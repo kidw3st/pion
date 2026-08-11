@@ -17,6 +17,7 @@ export function BouquetBuilderPopup({ open, onClose }: { open: boolean; onClose:
   const [step, setStep] = useState(0);
   const [values, setValues] = useState<BouquetValues>(initialValues);
   const [error, setError] = useState<string | undefined>();
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
 
   if (!open) return null;
@@ -28,10 +29,17 @@ export function BouquetBuilderPopup({ open, onClose }: { open: boolean; onClose:
   function handleNext() {
     const result = validateBouquetStep(step, values);
     if (!result.valid) {
-      setError(result.error);
+      if (step === 6 && result.errors) {
+        setFieldErrors(result.errors);
+        setError(undefined);
+      } else {
+        setError(result.error);
+        setFieldErrors({});
+      }
       return;
     }
     setError(undefined);
+    setFieldErrors({});
     if (step === STEPS.length - 1) {
       setSubmitted(true);
     } else {
@@ -41,6 +49,7 @@ export function BouquetBuilderPopup({ open, onClose }: { open: boolean; onClose:
 
   function handleBack() {
     setError(undefined);
+    setFieldErrors({});
     setStep((s) => Math.max(0, s - 1));
   }
 
@@ -49,6 +58,7 @@ export function BouquetBuilderPopup({ open, onClose }: { open: boolean; onClose:
     setValues(initialValues);
     setSubmitted(false);
     setError(undefined);
+    setFieldErrors({});
     onClose();
   }
 
@@ -124,6 +134,7 @@ export function BouquetBuilderPopup({ open, onClose }: { open: boolean; onClose:
                 <label className={styles.formLabel}>
                   Ваше имя
                   <input value={values.name} onChange={(e) => update('name', e.target.value)} />
+                  {fieldErrors.name && <span className={styles.fieldError}>{fieldErrors.name}</span>}
                 </label>
                 <label className={styles.formLabel}>
                   Телефон
@@ -133,15 +144,17 @@ export function BouquetBuilderPopup({ open, onClose }: { open: boolean; onClose:
                     value={values.phone}
                     onChange={(e) => update('phone', e.target.value)}
                   />
+                  {fieldErrors.phone && <span className={styles.fieldError}>{fieldErrors.phone}</span>}
                 </label>
                 <label className={styles.formLabel}>
                   Ваш e-mail
                   <input type="email" value={values.email} onChange={(e) => update('email', e.target.value)} />
+                  {fieldErrors.email && <span className={styles.fieldError}>{fieldErrors.email}</span>}
                 </label>
               </>
             )}
 
-            {error && <p className={styles.error}>{error}</p>}
+            {error && !fieldErrors && <p className={styles.error}>{error}</p>}
 
             <div className={styles.nav}>
               {step > 0 && <button type="button" onClick={handleBack}>← Назад</button>}

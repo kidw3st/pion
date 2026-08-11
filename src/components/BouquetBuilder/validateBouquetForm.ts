@@ -14,7 +14,20 @@ export interface BouquetValues {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_RE = /^\+?7\d{10}$/;
 
-export function validateBouquetStep(step: number, values: BouquetValues): { valid: boolean; error?: string } {
+function normalizePhone(phone: string): string {
+  // Remove all non-digits except leading +
+  const cleaned = phone.replace(/[\s()-]/g, '');
+  // If starts with 8 and has 11 digits total, replace 8 with 7
+  if (cleaned.match(/^8\d{10}$/)) {
+    return '7' + cleaned.slice(1);
+  }
+  return cleaned;
+}
+
+export function validateBouquetStep(
+  step: number,
+  values: BouquetValues,
+): { valid: boolean; error?: string; errors?: Record<string, string> } {
   switch (step) {
     case 0:
       return values.bouquetType ? { valid: true } : { valid: false, error: 'Выберите тип букета' };
@@ -30,12 +43,13 @@ export function validateBouquetStep(step: number, values: BouquetValues): { vali
     case 5:
       return { valid: true };
     case 6: {
-      if (!values.name.trim()) return { valid: false, error: 'Укажите ваше имя' };
-      if (!PHONE_RE.test(values.phone.replace(/[\s()-]/g, ''))) {
-        return { valid: false, error: 'Укажите корректный телефон' };
+      const errors: Record<string, string> = {};
+      if (!values.name.trim()) errors.name = 'Укажите ваше имя';
+      if (!PHONE_RE.test(normalizePhone(values.phone))) {
+        errors.phone = 'Укажите корректный телефон';
       }
-      if (!EMAIL_RE.test(values.email)) return { valid: false, error: 'Укажите корректный email' };
-      return { valid: true };
+      if (!EMAIL_RE.test(values.email)) errors.email = 'Укажите корректный email';
+      return { valid: Object.keys(errors).length === 0, errors };
     }
     default:
       return { valid: true };

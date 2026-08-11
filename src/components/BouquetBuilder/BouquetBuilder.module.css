@@ -79,6 +79,13 @@
   font-size: 12px;
 }
 
+.fieldError {
+  color: #c0392b;
+  font-size: 12px;
+  display: block;
+  margin-top: 2px;
+}
+
 .nav {
   display: flex;
   justify-content: space-between;
