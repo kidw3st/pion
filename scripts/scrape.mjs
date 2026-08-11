@@ -7,111 +7,114 @@ import { downloadImage } from './lib/downloadImage.mjs';
 const SITE = 'https://pionperm.ru';
 const ROOT = path.resolve(import.meta.dirname, '..');
 
-// Pull the product image URL off a Tilda store card. Tilda does NOT render an
-// <img> tag for card thumbnails — it uses a div.t-store__card__bgimg with a
-// full-res URL in the `data-original` attribute and a resized thumbnail set
-// via an inline `background-image: url(...)` style. Prefer data-original
-// (full resolution); fall back to parsing the inline style if it's missing.
-async function extractImageSrc(card) {
-  const bgImg = card.locator('.t-store__card__bgimg').first();
-  const dataOriginal = await bgImg.getAttribute('data-original').catch(() => null);
-  if (dataOriginal) return dataOriginal;
-
-  const style = await bgImg.getAttribute('style').catch(() => null);
-  if (style) {
-    const match = style.match(/url\((['"]?)(.*?)\1\)/);
-    if (match) return match[2];
+// Fetch `url` with retries. Tilda's own backend (pionperm.ru and its
+// store.tildacdn.com product API) is occasionally unreachable from this
+// environment (confirmed live: intermittent `ConnectTimeoutError` /
+// "fetch failed" on plain Node `fetch()` to store.tildacdn.com, roughly one
+// in several requests) — considerably rarer than the old browser-click
+// approach's failures, but not zero, so every network call here is wrapped
+// in a short retry loop with a per-attempt timeout so a hung request can't
+// stall the whole scrape.
+async function fetchWithRetry(url, { attempts = 4, delayMs = 2500, timeoutMs = 15000 } = {}) {
+  let lastErr;
+  for (let attempt = 1; attempt <= attempts; attempt++) {
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
+      if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
+      return res;
+    } catch (err) {
+      lastErr = err;
+      if (attempt < attempts) {
+        console.log(`  retry ${attempt}/${attempts - 1} for ${url}: ${err.message}`);
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+      }
+    }
   }
-
-  // Last-resort fallback in case a future Tilda block version renders a
-  // plain <img> after all.
-  return card.locator('img').first().getAttribute('src').catch(() => null);
+  throw lastErr;
 }
 
-export async function scrapeCategory(page, slug, categoryUrl = `${SITE}/${slug}`) {
-  // Tilda's own store-widget JS (tilda-cart-1.1.min.js) fetches product data
-  // from store.tildacdn.com client-side. That fetch intermittently fails in
-  // this environment ("Failed to fetch" / net::ERR_TIMED_OUT — confirmed via
-  // live console diagnostic on /korziny), and when it does, Tilda's widget
-  // gives up after its own internal retry and renders the "nothing found"
-  // empty-state message (`.js-store-empty-part-msg`) — indistinguishable
-  // from a genuinely empty category unless the whole page load is retried.
-  // So: reload up to `maxAttempts` times whenever we land on zero cards with
-  // that empty-state message showing, before accepting the category as
-  // actually empty. Raw `fetch()` to store.tildacdn.com from plain Node
-  // timed out on roughly 2 of every 5 requests when measured directly; a
-  // real page load can need more than one such request to succeed (product
-  // list + filters) and was observed failing several times in a row during
-  // live validation (even for `bukety`, which scraped cleanly on the very
-  // first try in Task 3) — so this uses 8 attempts with a several-second
-  // backoff between reloads rather than the brief's suggested 3, to keep
-  // the odds of an all-attempts failure low even during a bad network
-  // window. A category still showing 0 cards + the empty-state message
-  // after all 8 attempts is reported as empty; re-run the scraper for that
-  // one slug if that turns out to be wrong.
-  const maxAttempts = 8;
-  let cards = [];
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    if (attempt === 1) {
-      // Tilda pages keep background connections open (analytics, chat
-      // widgets), so `networkidle` frequently times out even once the page
-      // is usable. `load` + waiting for the first product card is more
-      // reliable.
-      await page.goto(categoryUrl, { waitUntil: 'load', timeout: 60000 });
-    } else {
-      console.log(`${slug}: retrying after empty result (attempt ${attempt})`);
-      await page.waitForTimeout(4000 + Math.random() * 3000);
-      await page.reload({ waitUntil: 'load', timeout: 60000 });
-    }
-    await page.locator('.t-store__card').first().waitFor({ state: 'visible', timeout: 30000 }).catch(() => {});
+function slugify(title) {
+  return title
+    .toLowerCase()
+    .replace(/[«»"]/g, '')
+    .replace(/[^a-zа-я0-9]+/gi, '-')
+    .replace(/^-+|-+$/g, '');
+}
 
-    // Click "Load more" until it's gone (Tilda store lazy-loads products).
-    while (true) {
-      const loadMore = page.locator('.js-store-load-more-btn').first();
-      if (!(await loadMore.isVisible().catch(() => false))) break;
-      await loadMore.click();
-      await page.waitForTimeout(600);
-    }
+// Scrape a Tilda store-widget category by calling its backend JSON API
+// directly instead of driving a browser and clicking "Load more". This
+// replaces the earlier Playwright/click-based implementation, which was
+// hitting intermittent "Failed to fetch" errors inside Tilda's own
+// store-widget JS (tilda-cart-1.1.min.js) that were indistinguishable from a
+// genuinely empty category without repeated full page reloads.
+//
+// The category page's raw HTML (plain `fetch`, no browser) embeds the
+// widget's init options as `options={recid:'...',storepart:'...',...}`,
+// which are the two IDs the product-list API needs:
+//   https://store.tildacdn.com/api/getproductslist/?storepartuid=<storepart>&recid=<recid>&slice=<N>
+// `slice` pages through the catalog (36 products per page, confirmed live on
+// `bukety`: slice=1 -> 36 products + {total:104,nextslice:2}). Not every
+// CATEGORY_SLUGS page is backed by this widget at all — verified live for
+// all 13 original candidate slugs, `flowers` and `indoorflowers` have no
+// `storepart`/`recid` anywhere in their HTML — so this returns `null` for
+// those and the caller falls back to `scrapePage()`.
+//
+// A handful of the confirmed store categories (`korziny`, `korobki`,
+// `wedding`, `balloons`, `chocolate`, `luchshee`, `flame`) returned
+// `total:0` from this API repeatedly across many separate calls, at
+// different times, and that was independently corroborated by loading each
+// page in a real browser and seeing Tilda's own "Ничего не найдено"
+// (nothing found) empty-state render (or, for a couple, no store section
+// render at all) — i.e. this matches the live site's actual current state,
+// not a fetch failure (which throws, rather than returning valid JSON with
+// total:0). Categories with genuinely zero products right now produce a
+// correct empty array; see the task report for the full list.
+export async function scrapeCategory(slug, categoryUrl = `${SITE}/${slug}`) {
+  const html = await (await fetchWithRetry(categoryUrl)).text();
+  const storepart = html.match(/storepart:'(\d+)'/)?.[1];
+  const recid = html.match(/recid:'(\d+)'/)?.[1];
+  if (!storepart || !recid) return null;
 
-    cards = await page.locator('.t-store__card').all();
-    if (cards.length > 0) break;
+  const rawProducts = [];
+  let slice = 1;
+  let total = Infinity;
+  const maxSlices = 200; // sanity cap so a pagination quirk can't loop forever
+  for (let i = 0; i < maxSlices; i++) {
+    const apiUrl = `https://store.tildacdn.com/api/getproductslist/?storepartuid=${storepart}&recid=${recid}&slice=${slice}`;
+    const json = await (await fetchWithRetry(apiUrl)).json();
+    if (slice === 1) total = Number(json.total) || 0;
 
-    const emptyMsgVisible = await page
-      .locator('.js-store-empty-part-msg')
-      .first()
-      .isVisible()
-      .catch(() => false);
-    if (!emptyMsgVisible) {
-      // Zero cards but no empty-state message either — doesn't match the
-      // known transient-fetch-failure signature, so don't burn retries on
-      // what's likely a genuinely different situation (e.g. selector miss).
-      break;
-    }
+    const batch = Array.isArray(json.products) ? json.products : [];
+    if (batch.length === 0) break;
+    rawProducts.push(...batch);
+
+    if (!json.nextslice || rawProducts.length >= total) break;
+    slice = json.nextslice;
   }
 
   const products = [];
-
-  for (const card of cards) {
-    const title = (await card.locator('.t-store__card__title').first().innerText().catch(() => '')).trim();
+  for (const item of rawProducts) {
+    const title = (item.title || '').trim();
     if (!title) continue;
-    const description = (await card.locator('.t-store__card__descr').first().innerText().catch(() => '')).trim();
-    const priceText = (await card.locator('.t-store__card__price-value').first().innerText().catch(() => '0'));
-    const price = Math.round(parseFloat(priceText.replace(/[^\d.,]/g, '').replace(',', '.')) || 0);
-    const imgSrc = await extractImageSrc(card);
+    const description = (item.descr || '').trim();
+    const price = Math.round(parseFloat(item.price) || 0);
+    const uid = String(item.uid);
+    const productSlug = slugify(title);
 
-    const uid = `${slug}-${products.length + 1}`;
-    const productSlug = title
-      .toLowerCase()
-      .replace(/[«»"]/g, '')
-      .replace(/[^a-zа-я0-9]+/gi, '-')
-      .replace(/^-+|-+$/g, '');
+    let gallery = [];
+    try {
+      gallery = JSON.parse(item.gallery || '[]');
+    } catch {
+      gallery = [];
+    }
+    const imgUrl = gallery[0]?.img;
 
     const images = [];
-    if (imgSrc) {
-      const ext = path.extname(new URL(imgSrc, SITE).pathname) || '.jpg';
+    if (imgUrl) {
+      const ext = path.extname(new URL(imgUrl).pathname) || '.jpg';
       const fileName = `${productSlug}${ext}`;
       const dest = path.join(ROOT, 'public', 'images', 'catalog', slug, fileName);
-      await downloadImage(new URL(imgSrc, SITE).href, dest);
+      await downloadImage(imgUrl, dest);
       images.push(`/images/catalog/${slug}/${fileName}`);
     }
 
@@ -190,8 +193,8 @@ async function scrapePage(page, slug) {
 
       if (el.tagName === 'IMG') {
         // Tilda lazy-loads: `src` starts as a tiny placeholder/thumbnail,
-        // the full-res URL lives in `data-original` (same pattern as the
-        // store card thumbnails handled by extractImageSrc()).
+        // the full-res URL lives in `data-original` (same lazy-load pattern
+        // the old browser-based store-card scraper used to handle).
         const src = el.getAttribute('data-original') || el.getAttribute('src');
         if (src && !src.toLowerCase().endsWith('.svg')) {
           out.push({ type: 'image', src, alt: el.getAttribute('alt') || '' });
@@ -351,14 +354,19 @@ async function scrapeHome(page) {
   return { heroSlides };
 }
 
+// `flowers` and `indoorflowers` were dropped from this list (and added to
+// PAGE_SLUGS below) after live investigation found neither has a Tilda
+// store-widget block — see scrapeCategory()'s doc comment and
+// src/lib/content.ts for the same change on the app side.
 const CATEGORY_SLUGS = [
-  'bukety', 'korziny', 'korobki', 'flowers', 'wedding', 'balloons',
-  'chocolate', 'indoorflowers', 'luchshee', 'flame', 'pions', 'roses', 'mixflower',
+  'bukety', 'korziny', 'korobki', 'wedding', 'balloons',
+  'chocolate', 'luchshee', 'flame', 'pions', 'roses', 'mixflower',
 ];
 
 const PAGE_SLUGS = [
   'about', 'delivery-and-payment', 'flower-delivery', 'contacts', 'uds',
   'stock', 'policy', 'valentinesday', 'new-year-2025', 'doza_endorfina',
+  'flowers', 'indoorflowers',
 ];
 
 async function main() {
@@ -367,13 +375,30 @@ async function main() {
   // Chromium-based browser instead via Playwright's `channel` option.
   // Configurable via env var (Task 3 review feedback: don't hardcode one
   // browser) — defaults to Microsoft Edge, which is what's available here.
+  // Still needed for scrapePage()/scrapeHome(), which need a real rendered
+  // DOM; scrapeCategory() no longer touches the browser at all.
   const browserChannel = process.env.SCRAPE_BROWSER_CHANNEL || 'msedge';
   const browser = await chromium.launch({ channel: browserChannel });
   const page = await browser.newPage();
 
   await mkdir(path.join(ROOT, 'data', 'catalog'), { recursive: true });
+  await mkdir(path.join(ROOT, 'data', 'pages'), { recursive: true });
   for (const slug of CATEGORY_SLUGS) {
-    const products = await scrapeCategory(page, slug);
+    const products = await scrapeCategory(slug);
+    if (products === null) {
+      // Defensive fallback: shouldn't trigger given the static
+      // reclassification above, but if a category ever loses its store
+      // widget, scrape it as a content page instead of erroring out.
+      console.log(`${slug}: no store widget found, falling back to scrapePage()`);
+      const blocks = await scrapePage(page, slug);
+      await writeFile(
+        path.join(ROOT, 'data', 'pages', `${slug}.json`),
+        JSON.stringify(blocks, null, 2),
+        'utf-8'
+      );
+      console.log(`${slug}: ${blocks.length} blocks (page fallback)`);
+      continue;
+    }
     await writeFile(
       path.join(ROOT, 'data', 'catalog', `${slug}.json`),
       JSON.stringify(products, null, 2),
@@ -382,7 +407,6 @@ async function main() {
     console.log(`${slug}: ${products.length} products`);
   }
 
-  await mkdir(path.join(ROOT, 'data', 'pages'), { recursive: true });
   for (const slug of PAGE_SLUGS) {
     const blocks = await scrapePage(page, slug);
     await writeFile(

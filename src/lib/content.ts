@@ -1,14 +1,20 @@
 import type { Product, ContentBlock, SiteData } from './types';
 import siteJson from '../../data/site.json';
 
+// `flowers` and `indoorflowers` were originally listed as store categories,
+// but live investigation (2026-08-11) found neither has a Tilda store-widget
+// block (no `storepart`/`recid`/`t_store_init` anywhere in their HTML) — they
+// are plain content pages, so they're scraped/served via the PAGE_SLUGS path
+// instead.
 export const CATEGORY_SLUGS = [
-  'bukety', 'korziny', 'korobki', 'flowers', 'wedding', 'balloons',
-  'chocolate', 'indoorflowers', 'luchshee', 'flame', 'pions', 'roses', 'mixflower',
+  'bukety', 'korziny', 'korobki', 'wedding', 'balloons',
+  'chocolate', 'luchshee', 'flame', 'pions', 'roses', 'mixflower',
 ] as const;
 
 export const PAGE_SLUGS = [
   'about', 'delivery-and-payment', 'flower-delivery', 'contacts', 'uds',
   'stock', 'policy', 'valentinesday', 'new-year-2025', 'doza_endorfina',
+  'flowers', 'indoorflowers',
 ] as const;
 
 export type CategorySlug = (typeof CATEGORY_SLUGS)[number];
