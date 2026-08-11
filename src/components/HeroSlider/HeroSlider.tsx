@@ -17,7 +17,7 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
     if (slides.length <= 1) return;
     const timer = setInterval(next, 5000);
     return () => clearInterval(timer);
-  }, [next, slides.length]);
+  }, [next, slides.length, index]);
 
   if (slides.length === 0) return null;
   const slide = slides[index];
