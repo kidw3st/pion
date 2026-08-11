@@ -1,0 +1,35 @@
+.page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 48px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.heading {
+  font-size: 28px;
+}
+
+.paragraph {
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.imageWrap {
+  position: relative;
+  width: 100%;
+}
+
+.image {
+  width: 100%;
+  height: auto;
+}
+
+.cta {
+  align-self: flex-start;
+  background: var(--color-accent);
+  color: var(--color-white);
+  padding: 14px 28px;
+  font-weight: 600;
+}
