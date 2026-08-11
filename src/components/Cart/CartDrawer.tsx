@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { useCart } from './CartContext';
 import styles from './CartDrawer.module.css';
 
@@ -39,7 +40,7 @@ export function CartDrawer() {
         )}
         <div className={styles.footer}>
           <span>Итоговая сумма: {total} ₽</span>
-          <a href="#checkout" className={styles.checkoutBtn} onClick={close}>Оформить заказ</a>
+          <Link href="/checkout" className={styles.checkoutBtn} onClick={close}>Оформить заказ</Link>
         </div>
       </div>
     </div>

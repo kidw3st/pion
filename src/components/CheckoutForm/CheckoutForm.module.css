@@ -1,0 +1,72 @@
+.form {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 48px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.form input {
+  padding: 10px;
+  border: 1px solid var(--color-border);
+}
+
+.form fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.form legend {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0;
+  margin: 12px 0 8px 0;
+}
+
+.summary {
+  list-style: none;
+  padding: 0;
+  font-size: 13px;
+}
+
+.total {
+  font-weight: 700;
+}
+
+.radioLabel {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-weight: 400;
+}
+
+.error {
+  color: #c0392b;
+  font-size: 12px;
+}
+
+.submitBtn {
+  margin-top: 12px;
+  background: var(--color-black);
+  color: var(--color-white);
+  border: none;
+  padding: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.thanks {
+  max-width: 480px;
+  margin: 80px auto;
+  text-align: center;
+}
