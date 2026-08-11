@@ -111,8 +111,15 @@ export async function scrapeCategory(slug, categoryUrl = `${SITE}/${slug}`) {
 
     const images = [];
     if (imgUrl) {
+      // Include `uid` in the filename, not just the title-derived slug: the
+      // catalog has several distinct products (different uid, different
+      // photo) that share an identical title (e.g. multiple "Букет «Для
+      // любимой»" listings), which would otherwise collide on the same
+      // `${productSlug}${ext}` path — and since downloadImage() skips
+      // already-downloaded files, the second product would silently reuse
+      // the first one's photo instead of getting its own.
       const ext = path.extname(new URL(imgUrl).pathname) || '.jpg';
-      const fileName = `${productSlug}${ext}`;
+      const fileName = `${productSlug}-${uid}${ext}`;
       const dest = path.join(ROOT, 'public', 'images', 'catalog', slug, fileName);
       await downloadImage(imgUrl, dest);
       images.push(`/images/catalog/${slug}/${fileName}`);
