@@ -46,4 +46,26 @@ describe('cartReducer', () => {
     state = cartReducer(state, { type: 'SET_QUANTITY', uid: '1', quantity: 0 });
     expect(state.items).toHaveLength(0);
   });
+
+  it('hydrates state from stored items (idempotent)', () => {
+    const storedItems = [
+      { uid: '1', title: 'Букет 1', price: 1000, image: '/img1.jpg', quantity: 2 },
+      { uid: '2', title: 'Букет 2', price: 2000, image: '/img2.jpg', quantity: 1 },
+    ];
+    let state = cartReducer(emptyState, {
+      type: 'HYDRATE',
+      items: storedItems,
+    });
+    expect(state.items).toHaveLength(2);
+    expect(state.items[0]).toMatchObject({ uid: '1', quantity: 2 });
+    expect(state.items[1]).toMatchObject({ uid: '2', quantity: 1 });
+
+    // Calling HYDRATE again should replace state, not double items (idempotent)
+    state = cartReducer(state, {
+      type: 'HYDRATE',
+      items: storedItems,
+    });
+    expect(state.items).toHaveLength(2);
+    expect(state.items[0].quantity).toBe(2);
+  });
 });

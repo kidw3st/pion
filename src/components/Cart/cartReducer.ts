@@ -14,7 +14,8 @@ export type CartAction =
   | { type: 'ADD_ITEM'; item: Omit<CartItem, 'quantity'> }
   | { type: 'REMOVE_ITEM'; uid: string }
   | { type: 'SET_QUANTITY'; uid: string; quantity: number }
-  | { type: 'CLEAR' };
+  | { type: 'CLEAR' }
+  | { type: 'HYDRATE'; items: CartItem[] };
 
 export function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
@@ -43,6 +44,8 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
     }
     case 'CLEAR':
       return { items: [] };
+    case 'HYDRATE':
+      return { items: action.items };
     default:
       return state;
   }

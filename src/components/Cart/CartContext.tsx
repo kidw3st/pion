@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useReducer, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useState, type ReactNode } from 'react';
 import { cartReducer, cartTotal, type CartItem, type CartState } from './cartReducer';
 
 const STORAGE_KEY = 'pion-cart';
@@ -29,10 +29,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     if (raw) {
       try {
         const items = JSON.parse(raw) as CartItem[];
-        items.forEach((item) => dispatch({ type: 'ADD_ITEM', item }));
-        items.forEach((item) => {
-          if (item.quantity > 1) dispatch({ type: 'SET_QUANTITY', uid: item.uid, quantity: item.quantity });
-        });
+        dispatch({ type: 'HYDRATE', items });
       } catch {
         // ignore corrupt storage
       }
@@ -45,20 +42,42 @@ export function CartProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state.items));
   }, [state.items, hydrated]);
 
-  const value: CartContextValue = {
+  const addItem = useCallback((item: Omit<CartItem, 'quantity'>) => {
+    dispatch({ type: 'ADD_ITEM', item });
+    setIsOpen(true);
+  }, []);
+
+  const removeItem = useCallback((uid: string) => {
+    dispatch({ type: 'REMOVE_ITEM', uid });
+  }, []);
+
+  const setQuantity = useCallback((uid: string, quantity: number) => {
+    dispatch({ type: 'SET_QUANTITY', uid, quantity });
+  }, []);
+
+  const clear = useCallback(() => {
+    dispatch({ type: 'CLEAR' });
+  }, []);
+
+  const open = useCallback(() => {
+    setIsOpen(true);
+  }, []);
+
+  const close = useCallback(() => {
+    setIsOpen(false);
+  }, []);
+
+  const value = useMemo<CartContextValue>(() => ({
     items: state.items,
     total: cartTotal(state),
     isOpen,
-    addItem: (item) => {
-      dispatch({ type: 'ADD_ITEM', item });
-      setIsOpen(true);
-    },
-    removeItem: (uid) => dispatch({ type: 'REMOVE_ITEM', uid }),
-    setQuantity: (uid, quantity) => dispatch({ type: 'SET_QUANTITY', uid, quantity }),
-    clear: () => dispatch({ type: 'CLEAR' }),
-    open: () => setIsOpen(true),
-    close: () => setIsOpen(false),
-  };
+    addItem,
+    removeItem,
+    setQuantity,
+    clear,
+    open,
+    close,
+  }), [state.items, isOpen, addItem, removeItem, setQuantity, clear, open, close]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }
