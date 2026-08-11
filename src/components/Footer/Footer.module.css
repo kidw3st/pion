@@ -1,0 +1,47 @@
+.footer {
+  background: var(--color-text-dark);
+  color: var(--color-white);
+  padding: 48px 40px;
+}
+
+.vkBlock {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.vkBlock a {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 10px 20px;
+  border: 1px solid var(--color-white);
+}
+
+.columns {
+  display: flex;
+  gap: 48px;
+  flex-wrap: wrap;
+}
+
+.column h4 {
+  font-size: 13px;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.column ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.legal {
+  margin-top: 32px;
+  font-size: 11px;
+  opacity: 0.6;
+  line-height: 1.6;
+}
