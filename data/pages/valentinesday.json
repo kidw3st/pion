@@ -1,1 +1,65 @@
-﻿[]
+[
+  {
+    "type": "image",
+    "src": "/images/pages/valentinesday/img-0.png",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/valentinesday/img-1.png",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/valentinesday/img-2.png",
+    "alt": ""
+  },
+  {
+    "type": "heading",
+    "text": "Букеты и подарочные боксы"
+  },
+  {
+    "type": "heading",
+    "text": "Букеты и подарочные наборы"
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/valentinesday/img-3.jpg",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/valentinesday/img-4.jpg",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/valentinesday/img-5.jpg",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/valentinesday/img-6.jpg",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/valentinesday/img-7.GIF",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/valentinesday/img-8.jpg",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/valentinesday/img-9.jpg",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/valentinesday/img-10.png",
+    "alt": ""
+  }
+]

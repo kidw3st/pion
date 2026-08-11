@@ -1,56 +1,187 @@
 {
   "nav": [
-    { "label": "КАТАЛОГ", "href": "/catalog" },
-    { "label": "АКЦИИ", "href": "/stock" },
-    { "label": "ДОСТАВКА", "href": "/delivery-and-payment" },
-    { "label": "О НАС", "href": "/about" },
-    { "label": "КОНТАКТЫ", "href": "/contacts" },
-    { "label": "UDS", "href": "/uds" }
+    {
+      "label": "КАТАЛОГ",
+      "href": "/catalog"
+    },
+    {
+      "label": "АКЦИИ",
+      "href": "/stock"
+    },
+    {
+      "label": "ДОСТАВКА",
+      "href": "/delivery-and-payment"
+    },
+    {
+      "label": "О НАС",
+      "href": "/about"
+    },
+    {
+      "label": "КОНТАКТЫ",
+      "href": "/contacts"
+    },
+    {
+      "label": "UDS",
+      "href": "/uds"
+    }
   ],
   "phone": "+7 342 258 45 45",
   "address": "г. Пермь, ул. Газеты Звезда, д. 27",
   "social": [
-    { "label": "VK", "href": "https://vk.com/pionpermcveti" },
-    { "label": "Telegram", "href": "https://t.me/PionPerm" },
-    { "label": "WhatsApp", "href": "https://wa.me/79082413741" }
+    {
+      "label": "VK",
+      "href": "https://vk.com/pionpermcveti"
+    },
+    {
+      "label": "Telegram",
+      "href": "https://t.me/PionPerm"
+    },
+    {
+      "label": "WhatsApp",
+      "href": "https://wa.me/79082413741"
+    }
   ],
   "footer": {
     "columns": [
       {
         "title": "БУКЕТЫ",
         "links": [
-          { "label": "Авторские букеты", "href": "/bukety" },
-          { "label": "Корзины цветов", "href": "/korziny" },
-          { "label": "Цветы", "href": "/flowers" },
-          { "label": "Коробки с цветами", "href": "/korobki" }
+          {
+            "label": "Авторские букеты",
+            "href": "/bukety"
+          },
+          {
+            "label": "Корзины цветов",
+            "href": "/korziny"
+          },
+          {
+            "label": "Цветы",
+            "href": "/flowers"
+          },
+          {
+            "label": "Коробки с цветами",
+            "href": "/korobki"
+          }
         ]
       },
       {
         "title": "ДЕКОР",
         "links": [
-          { "label": "Лучшее для дома", "href": "/luchshee" },
-          { "label": "Воздушные шары", "href": "/balloons" }
+          {
+            "label": "Лучшее для дома",
+            "href": "/luchshee"
+          },
+          {
+            "label": "Воздушные шары",
+            "href": "/balloons"
+          }
         ]
       },
       {
         "title": "ИНФОРМАЦИЯ",
         "links": [
-          { "label": "О нас", "href": "/about" },
-          { "label": "Доставка и оплата", "href": "/delivery-and-payment" },
-          { "label": "Контакты", "href": "/contacts" },
-          { "label": "Политика конфиденциальности", "href": "/policy" }
+          {
+            "label": "О нас",
+            "href": "/about"
+          },
+          {
+            "label": "Доставка и оплата",
+            "href": "/delivery-and-payment"
+          },
+          {
+            "label": "Контакты",
+            "href": "/contacts"
+          },
+          {
+            "label": "Политика конфиденциальности",
+            "href": "/policy"
+          }
         ]
       }
     ],
     "legal": "© 2024 ИП Дылдина Раиса Закирзяновна. Салон цветов и подарков «Пион». Пермь, ул. Газеты Звезда, 27. ОГРНИП 323595800106532. ИНН 590403045968.",
     "hours": "Режим работы: пн-пт 10:00-22:00, сб-вс 10:00-22:00"
   },
-  "heroSlides": [],
-  "newProducts": [],
+  "heroSlides": [
+    {
+      "title": "ПИОН - для вас",
+      "subtitle": "Каждую неделю мы показываем поставку свежих цветов",
+      "buttonText": "Посмотреть витрину",
+      "buttonHref": "instagram.com/pionperm",
+      "image": "/images/site/hero-0.jpg"
+    },
+    {
+      "title": "УНИКАЛЬНЫЕ БУКЕТЫ",
+      "subtitle": "ДЛЯ ОСОБЕННЫХ МОМЕНТОВ",
+      "buttonText": "Выбрать",
+      "buttonHref": "/valentinesday",
+      "image": "/images/site/hero-1.png"
+    },
+    {
+      "title": "ЦВЕТЫ КОТОРЫЕ ВДОХНОВЛЯЮТ",
+      "subtitle": "Букеты с доставкой",
+      "buttonText": "Выбрать",
+      "buttonHref": "/bukety",
+      "image": "/images/site/hero-2.jpg"
+    },
+    {
+      "title": "АКЦИИ",
+      "subtitle": "и специальные предложения",
+      "buttonText": "Посмотреть",
+      "buttonHref": "/stock",
+      "image": "/images/site/hero-3.jpg"
+    },
+    {
+      "title": "Цветочная подпискаот салона \"Пион\"",
+      "subtitle": "Эстетическое удовольствие с доставкой на дом",
+      "buttonText": "Подробности",
+      "buttonHref": "/flower-delivery",
+      "image": "/images/site/hero-4.jpeg"
+    },
+    {
+      "title": "-20% НА ДЕКОР",
+      "subtitle": "Вазы, декор, искусственные цветы и композиции!",
+      "buttonText": "Посмотреть коллекцию",
+      "buttonHref": "/luchshee",
+      "image": "/images/site/hero-5.jpg"
+    }
+  ],
+  "newProducts": [
+    {
+      "title": "Букет «Счастье есть »",
+      "subtitle": "Состав букета:Диантусы ,маттиола, Аллиум, розы",
+      "price": 4830,
+      "image": "/images/catalog/bukety/букет-счастье-есть.jpg"
+    },
+    {
+      "title": "Букет «Магическая красота »",
+      "subtitle": "Состав букета: Пионы , французская роза, альстромерия, дельфиниум, кустовые розы",
+      "price": 12200,
+      "image": "/images/catalog/bukety/букет-магическая-красота.jpg"
+    },
+    {
+      "title": "Букет «Нежные чувства »",
+      "subtitle": "Состав букета: Букет с французскими розами, альстромерией, кустовыми розами и диантусами",
+      "price": 7700,
+      "image": "/images/catalog/bukety/букет-нежные-чувства.jpg"
+    }
+  ],
   "features": [
-    { "title": "Всегда свежие цветы в нашем салоне", "description": "Мы используем лучшие свежесрезанные цветы" },
-    { "title": "Фото и видео букета перед доставкой", "description": "Только приятные сюрпризы для вас и ваших близких" },
-    { "title": "Экспресс-доставка по Перми", "description": "Бережно собираем букет и доставляем прямо к двери" },
-    { "title": "Заказ из любой точки мира", "description": "Мы подключили на сайт оплату банковской картой" }
+    {
+      "title": "Всегда свежие цветы в нашем салоне",
+      "description": "Мы используем лучшие свежесрезанные цветы"
+    },
+    {
+      "title": "Фото и видео букета перед доставкой",
+      "description": "Только приятные сюрпризы для вас и ваших близких"
+    },
+    {
+      "title": "Экспресс-доставка по Перми",
+      "description": "Бережно собираем букет и доставляем прямо к двери"
+    },
+    {
+      "title": "Заказ из любой точки мира",
+      "description": "Мы подключили на сайт оплату банковской картой"
+    }
   ]
 }

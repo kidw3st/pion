@@ -1,1 +1,95 @@
-﻿[]
+[
+  {
+    "type": "image",
+    "src": "/images/pages/delivery-and-payment/img-0.png",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/delivery-and-payment/img-1.png",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/delivery-and-payment/img-2.png",
+    "alt": ""
+  },
+  {
+    "type": "heading",
+    "text": "Доставка и оплата"
+  },
+  {
+    "type": "heading",
+    "text": "Доставка"
+  },
+  {
+    "type": "paragraph",
+    "text": "Вы можете выбрать удобный для вас способ доставки"
+  },
+  {
+    "type": "paragraph",
+    "text": "1. Самовывоз из нашего салона по адресу ул.Газеты Звезда, 27. При самовывозе - скидка 5%2. Стоимость курьерской доставки:До 5км от нашего магазина - 500 рублейДо 7км от нашего магазина - 800 рублейДо 9км от нашего магазина - 950 рублейПарковый, Вышка, Балатово, Запруд, Висим - 780 рублейЛёвшино, Водники, Гайва, Фролы, Кондратово, Ферма - 1140 рублейЗакамск, Крым, Кировский - 1560 рублейПолазна, Ляды, Жебреи, Звездный - 2400 рублейДоставка возможна через 2 часа после оформления и подтверждения заказа для готового букета и 3 часа для авторского"
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/delivery-and-payment/img-3.jpg",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/delivery-and-payment/img-4.jpg",
+    "alt": ""
+  },
+  {
+    "type": "heading",
+    "text": "Оплата"
+  },
+  {
+    "type": "paragraph",
+    "text": "Вы можете выбрать для себя наиболее удобный способ оплаты. Мы сделали процесс оформления заказа максимально быстрым, удобным и безопасным"
+  },
+  {
+    "type": "paragraph",
+    "text": "1. Банковской картой в нашей студии или при оформлении заказа через сайт2. Наличными при самовывозе из салона (ул.Газеты Звезда, 27)3. Безналичный расчет на расчетный счет юридического лица"
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/delivery-and-payment/img-5.jpg",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/delivery-and-payment/img-6.jpg",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/delivery-and-payment/img-7.jpg",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/delivery-and-payment/img-8.jpg",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/delivery-and-payment/img-9.GIF",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/delivery-and-payment/img-10.jpg",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/delivery-and-payment/img-11.jpg",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/delivery-and-payment/img-12.png",
+    "alt": ""
+  }
+]

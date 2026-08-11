@@ -1,1 +1,77 @@
-﻿[]
+[
+  {
+    "type": "image",
+    "src": "/images/pages/contacts/img-0.png",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/contacts/img-1.png",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/contacts/img-2.png",
+    "alt": ""
+  },
+  {
+    "type": "heading",
+    "text": "Контакты"
+  },
+  {
+    "type": "paragraph",
+    "text": "Если у вас есть пожелания по качеству или сервису, мы с радостью это обсудим."
+  },
+  {
+    "type": "paragraph",
+    "text": "+7 908 241 37 41pion-perm59@yandex.ru"
+  },
+  {
+    "type": "paragraph",
+    "text": "г.Пермь, ул.Газеты Звезда, д.27Режим работы:пн-пт: 10:00—22:00сб-вс: 10.00—22.00"
+  },
+  {
+    "type": "paragraph",
+    "text": "Нажимая на кнопку, вы даете согласие на обработку персональных данных и соглашаетесь c политикой конфиденциальности"
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/contacts/img-3.jpg",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/contacts/img-4.jpg",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/contacts/img-5.jpg",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/contacts/img-6.jpg",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/contacts/img-7.GIF",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/contacts/img-8.jpg",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/contacts/img-9.jpg",
+    "alt": ""
+  },
+  {
+    "type": "image",
+    "src": "/images/pages/contacts/img-10.png",
+    "alt": ""
+  }
+]
