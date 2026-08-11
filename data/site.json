@@ -1,0 +1,56 @@
+{
+  "nav": [
+    { "label": "КАТАЛОГ", "href": "/catalog" },
+    { "label": "АКЦИИ", "href": "/stock" },
+    { "label": "ДОСТАВКА", "href": "/delivery-and-payment" },
+    { "label": "О НАС", "href": "/about" },
+    { "label": "КОНТАКТЫ", "href": "/contacts" },
+    { "label": "UDS", "href": "/uds" }
+  ],
+  "phone": "+7 342 258 45 45",
+  "address": "г. Пермь, ул. Газеты Звезда, д. 27",
+  "social": [
+    { "label": "VK", "href": "https://vk.com/pionpermcveti" },
+    { "label": "Telegram", "href": "https://t.me/PionPerm" },
+    { "label": "WhatsApp", "href": "https://wa.me/79082413741" }
+  ],
+  "footer": {
+    "columns": [
+      {
+        "title": "БУКЕТЫ",
+        "links": [
+          { "label": "Авторские букеты", "href": "/bukety" },
+          { "label": "Корзины цветов", "href": "/korziny" },
+          { "label": "Цветы", "href": "/flowers" },
+          { "label": "Коробки с цветами", "href": "/korobki" }
+        ]
+      },
+      {
+        "title": "ДЕКОР",
+        "links": [
+          { "label": "Лучшее для дома", "href": "/luchshee" },
+          { "label": "Воздушные шары", "href": "/balloons" }
+        ]
+      },
+      {
+        "title": "ИНФОРМАЦИЯ",
+        "links": [
+          { "label": "О нас", "href": "/about" },
+          { "label": "Доставка и оплата", "href": "/delivery-and-payment" },
+          { "label": "Контакты", "href": "/contacts" },
+          { "label": "Политика конфиденциальности", "href": "/policy" }
+        ]
+      }
+    ],
+    "legal": "© 2024 ИП Дылдина Раиса Закирзяновна. Салон цветов и подарков «Пион». Пермь, ул. Газеты Звезда, 27. ОГРНИП 323595800106532. ИНН 590403045968.",
+    "hours": "Режим работы: пн-пт 10:00-22:00, сб-вс 10:00-22:00"
+  },
+  "heroSlides": [],
+  "newProducts": [],
+  "features": [
+    { "title": "Всегда свежие цветы в нашем салоне", "description": "Мы используем лучшие свежесрезанные цветы" },
+    { "title": "Фото и видео букета перед доставкой", "description": "Только приятные сюрпризы для вас и ваших близких" },
+    { "title": "Экспресс-доставка по Перми", "description": "Бережно собираем букет и доставляем прямо к двери" },
+    { "title": "Заказ из любой точки мира", "description": "Мы подключили на сайт оплату банковской картой" }
+  ]
+}
