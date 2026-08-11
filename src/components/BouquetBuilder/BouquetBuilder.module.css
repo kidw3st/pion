@@ -1,0 +1,100 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal {
+  position: relative;
+  background: var(--color-white);
+  padding: 40px;
+  width: 480px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.closeBtn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.stepIndicator {
+  font-size: 12px;
+  opacity: 0.6;
+}
+
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.radioOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.rangeLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  margin: 16px 0;
+}
+
+.rangeLabel input {
+  margin-top: 8px;
+}
+
+.formLabel {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  margin-bottom: 12px;
+}
+
+.formLabel input,
+.formLabel textarea {
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  font-family: inherit;
+}
+
+.error {
+  color: #c0392b;
+  font-size: 12px;
+}
+
+.nav {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+}
+
+.nextBtn {
+  background: var(--color-black);
+  color: var(--color-white);
+  border: none;
+  padding: 12px 24px;
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.thanks {
+  text-align: center;
+  padding: 24px 0;
+}

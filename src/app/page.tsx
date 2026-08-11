@@ -1,6 +1,7 @@
 import { getSite, getCatalog } from '@/lib/content';
 import { HeroSlider } from '@/components/HeroSlider/HeroSlider';
 import { ProductCard } from '@/components/ProductCard/ProductCard';
+import { BouquetBuilderCta } from '@/components/BouquetBuilder/BouquetBuilderCta';
 import styles from './page.module.css';
 
 export default async function HomePage() {
@@ -26,6 +27,8 @@ export default async function HomePage() {
           </div>
         ))}
       </section>
+
+      <BouquetBuilderCta />
     </main>
   );
 }
