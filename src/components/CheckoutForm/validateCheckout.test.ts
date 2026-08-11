@@ -33,6 +33,17 @@ describe('validateCheckout', () => {
     expect(result.errors.phone).toBeDefined();
   });
 
+  it('accepts 8-prefixed Russian phone numbers', () => {
+    const result = validateCheckout({ ...validValues, phone: '89001234567' });
+    expect(result.valid).toBe(true);
+    expect(result.errors.phone).toBeUndefined();
+
+    // Also test with formatting
+    const formatted = validateCheckout({ ...validValues, phone: '8 (900) 123-45-67' });
+    expect(formatted.valid).toBe(true);
+    expect(formatted.errors.phone).toBeUndefined();
+  });
+
   it('requires an address unless self-pickup is chosen', () => {
     const result = validateCheckout({ ...validValues, address: '' });
     expect(result.valid).toBe(false);

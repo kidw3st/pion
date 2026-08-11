@@ -111,6 +111,7 @@ export function CheckoutForm() {
           <input
             type="radio"
             name="paymentMethod"
+            value="card"
             checked={values.paymentMethod === 'card'}
             onChange={() => update('paymentMethod', 'card')}
           />
@@ -120,6 +121,7 @@ export function CheckoutForm() {
           <input
             type="radio"
             name="paymentMethod"
+            value="cash"
             checked={values.paymentMethod === 'cash'}
             onChange={() => update('paymentMethod', 'cash')}
           />
