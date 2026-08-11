@@ -154,7 +154,7 @@ export function BouquetBuilderPopup({ open, onClose }: { open: boolean; onClose:
               </>
             )}
 
-            {error && !fieldErrors && <p className={styles.error}>{error}</p>}
+            {error && step !== 6 && <p className={styles.error}>{error}</p>}
 
             <div className={styles.nav}>
               {step > 0 && <button type="button" onClick={handleBack}>← Назад</button>}
