@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { getSite } from '@/lib/content';
+import { CartButton } from './CartButton';
 import styles from './Header.module.css';
 
 export function Header() {
@@ -30,6 +31,7 @@ export function Header() {
             </li>
           ))}
         </ul>
+        <CartButton />
         <Link href="/catalog" className={styles.orderBtn}>СДЕЛАТЬ ЗАКАЗ</Link>
       </div>
     </header>

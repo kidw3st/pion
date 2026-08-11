@@ -20,6 +20,20 @@ export const PAGE_SLUGS = [
 export type CategorySlug = (typeof CATEGORY_SLUGS)[number];
 export type PageSlug = (typeof PAGE_SLUGS)[number];
 
+export const CATEGORY_LABELS: Record<CategorySlug, string> = {
+  bukety: 'Букеты',
+  korziny: 'Корзины цветов',
+  korobki: 'Коробки с цветами',
+  wedding: 'Свадебные букеты',
+  balloons: 'Воздушные шары',
+  chocolate: 'Шоколад',
+  luchshee: 'Лучшее для дома',
+  flame: 'Продукция Flame',
+  pions: 'Пионы',
+  roses: 'Розы',
+  mixflower: 'Микс из цветов',
+};
+
 export function getSite(): SiteData {
   return siteJson as SiteData;
 }

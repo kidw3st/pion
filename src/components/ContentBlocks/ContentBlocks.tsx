@@ -1,6 +1,11 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import type { ContentBlock } from '@/lib/types';
 import styles from './ContentBlocks.module.css';
+
+function isExternalHref(href: string): boolean {
+  return href.startsWith('http://') || href.startsWith('https://');
+}
 
 export function ContentBlocks({ blocks }: { blocks: ContentBlock[] }) {
   return (
@@ -18,8 +23,12 @@ export function ContentBlocks({ blocks }: { blocks: ContentBlock[] }) {
               </div>
             );
           case 'cta':
-            return (
-              <a key={i} href={block.href} className={styles.cta}>{block.text}</a>
+            return isExternalHref(block.href) ? (
+              <a key={i} href={block.href} target="_blank" rel="noreferrer noopener" className={styles.cta}>
+                {block.text}
+              </a>
+            ) : (
+              <Link key={i} href={block.href} className={styles.cta}>{block.text}</Link>
             );
           default:
             return null;

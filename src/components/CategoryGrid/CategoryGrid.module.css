@@ -19,3 +19,9 @@
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 32px;
 }
+
+.empty {
+  text-align: center;
+  padding: 48px 16px;
+  opacity: 0.6;
+}

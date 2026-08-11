@@ -32,21 +32,27 @@ export function CategoryGrid({
         <h1>{title}</h1>
         <p>{subtitle}</p>
       </div>
-      <div className={styles.toolbar}>
-        <label>
-          Порядок:{' '}
-          <select value={order} onChange={(e) => setOrder(e.target.value as SortOrder)}>
-            {Object.entries(SORT_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
+      {sorted.length === 0 ? (
+        <p className={styles.empty}>В этой категории сейчас нет товаров</p>
+      ) : (
+        <>
+          <div className={styles.toolbar}>
+            <label>
+              Порядок:{' '}
+              <select value={order} onChange={(e) => setOrder(e.target.value as SortOrder)}>
+                {Object.entries(SORT_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>{label}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <div className={styles.grid}>
+            {sorted.map((product) => (
+              <ProductCard key={product.uid} product={product} />
             ))}
-          </select>
-        </label>
-      </div>
-      <div className={styles.grid}>
-        {sorted.map((product) => (
-          <ProductCard key={product.uid} product={product} />
-        ))}
-      </div>
+          </div>
+        </>
+      )}
     </section>
   );
 }

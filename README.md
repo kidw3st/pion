@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pion — pionperm.ru clone
 
-## Getting Started
+A Next.js 14 (App Router) + TypeScript clone of [pionperm.ru](https://pionperm.ru), a Perm flower shop's site,
+built to move the shop off Tilda onto a self-hosted codebase at the owner's request.
 
-First, run the development server:
+## Getting started
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev      # http://localhost:3000
+npm test         # vitest unit tests
+npm run build    # production build (static export of all routes)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Where things live
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `src/app/` — Next.js App Router pages and layouts (routes are mostly driven by
+  `src/app/[slug]/page.tsx`, which resolves category and static-page slugs from `src/lib/content.ts`).
+- `src/components/` — UI components, colocated with their CSS modules and unit tests.
+- `data/` — site content as JSON: `data/site.json` (nav, footer, hero slides, etc.),
+  `data/catalog/*.json` (one file per product category), `data/pages/*.json` (static content pages).
+- `public/images/` — downloaded product/site imagery referenced by the JSON above.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Content pipeline
 
-## Learn More
+All content in `data/` and `public/images/` was produced by a one-time scrape of the live
+pionperm.ru site, not hand-authored. To re-run it:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+node scripts/scrape.mjs
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The scraper uses Playwright to drive a real browser (needed because Tilda's catalog is a
+JS-rendered store widget). It respects the `SCRAPE_BROWSER_CHANNEL` env var to pick which
+installed browser channel to drive (defaults to `msedge`):
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+SCRAPE_BROWSER_CHANNEL=chrome node scripts/scrape.mjs
+```
 
-## Deploy on Vercel
+Some categories (e.g. `korziny`, `balloons`, `wedding`) are genuinely empty on the live site —
+that's expected, not a scrape failure.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Design constraint: no backend
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project is intentionally frontend-only. There is no server, database, or payment
+integration behind checkout or the bouquet-builder popup — both are UI stubs that collect
+input and validate it client-side, but do not submit orders or process payments anywhere.
+This is a deliberate scope boundary, not an oversight: the goal was to reproduce the site's
+look and browsing experience, not to build order fulfillment.

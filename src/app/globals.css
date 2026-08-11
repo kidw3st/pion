@@ -6,7 +6,7 @@
   --color-bg-light-2: #f3f3f3;
   --color-text-dark: #2a2928;
   --color-border: #d6d6d6;
-  --font-sans: 'Montserrat', Arial, sans-serif;
+  --font-sans: var(--font-montserrat), Arial, sans-serif;
 }
 
 * {

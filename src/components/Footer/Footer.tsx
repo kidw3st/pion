@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { getSite } from '@/lib/content';
 import styles from './Footer.module.css';
 
@@ -17,7 +18,7 @@ export function Footer() {
             <h4>{col.title}</h4>
             <ul>
               {col.links.map((l) => (
-                <li key={l.href}><a href={l.href}>{l.label}</a></li>
+                <li key={l.href}><Link href={l.href}>{l.label}</Link></li>
               ))}
             </ul>
           </div>

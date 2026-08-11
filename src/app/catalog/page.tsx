@@ -1,21 +1,5 @@
 import Link from 'next/link';
-import { CATEGORY_SLUGS } from '@/lib/content';
-
-const CATEGORY_LABELS: Record<string, string> = {
-  bukety: 'Букеты',
-  korziny: 'Корзины цветов',
-  korobki: 'Коробки с цветами',
-  flowers: 'Цветы',
-  wedding: 'Свадебные букеты',
-  balloons: 'Воздушные шары',
-  chocolate: 'Шоколад',
-  indoorflowers: 'Комнатные растения',
-  luchshee: 'Лучшее для дома',
-  flame: 'Продукция Flame',
-  pions: 'Пионы',
-  roses: 'Розы',
-  mixflower: 'Микс из цветов',
-};
+import { CATEGORY_SLUGS, CATEGORY_LABELS } from '@/lib/content';
 
 export default function CatalogPage() {
   return (

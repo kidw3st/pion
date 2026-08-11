@@ -6,6 +6,10 @@ import Link from 'next/link';
 import type { HeroSlide } from '@/lib/types';
 import styles from './HeroSlider.module.css';
 
+function isExternalHref(href: string): boolean {
+  return href.startsWith('http://') || href.startsWith('https://');
+}
+
 export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
   const [index, setIndex] = useState(0);
 
@@ -30,7 +34,13 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
       <div className={styles.content}>
         <h2>{slide.title}</h2>
         <p>{slide.subtitle}</p>
-        <Link href={slide.buttonHref} className={styles.button}>{slide.buttonText}</Link>
+        {isExternalHref(slide.buttonHref) ? (
+          <a href={slide.buttonHref} target="_blank" rel="noreferrer noopener" className={styles.button}>
+            {slide.buttonText}
+          </a>
+        ) : (
+          <Link href={slide.buttonHref} className={styles.button}>{slide.buttonText}</Link>
+        )}
       </div>
       <div className={styles.dots}>
         {slides.map((s, i) => (
