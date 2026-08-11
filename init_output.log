@@ -1,0 +1,3 @@
+npm warn exec The following package was not found and will be installed: create-next-app@14.2.35
+Could not create a project called [31m"Pion"[39m because of npm naming restrictions:
+    [31m[1m*[22m[39m name can no longer contain capital letters
