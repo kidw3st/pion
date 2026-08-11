@@ -1,5 +1,9 @@
 import type { Metadata } from 'next';
 import { Montserrat } from 'next/font/google';
+import { CartProvider } from '@/components/Cart/CartContext';
+import { CartDrawer } from '@/components/Cart/CartDrawer';
+import { Header } from '@/components/Header/Header';
+import { Footer } from '@/components/Footer/Footer';
 import './globals.css';
 
 const montserrat = Montserrat({
@@ -16,7 +20,14 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru" className={montserrat.variable}>
-      <body>{children}</body>
+      <body>
+        <CartProvider>
+          <Header />
+          {children}
+          <Footer />
+          <CartDrawer />
+        </CartProvider>
+      </body>
     </html>
   );
 }
