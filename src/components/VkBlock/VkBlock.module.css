@@ -85,11 +85,11 @@
   color: var(--color-black);
 }
 
-/* The badge's ring is part of the SVG itself; the live block only animates it
-   on hover, so that is the single piece of motion reproduced here. */
+/* The badge's ring is part of the SVG itself. On hover the live badge spins a
+   full circle; the transition back leaves it settling smoothly on mouse-out. */
 .badge {
   display: block;
-  transition: transform 0.4s ease-in-out;
+  transition: transform 0.9s ease-in-out;
 }
 
 .badge img {
@@ -99,7 +99,7 @@
 }
 
 .link:hover .badge {
-  transform: scale(1.08) rotate(-6deg);
+  transform: rotate(360deg);
 }
 
 .linkText {
