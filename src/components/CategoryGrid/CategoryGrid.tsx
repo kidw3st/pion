@@ -6,6 +6,7 @@ import { useCart } from '@/components/Cart/CartContext';
 import { BouquetBuilderPopup } from '@/components/BouquetBuilder/BouquetBuilderPopup';
 import type { Product } from '@/lib/types';
 import { sortProducts, type SortOrder } from './sortProducts';
+import { filterProducts, priceBounds } from './filterProducts';
 import styles from './CategoryGrid.module.css';
 
 const PAGE_SIZE = 36;
@@ -92,10 +93,35 @@ export function CategoryGrid({
   const [visible, setVisible] = useState(PAGE_SIZE);
   const [shown, setShown] = useState<Product | null>(null);
   const [builderOpen, setBuilderOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [minPrice, setMinPrice] = useState<number | null>(null);
+  const [maxPrice, setMaxPrice] = useState<number | null>(null);
   const { addItem, open } = useCart();
 
-  const sorted = sortProducts(products, order);
+  const bounds = priceBounds(products);
+  const filtered = filterProducts(products, { query, minPrice, maxPrice });
+  const sorted = sortProducts(filtered, order);
   const slice = sorted.slice(0, visible);
+  const isFiltered = query.trim() !== '' || minPrice !== null || maxPrice !== null;
+
+  // A narrower filter can leave the visible count far past the result set;
+  // reset it so "Загрузить еще" reappears in step with the new list.
+  const applyFilter = (next: () => void) => {
+    next();
+    setVisible(PAGE_SIZE);
+  };
+
+  const resetFilter = () => {
+    setQuery('');
+    setMinPrice(null);
+    setMaxPrice(null);
+    setVisible(PAGE_SIZE);
+  };
+
+  const parsePrice = (value: string): number | null => {
+    const digits = value.replace(/[^\d]/g, '');
+    return digits === '' ? null : Number(digits);
+  };
 
   const buy = (p: Product) => {
     addItem({ uid: p.uid, title: p.title, price: p.price, image: p.images[0] || '' });
@@ -113,11 +139,49 @@ export function CategoryGrid({
       )}
 
       <section className={styles.store}>
-        {sorted.length === 0 ? (
+        {products.length === 0 ? (
           <p className={styles.empty}>В этой категории сейчас нет товаров</p>
         ) : (
           <div className={styles.inner}>
             <div className={styles.toolbar}>
+              <div className={styles.filters}>
+                <input
+                  type="search"
+                  className={styles.search}
+                  placeholder="Поиск: пионы, розы, ромашки…"
+                  value={query}
+                  onChange={(e) => applyFilter(() => setQuery(e.target.value))}
+                  aria-label="Поиск по названию и составу"
+                />
+                <span className={styles.budget}>
+                  <span className={styles.budgetLabel}>Бюджет, ₽</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    className={styles.priceInput}
+                    placeholder={String(bounds.min)}
+                    value={minPrice ?? ''}
+                    onChange={(e) => applyFilter(() => setMinPrice(parsePrice(e.target.value)))}
+                    aria-label="Цена от"
+                  />
+                  <span className={styles.budgetDash}>—</span>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    className={styles.priceInput}
+                    placeholder={String(bounds.max)}
+                    value={maxPrice ?? ''}
+                    onChange={(e) => applyFilter(() => setMaxPrice(parsePrice(e.target.value)))}
+                    aria-label="Цена до"
+                  />
+                </span>
+                {isFiltered && (
+                  <button type="button" className={styles.resetBtn} onClick={resetFilter}>
+                    Сбросить
+                  </button>
+                )}
+              </div>
+
               <label className={styles.sortLabel}>
                 Порядок:{' '}
                 <select
@@ -133,6 +197,14 @@ export function CategoryGrid({
                 </select>
               </label>
             </div>
+
+            {isFiltered && (
+              <p className={styles.resultCount}>
+                {sorted.length === 0
+                  ? 'Ничего не найдено — попробуйте изменить запрос или бюджет'
+                  : `Найдено товаров: ${sorted.length}`}
+              </p>
+            )}
 
             <div className={styles.grid}>
               {slice.map((p) => (

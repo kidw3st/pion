@@ -35,8 +35,84 @@
 
 .toolbar {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
   margin-bottom: 24px;
+}
+
+.filters {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.search {
+  width: 280px;
+  max-width: 100%;
+  padding: 9px 14px;
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-text-dark);
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.search:focus,
+.priceInput:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.budget {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--color-text-dark);
+}
+
+.budgetLabel {
+  opacity: 0.75;
+}
+
+.budgetDash {
+  opacity: 0.5;
+}
+
+.priceInput {
+  width: 88px;
+  padding: 9px 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-text-dark);
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.resetBtn {
+  padding: 8px 16px;
+  border: 1px solid var(--color-accent);
+  background: transparent;
+  color: var(--color-text-dark);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.resetBtn:hover {
+  background: var(--color-accent);
+  color: var(--color-white);
+}
+
+.resultCount {
+  margin: 0 0 24px;
+  font-size: 14px;
+  color: var(--color-text-dark);
+  opacity: 0.75;
 }
 
 .sortLabel {
