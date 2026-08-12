@@ -1,81 +1,163 @@
-/* Live block (t396): large left-aligned heading over a full-width strip of
-   four photos sitting on the accent band. */
+/* Measured from the live block (record 396) at 1866px: a 1200px-wide canvas
+   centred in a 635px band, 90px padding above and 45px below, every child
+   placed at a fixed offset from the canvas' top-left corner. */
 .section {
   background: var(--color-bg-light);
+  padding: 90px 0 45px;
 }
 
-.head {
-  max-width: 1160px;
+.canvas {
+  position: relative;
+  width: 1200px;
+  height: 500px;
   margin: 0 auto;
-  padding: 70px 40px 40px;
 }
 
 .title {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 560px;
   margin: 0;
-  font-size: 44px;
-  font-weight: 700;
-  line-height: 52px;
-  color: var(--color-text-dark);
+  font-size: 42px;
+  font-weight: 500;
+  line-height: 65px;
+  color: var(--color-black);
   white-space: pre-line;
 }
 
 .text {
-  margin: 20px 0 0;
-  font-size: 16px;
+  position: absolute;
+  top: 145px;
+  left: 0;
+  width: 440px;
+  margin: 0;
+  font-size: 20px;
   font-weight: 300;
-  line-height: 26px;
-  color: var(--color-text-dark);
+  line-height: 31px;
+  color: var(--color-black);
   white-space: pre-line;
 }
 
-.button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 52px;
-  margin-top: 32px;
-  padding: 0 40px;
-  border: 1px solid var(--color-text-dark);
-  color: var(--color-text-dark);
-  font-size: 14px;
-  font-weight: 600;
-  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+/* Sits behind the photo row; the live one runs past the canvas edge. */
+.watermark {
+  position: absolute;
+  top: 150px;
+  left: 530px;
+  z-index: 0;
+  font-size: 200px;
+  font-weight: 500;
+  line-height: 200px;
+  color: #ba9b80;
+  white-space: pre-line;
+  pointer-events: none;
+  user-select: none;
 }
 
-.button:hover {
-  background: var(--color-text-dark);
-  color: var(--color-white);
-}
-
-.strip {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0;
-  background: var(--color-header);
-  padding: 30px 40px;
+.photos {
+  position: absolute;
+  top: 285px;
+  left: 290px;
+  z-index: 1;
+  display: flex;
+  gap: 14px;
 }
 
 .shot {
   position: relative;
-  height: 240px;
+  width: 215px;
+  height: 215px;
+  flex: none;
 }
 
 .image {
   object-fit: cover;
 }
 
-@media (max-width: 900px) {
-  .head {
-    padding: 48px 20px 32px;
+.link {
+  position: absolute;
+  top: 352px;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-black);
+}
+
+/* The badge's ring is part of the SVG itself; the live block only animates it
+   on hover, so that is the single piece of motion reproduced here. */
+.badge {
+  display: block;
+  transition: transform 0.4s ease-in-out;
+}
+
+.badge img {
+  display: block;
+  width: 80px;
+  height: 81px;
+}
+
+.link:hover .badge {
+  transform: scale(1.08) rotate(-6deg);
+}
+
+.linkText {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 22px;
+}
+
+/* The fixed canvas cannot shrink, so narrower viewports get a flow layout
+   with the watermark dropped. */
+@media (max-width: 1240px) {
+  .section {
+    padding: 60px 20px 40px;
+  }
+
+  .canvas {
+    width: 100%;
+    height: auto;
+    max-width: 900px;
+  }
+
+  .title,
+  .text,
+  .photos,
+  .link {
+    position: static;
+    width: auto;
   }
 
   .title {
-    font-size: 30px;
-    line-height: 38px;
+    font-size: 32px;
+    line-height: 44px;
   }
 
-  .strip {
-    grid-template-columns: repeat(2, 1fr);
-    padding: 20px;
+  .text {
+    margin-top: 20px;
+    font-size: 17px;
+    line-height: 27px;
+  }
+
+  .watermark {
+    display: none;
+  }
+
+  .photos {
+    margin-top: 32px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .link {
+    margin-top: 28px;
+  }
+}
+
+@media (max-width: 560px) {
+  .shot {
+    width: 140px;
+    height: 140px;
   }
 }

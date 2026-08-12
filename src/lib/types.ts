@@ -65,6 +65,10 @@ export interface VkBlock {
   buttonText: string;
   href: string;
   images: string[];
+  /** Round logo badge shown beside the "go to VK" link. */
+  badge: string;
+  /** Oversized watermark set behind the photo row. */
+  watermark: string;
 }
 
 export interface SiteData {

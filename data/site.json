@@ -211,10 +211,12 @@
     "buttonText": "ПЕРЕЙТИ В ГРУППУ VK",
     "href": "https://vk.com/pionpermcveti",
     "images": [
+      "/images/site/vk-4.jpg",
       "/images/site/vk-1.jpg",
       "/images/site/vk-2.jpg",
-      "/images/site/vk-3.jpg",
-      "/images/site/vk-4.jpg"
-    ]
+      "/images/site/vk-3.jpg"
+    ],
+    "badge": "/images/site/pion-badge.svg",
+    "watermark": "PION\nцветы"
   }
 }
