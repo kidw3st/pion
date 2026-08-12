@@ -38,11 +38,11 @@ jobs:
       # `_next/` starts with an underscore, which Pages' Jekyll layer would skip.
       - run: touch out/.nojekyll
 
-      # enablement: turns Pages on for the repo automatically on the first run,
-      # so there's no manual step in Settings before the first deploy.
+      # Requires Pages to be switched on once by the repo owner:
+      # Settings -> Pages -> Build and deployment -> Source: "GitHub Actions".
+      # (Doing it from here needs a token with pages scope, which the default
+      # workflow token doesn't carry.)
       - uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:
