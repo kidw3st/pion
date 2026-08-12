@@ -1,0 +1,90 @@
+{
+  "name": "Салон цветов и подарков «Пион»",
+  "url": "https://kidw3st.github.io/pion/",
+  "phone": "+7 342 258 45 45",
+  "address": "г. Пермь, ул. Газеты Звезда, д. 27",
+  "openingHours": "Режим работы: пн-пт 10:00-22:00, сб-вс 10:00-22:00",
+  "social": [
+    {
+      "label": "VK",
+      "href": "https://vk.com/pionpermcveti"
+    },
+    {
+      "label": "Telegram",
+      "href": "https://t.me/PionPerm"
+    },
+    {
+      "label": "WhatsApp",
+      "href": "https://wa.me/79082413741"
+    }
+  ],
+  "categories": [
+    {
+      "slug": "balloons",
+      "title": "Воздушные шары от салона \"Пион\"",
+      "url": "https://kidw3st.github.io/pion/balloons/",
+      "productCount": 0
+    },
+    {
+      "slug": "bukety",
+      "title": "Букеты",
+      "url": "https://kidw3st.github.io/pion/bukety/",
+      "productCount": 104
+    },
+    {
+      "slug": "chocolate",
+      "title": "ШОКОЛАД СhocoME",
+      "url": "https://kidw3st.github.io/pion/chocolate/",
+      "productCount": 0
+    },
+    {
+      "slug": "flame",
+      "title": "Ароматы Flame Moscow",
+      "url": "https://kidw3st.github.io/pion/flame/",
+      "productCount": 0
+    },
+    {
+      "slug": "korobki",
+      "title": "Цветочные коробки",
+      "url": "https://kidw3st.github.io/pion/korobki/",
+      "productCount": 0
+    },
+    {
+      "slug": "korziny",
+      "title": "Корзины цветов",
+      "url": "https://kidw3st.github.io/pion/korziny/",
+      "productCount": 0
+    },
+    {
+      "slug": "luchshee",
+      "title": "Лучшее для дома\nи офиса",
+      "url": "https://kidw3st.github.io/pion/luchshee/",
+      "productCount": 0
+    },
+    {
+      "slug": "mixflower",
+      "title": "mixflower",
+      "url": "https://kidw3st.github.io/pion/mixflower/",
+      "productCount": 5
+    },
+    {
+      "slug": "pions",
+      "title": "pions",
+      "url": "https://kidw3st.github.io/pion/pions/",
+      "productCount": 1
+    },
+    {
+      "slug": "roses",
+      "title": "roses",
+      "url": "https://kidw3st.github.io/pion/roses/",
+      "productCount": 3
+    },
+    {
+      "slug": "wedding",
+      "title": "Открываем свадебный сезон 2025",
+      "url": "https://kidw3st.github.io/pion/wedding/",
+      "productCount": 0
+    }
+  ],
+  "note": "Статические файлы, не HTTP API. Заказ оформляется заявкой на сайте, оплата согласуется отдельно."
+}

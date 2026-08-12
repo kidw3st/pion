@@ -4,6 +4,7 @@ import { CartProvider } from '@/components/Cart/CartContext';
 import { CartDrawer } from '@/components/Cart/CartDrawer';
 import { Header } from '@/components/Header/Header';
 import { CartButton } from '@/components/Header/CartButton';
+import { WebMcpTools } from '@/components/AgentTools/WebMcpTools';
 import { VkBlock } from '@/components/VkBlock/VkBlock';
 import { Footer } from '@/components/Footer/Footer';
 import { getSite } from '@/lib/content';
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Footer />
           <CartButton />
           <CartDrawer />
+          <WebMcpTools />
         </CartProvider>
       </body>
     </html>

@@ -1,0 +1,8 @@
+# Content preferences, see https://contentsignals.org/
+Content-Signal: ai-train=no, search=yes, ai-input=yes
+
+User-agent: *
+Content-Signal: ai-train=no, search=yes, ai-input=yes
+Allow: /
+
+Sitemap: https://kidw3st.github.io/pion/sitemap.xml

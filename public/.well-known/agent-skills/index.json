@@ -1,0 +1,13 @@
+{
+  "$schema": "https://agentskills.io/schemas/v0.2.0/index.json",
+  "version": "0.2.0",
+  "skills": [
+    {
+      "name": "pion-catalog",
+      "type": "skill",
+      "description": "Каталог, цены и контакты салона цветов «Пион» в машиночитаемом виде",
+      "url": "https://kidw3st.github.io/pion/.well-known/agent-skills/pion-catalog/SKILL.md",
+      "sha256": "f96b4214e877191ba38ceeea00ec14d20e1df06d40770847ac57fdcebb63a436"
+    }
+  ]
+}

@@ -1,0 +1,735 @@
+{
+  "slug": "bukety",
+  "title": "Букеты",
+  "url": "https://kidw3st.github.io/pion/bukety/",
+  "products": [
+    {
+      "id": "703965892971",
+      "title": "Букет «Счастье есть »",
+      "composition": "Состав букета:Диантусы ,маттиола, Аллиум, розы",
+      "priceRub": 4830,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-счастье-есть-703965892971.jpg"
+    },
+    {
+      "id": "859358204393",
+      "title": "Букет «Магическая красота »",
+      "composition": "Состав букета: Пионы , французская роза, альстромерия, дельфиниум, кустовые розы",
+      "priceRub": 12200,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-магическая-красота-859358204393.jpg"
+    },
+    {
+      "id": "110524575783",
+      "title": "Букет «Нежные чувства »",
+      "composition": "Состав букета: Букет с французскими розами, альстромерией, кустовыми розами и диантусами",
+      "priceRub": 7700,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-нежные-чувства-110524575783.jpg"
+    },
+    {
+      "id": "820959290123",
+      "title": "Букет «Теплый момент »",
+      "composition": "Состав букета:Диантусы ,розы, альстромерия, кустовые розы, антуриум , орхидея",
+      "priceRub": 12500,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-теплый-момент-820959290123.jpg"
+    },
+    {
+      "id": "203013873043",
+      "title": "Букет «Для любимой»",
+      "composition": "Состав букета: французские розы, гортензия, амми, эустома,диантусы, маттиола, пионы, альстромерия",
+      "priceRub": 12600,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-для-любимой-203013873043.jpg"
+    },
+    {
+      "id": "601198694743",
+      "title": "Букет «Нежность »",
+      "composition": "Состав букета: гортензия, альстромерия, кустовые розы,, диантусы, орхидея, маттиола",
+      "priceRub": 6800,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-нежность-601198694743.jpg"
+    },
+    {
+      "id": "714202551013",
+      "title": "Букет «Дофаминовый »",
+      "composition": "Состав букета:Гортензия , эвкалипт, аллиум, дельфиниум, кустовая роза, гвоздика, целлозия, амми",
+      "priceRub": 8550,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-дофаминовый-714202551013.jpg"
+    },
+    {
+      "id": "642917717573",
+      "title": "Букет «Дофаминовый с пионом»",
+      "composition": "Состав букета:Кустовые хризантемы, Аллиум, альстромерия , гвоздика, французская роза , дельфиниум , пион",
+      "priceRub": 4100,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-дофаминовый-с-пионом-642917717573.jpg"
+    },
+    {
+      "id": "360926813813",
+      "title": "Букет «Утро в саду »",
+      "composition": "Состав букета: Эустома, маттиола, пионы, гортензия , розы , альстромерия",
+      "priceRub": 12000,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-утро-в-саду-360926813813.jpg"
+    },
+    {
+      "id": "216550001223",
+      "title": "Букет «Беззаботное лето »",
+      "composition": "Состав букета: Ромашки, амми, лилия, диантусы, альстромерия, маттиола и эустома собрались в гармоничную, мягкую композицию",
+      "priceRub": 7600,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-беззаботное-лето-216550001223.jpg"
+    },
+    {
+      "id": "499050623383",
+      "title": "Букет «Настроение »",
+      "composition": "Состав букета:Гортензия , диантусы, французские розы, розы , альстромерия , маттиола, эустома",
+      "priceRub": 11300,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-настроение-499050623383.jpg"
+    },
+    {
+      "id": "185636791773",
+      "title": "Букет «Цветочный вальс»",
+      "composition": "Состав букета: Эустома, гортензия , розы , альстромерия, кустовые розы , диантусы",
+      "priceRub": 5990,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-цветочный-вальс-185636791773.jpg"
+    },
+    {
+      "id": "594837133223",
+      "title": "Букет «Солнечный день »",
+      "composition": "Состав букета: Альстромерия , ромашки, розы , диантусы, гортензия",
+      "priceRub": 7120,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-солнечный-день-594837133223.jpg"
+    },
+    {
+      "id": "838878837693",
+      "title": "Букет «Подсолнухи »",
+      "composition": "Состав букета: Подсолнухи , гортензия , ромашки , дельфиниум , эремурус",
+      "priceRub": 9100,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-подсолнухи-838878837693.jpg"
+    },
+    {
+      "id": "691347329283",
+      "title": "Букет «Мелодия любви »",
+      "composition": "Состав букета: розы, хризантемы , пионы, котинус , альстромерия , ромашки",
+      "priceRub": 10000,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-мелодия-любви-691347329283.jpg"
+    },
+    {
+      "id": "930313062063",
+      "title": "Букет «Букет мечты»",
+      "composition": "Состав букета: георгины, гортензия, котинус , альстромерия, пионы, оксипеталум, дельфиниум",
+      "priceRub": 8500,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-букет-мечты-930313062063.jpg"
+    },
+    {
+      "id": "314475263263",
+      "title": "Букет «Симфония цветов »",
+      "composition": "Состав букета: дельфиниум , Аллиум , гортензия",
+      "priceRub": 26000,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-симфония-цветов-314475263263.jpg"
+    },
+    {
+      "id": "739410087953",
+      "title": "Букет «Сияние чувств»",
+      "composition": "Состав букета: Подсолнух, эустома, роза, книфофия, гербера, лотос",
+      "priceRub": 10990,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-сияние-чувств-739410087953.jpg"
+    },
+    {
+      "id": "606648630393",
+      "title": "Букет «Сад на рассвете»",
+      "composition": "Состав букета: Французские розы, гладиолус, эвкалипт, диантусы , Аллиум, гортензия",
+      "priceRub": 10100,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-сад-на-рассвете-606648630393.jpg"
+    },
+    {
+      "id": "588497195913",
+      "title": "Букет «Утро в Париже max»",
+      "composition": "Состав букета: Роза, матиола, эустома, пион",
+      "priceRub": 26240,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-утро-в-париже-max-588497195913.jpg"
+    },
+    {
+      "id": "123398273692",
+      "title": "Букет «Поцелуй»",
+      "composition": "Состав букета: Роза, эустома, пион, диантус, вибурнум",
+      "priceRub": 17470,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-поцелуй-123398273692.jpg"
+    },
+    {
+      "id": "655523579532",
+      "title": "Букет «Розовое счастье»",
+      "composition": "Состав букета: роза пионовидная, хризантема, гортензия, пион, декоративная зелень",
+      "priceRub": 15350,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-розовое-счастье-655523579532.jpg"
+    },
+    {
+      "id": "952169320352",
+      "title": "Букет «Кружево»",
+      "composition": "Состав букета: роза пионовидная, гортензия, пион, эустома, декоративная зелень",
+      "priceRub": 26100,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-кружево-952169320352.jpg"
+    },
+    {
+      "id": "708614119172",
+      "title": "Букет «Ажурный»",
+      "composition": "Состав букета: роза пионовидная, хризантема, гортензия, матиола, эустома, пион, декоративная зелень",
+      "priceRub": 15350,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-ажурный-708614119172.jpg"
+    },
+    {
+      "id": "960609407262",
+      "title": "Букет «Розовые мечты»",
+      "composition": "Состав букета: роза пионовидная, хризантема, гортензия, кустовая роза, декоративная зелень",
+      "priceRub": 15400,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-розовые-мечты-960609407262.jpg"
+    },
+    {
+      "id": "957664977802",
+      "title": "Букет «Восторг»",
+      "composition": "Состав букета: роза пионовидная, роза, дельфиниум, эустома, гортензия, пион, декоративная зелень",
+      "priceRub": 23540,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-восторг-957664977802.jpg"
+    },
+    {
+      "id": "853070115712",
+      "title": "Букет «Свежий воздух»",
+      "composition": "Состав букета: роза, гортензия, пион, декоративная зелень",
+      "priceRub": 24900,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-свежий-воздух-853070115712.jpg"
+    },
+    {
+      "id": "724547993552",
+      "title": "Букет «Утро в Париже»",
+      "composition": "Состав букета: Роза, эустома, пион, гербера, антирринум",
+      "priceRub": 12160,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-утро-в-париже-724547993552.jpg"
+    },
+    {
+      "id": "314308205722",
+      "title": "Букет «Ягодное варенье»",
+      "composition": "Состав букета: Роза, эустома, дельфиниум, гербера, антирринум",
+      "priceRub": 14700,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-ягодное-варенье-314308205722.jpg"
+    },
+    {
+      "id": "903922000012",
+      "title": "Букет «Рассвет в поле»",
+      "composition": "Состав букета: Роза, эустома, альстромерия, вибурнум, танацетум, антирринум",
+      "priceRub": 13500,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-рассвет-в-поле-903922000012.jpg"
+    },
+    {
+      "id": "247814608102",
+      "title": "Букет «Клубничное настроение»",
+      "composition": "Состав букета: Роза, эустома, кустовая роза, диантус, астильба",
+      "priceRub": 10900,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-клубничное-настроение-247814608102.jpg"
+    },
+    {
+      "id": "993957005172",
+      "title": "Букет «Летнее настроение»",
+      "composition": "Состав букета: Роза, эустома, пион, антирринум, вибурнум, ромашка, листья малины",
+      "priceRub": 13420,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-летнее-настроение-993957005172.jpg"
+    },
+    {
+      "id": "573432114192",
+      "title": "Букет «Яркость чувств»",
+      "composition": "Состав букета: Роза, эустома, гербера, диантус",
+      "priceRub": 9700,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-яркость-чувств-573432114192.jpg"
+    },
+    {
+      "id": "233066578562",
+      "title": "Букет «С картины»",
+      "composition": "Состав букета: Роза, эустома, пион, диантус, кустовая роза, эвкалипт",
+      "priceRub": 13700,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-с-картины-233066578562.jpg"
+    },
+    {
+      "id": "105880465022",
+      "title": "Букет «Ничего лишнего»",
+      "composition": "Состав букета: Роза, эустома, пион, гортензия, маттиола, эвкалипт",
+      "priceRub": 14900,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-ничего-лишнего-105880465022.jpg"
+    },
+    {
+      "id": "359435016512",
+      "title": "Букет «Просто ромашки»",
+      "composition": "Состав букета: Танацетум",
+      "priceRub": 9650,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-просто-ромашки-359435016512.jpg"
+    },
+    {
+      "id": "461476087712",
+      "title": "Букет «Я люблю тебя!»",
+      "composition": "Состав букета: Розы сорта «Нина»",
+      "priceRub": 9650,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-я-люблю-тебя-461476087712.jpg"
+    },
+    {
+      "id": "157568120292",
+      "title": "Букет «Пломбир»",
+      "composition": "Состав букета: Роза, гербера, пион, альстромерия, эустома, кустовая роза, хризантема",
+      "priceRub": 14650,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-пломбир-157568120292.jpg"
+    },
+    {
+      "id": "218831581862",
+      "title": "Букет «Солнечное лето»",
+      "composition": "Состав букета: Кустовая роза, танацетум",
+      "priceRub": 14600,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-солнечное-лето-218831581862.jpg"
+    },
+    {
+      "id": "713074525002",
+      "title": "Букет «Первая любовь»",
+      "composition": "Состав букета: сирень, гортензия, роза, пион, эвкалипт",
+      "priceRub": 28600,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-первая-любовь-713074525002.jpg"
+    },
+    {
+      "id": "859288073581",
+      "title": "Букет «Розовые пионы»",
+      "composition": "Состав букета: пион, роза, эустома, маттиола",
+      "priceRub": 14700,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-розовые-пионы-859288073581.jpg"
+    },
+    {
+      "id": "180308107411",
+      "title": "Букет «Солнце»",
+      "composition": "Состав букета: тюльпан, нарцисс, аллиум, эвкалипт",
+      "priceRub": 17250,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-солнце-180308107411.jpg"
+    },
+    {
+      "id": "585066330552",
+      "title": "Букет «Хочу ярче!»",
+      "composition": "Состав букета: роза, кустовая роза, диантус, астильба, джениста, эвкалипт, зелень декоративная",
+      "priceRub": 17250,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-хочу-ярче-585066330552.jpg"
+    },
+    {
+      "id": "639808551541",
+      "title": "Букет «Весна»",
+      "composition": "Состав букета: тюльпан",
+      "priceRub": 22300,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-весна-639808551541.jpg"
+    },
+    {
+      "id": "296350022061",
+      "title": "Букет «Сладкая вата»",
+      "composition": "Состав букета: тюльпан, роза, гербера, диантус, аллиум, эвкалипт",
+      "priceRub": 11550,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-сладкая-вата-296350022061.jpg"
+    },
+    {
+      "id": "470979411201",
+      "title": "Букет «Ты мой луч солнца»",
+      "composition": "Состав букета: тюльпан, ранункулюс, аллиум, эустома, эвкалипт",
+      "priceRub": 21100,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-ты-мой-луч-солнца-470979411201.jpg"
+    },
+    {
+      "id": "699294121271",
+      "title": "Букет «Яркие чувства»",
+      "composition": "Состав букета: роза, кустовая роза Джульетта, гербера, эвкалипт",
+      "priceRub": 28600,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-яркие-чувства-699294121271.jpg"
+    },
+    {
+      "id": "802434337321",
+      "title": "Букет «Ванильное небо»",
+      "composition": "Состав букета: Роза, гортензия, дельфиниум, вибурнум, гербера, тюльпан",
+      "priceRub": 18500,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-ванильное-небо-802434337321.jpg"
+    },
+    {
+      "id": "366492925811",
+      "title": "Букет «Оранжевый закат»",
+      "composition": "Состав букета: Роза, гортензия, кустовая роза, эвкалипт",
+      "priceRub": 12850,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-оранжевый-закат-366492925811.jpg"
+    },
+    {
+      "id": "703285983631",
+      "title": "Букет «Нежное кружево»",
+      "composition": "Состав букета: Роза, гортензия, пион, кустовая пионовидная роза, эвкалипт",
+      "priceRub": 40000,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-нежное-кружево-703285983631.jpg"
+    },
+    {
+      "id": "707168805291",
+      "title": "Букет «Персик»",
+      "composition": "Состав букета: Роза, амарилис, гортензия, ваксфлауэр, диантус, эвкалипт",
+      "priceRub": 18400,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-персик-707168805291.jpg"
+    },
+    {
+      "id": "805054496262",
+      "title": "Букет «Виногад на юге»",
+      "composition": "Состав букета: роза, гербера, тюльпан, маттиола, диантус, эвкалипт",
+      "priceRub": 13450,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-виногад-на-юге-805054496262.jpg"
+    },
+    {
+      "id": "992404655941",
+      "title": "Букет «Шарм»",
+      "composition": "Состав букета: Роза, гербера, аллиум, эвкалипт, лилия",
+      "priceRub": 12850,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-шарм-992404655941.jpg"
+    },
+    {
+      "id": "559519345282",
+      "title": "Copy: Букет «Все оттенки»",
+      "composition": "Состав букета: пион, роза, кустовая роза, маттиола, диантус, эвкалипт",
+      "priceRub": 16250,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/copy-букет-все-оттенки-559519345282.jpg"
+    },
+    {
+      "id": "167104392781",
+      "title": "Букет «Белые розы»",
+      "composition": "Состав букета: Роза",
+      "priceRub": 9700,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-белые-розы-167104392781.jpg"
+    },
+    {
+      "id": "559226755541",
+      "title": "Букет «Спелые ягоды»",
+      "composition": "Состав букета: пион, матиола",
+      "priceRub": 13200,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-спелые-ягоды-559226755541.jpg"
+    },
+    {
+      "id": "784471589601",
+      "title": "Букет «Нежная лилия»",
+      "composition": "Состав букета: лилия, гортензия, эвкалипт, роза, кустовая роза",
+      "priceRub": 6050,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-нежная-лилия-784471589601.jpg"
+    },
+    {
+      "id": "281539096351",
+      "title": "Букет «Маршмеллоу»",
+      "composition": "Состав букета: Дельфиниум, пионовидная роза, эустома, зелень",
+      "priceRub": 4650,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-маршмеллоу-281539096351.jpg"
+    },
+    {
+      "id": "113417067991",
+      "title": "Букет «Воспоминания о лете»",
+      "composition": "Состав букета: гортензия, ваксфлауэр, декоративная упаковка",
+      "priceRub": 5500,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-воспоминания-о-лете-113417067991.jpg"
+    },
+    {
+      "id": "884615901471",
+      "title": "Букет «RED STAR»",
+      "composition": "Состав букета: роза, пионовидная кустовая роза, эустома, гвоздика, ваксфлауэр, эвкалипт.",
+      "priceRub": 6000,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-red-star-884615901471.jpg"
+    },
+    {
+      "id": "275875894591",
+      "title": "Букет «Очарование»",
+      "composition": "Состав букета: роза, пионовидная кустовая роза, гортензия, гвоздика, ваксфлауэр, эвкалипт.",
+      "priceRub": 4750,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-очарование-275875894591.jpg"
+    },
+    {
+      "id": "386500338141",
+      "title": "Букет «SALMON»",
+      "composition": "Состав букета: пионы, пионовидная роза, эустома, эвкалипт.",
+      "priceRub": 21450,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-salmon-386500338141.jpg"
+    },
+    {
+      "id": "142359360291",
+      "title": "Букет «Летнее чудо»",
+      "composition": "Состав букета: пионы, пионовидная роза, астильба, диантсу, эвкалипт",
+      "priceRub": 10800,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-летнее-чудо-142359360291.jpg"
+    },
+    {
+      "id": "243563647011",
+      "title": "Букет «Скарлетт»",
+      "composition": "Состав букета: пионы, антуриум, эустома, пионовидная роза, эвкалипт",
+      "priceRub": 13200,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-скарлетт-243563647011.jpg"
+    },
+    {
+      "id": "148391147521",
+      "title": "Букет «Ей понравится»",
+      "composition": "Состав букета: пионы, гортензия, пионовидные розы, лизиантус, эвкалипт",
+      "priceRub": 19800,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-ей-понравится-148391147521.jpg"
+    },
+    {
+      "id": "914070208801",
+      "title": "Букет «Все для тебя»",
+      "composition": "Состав букета:Пионовидная роза, роза, ранункулюс, эустома, джениста.",
+      "priceRub": 10450,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-все-для-тебя-914070208801.jpg"
+    },
+    {
+      "id": "916076591401",
+      "title": "Букет «Фруктовый лед»",
+      "composition": "Состав букета: пионы, гортензия, гербера, пионовидная роза, кустовая роза, аллиум, диантус, эвкалипт",
+      "priceRub": 13750,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-фруктовый-лед-916076591401.jpg"
+    },
+    {
+      "id": "834436914901",
+      "title": "Букет «Лимонад»",
+      "composition": "Состав букета: пионовидная роза, пионовидная кустовая роза, диантус, форзиция, декоративное оформление",
+      "priceRub": 10450,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-лимонад-834436914901.jpg"
+    },
+    {
+      "id": "342420133641",
+      "title": "Букет «Чистое сияние»",
+      "composition": "Состав букета: гортензия, ранункулюс, сирень, декоративное оформление",
+      "priceRub": 21450,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-чистое-сияние-342420133641.jpg"
+    },
+    {
+      "id": "591419089681",
+      "title": "Букет «На юге Африки»",
+      "composition": "Состав букета: протея, вибурнум, гортензия, пионовидная роза, кустовая пионовидная роза, альстромерия, зелень, декоративное оформление",
+      "priceRub": 9900,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-на-юге-африки-591419089681.jpg"
+    },
+    {
+      "id": "682366199711",
+      "title": "Букет «ELEGANT»",
+      "composition": "Состав букета: гортензия, пионовидная роза, кустовая роза, альстромерия, спирея эвкалипт, декоративное оформление.",
+      "priceRub": 4950,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-elegant-682366199711.jpg"
+    },
+    {
+      "id": "975728520021",
+      "title": "Букет «Ягодное варенье»",
+      "composition": "Состав букета: пионы, гортензия, эустома, флокс, антуриум, кустовая роза, зелень, декоративное оформление",
+      "priceRub": 12650,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-ягодное-варенье-975728520021.jpg"
+    },
+    {
+      "id": "683773457161",
+      "title": "Букет \"Верона\"",
+      "composition": "Состав букета:гортензия, пионовидная роза, нарциссы, ранункулюс, кустовая роза, эустома, диантус, зелень, декоративное оформление",
+      "priceRub": 16170,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-верона-683773457161.jpg"
+    },
+    {
+      "id": "353734458411",
+      "title": "Букет «Удиви меня!»",
+      "composition": "Состав букета: амариллис, пионовидная роза, кустовая роза, пальмовое копье, сухоцветы, вибурнум, декоративная упаковка",
+      "priceRub": 14190,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-удиви-меня-353734458411.jpg"
+    },
+    {
+      "id": "504411016111",
+      "title": "Букет «Ничего лишнего»",
+      "composition": "Состав букета: пион,астильба, декоративное оформление",
+      "priceRub": 13200,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-ничего-лишнего-504411016111.jpg"
+    },
+    {
+      "id": "261853384891",
+      "title": "Букет «Нежный персик»",
+      "composition": "Состав букета: пион, кустовая пионовидная роза, астильба, диантус, пионовидная роза, зелень, декоративное оформление",
+      "priceRub": 5950,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-нежный-персик-261853384891.jpg"
+    },
+    {
+      "id": "608179431671",
+      "title": "Букет «Отражение красоты»",
+      "composition": "Состав букета: Пионы, Эвкалипт",
+      "priceRub": 14960,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-отражение-красоты-608179431671.jpg"
+    },
+    {
+      "id": "566708970301",
+      "title": "Букет «Весенняя симфония»",
+      "composition": "Состав букета: пионы, лилия, форзиция, ранункулюс, пионовидная роза, орхидея Дендробиум, диантус, тюльпаны, эвкалипт",
+      "priceRub": 13750,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-весенняя-симфония-566708970301.jpg"
+    },
+    {
+      "id": "553645466981",
+      "title": "Букет «Бархатные грани»",
+      "composition": "Состав букета: Роза одноголосая, Алиум",
+      "priceRub": 6380,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-бархатные-грани-553645466981.jpg"
+    },
+    {
+      "id": "537388089641",
+      "title": "Букет «Сокровенная мечта»",
+      "composition": "Состав букета: Роза кустовая, пион, аллиум, эвкалипт",
+      "priceRub": 24200,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-сокровенная-мечта-537388089641.jpg"
+    },
+    {
+      "id": "939551364001",
+      "title": "Букет «История любви»",
+      "composition": "Состав букета: Ранункулюс, джениста",
+      "priceRub": 11350,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-история-любви-939551364001.jpg"
+    },
+    {
+      "id": "650905499621",
+      "title": "Букет «Безмятежность»",
+      "composition": "Состав букета: Ранункулюс, аллиум, кохия",
+      "priceRub": 17950,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-безмятежность-650905499621.jpg"
+    },
+    {
+      "id": "302346416341",
+      "title": "Букет «Солнечные лучи»",
+      "composition": "Состав букета: Тюльпан, джениста",
+      "priceRub": 7150,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-солнечные-лучи-302346416341.jpg"
+    },
+    {
+      "id": "352972707231",
+      "title": "Букет «Вкус радости»",
+      "composition": "Состав букета: Роза кустовая, эустома, джениста, эвкалипт",
+      "priceRub": 7700,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-вкус-радости-352972707231.jpg"
+    },
+    {
+      "id": "226310645051",
+      "title": "Букет «Изысканная ОХара»",
+      "composition": "Состав букета: Роза одноголовая ОХара, джениста, эвкалипт",
+      "priceRub": 4400,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-изысканная-охара-226310645051.jpg"
+    },
+    {
+      "id": "179655833621",
+      "title": "Букет «Весенний привет»",
+      "composition": "Состав букета: Гиацинт, аллиум, эвкалипт",
+      "priceRub": 7050,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-весенний-привет-179655833621.jpg"
+    },
+    {
+      "id": "361721267471",
+      "title": "Букет «Мон Амур»",
+      "composition": "Состав букета: Роза одноголосая Наутика",
+      "priceRub": 6050,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-мон-амур-361721267471.jpg"
+    },
+    {
+      "id": "564027462361",
+      "title": "Букет «Вечерний блюз»",
+      "composition": "Состав букета: Роза одноголовая Кантри Блюз",
+      "priceRub": 6050,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-вечерний-блюз-564027462361.jpg"
+    },
+    {
+      "id": "283030101241",
+      "title": "Букет «Восхитительное искушение»",
+      "composition": "Состав букета: Гортензия, Роза кустовая Джульетта",
+      "priceRub": 13200,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-восхитительное-искушение-283030101241.jpg"
+    },
+    {
+      "id": "762172350201",
+      "title": "Букет «Лимончелло»",
+      "composition": "Состав букета: Пионовидная роза, нарцисс, форзиция, хризантема, диантус",
+      "priceRub": 7600,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-лимончелло-762172350201.jpg"
+    },
+    {
+      "id": "414294128381",
+      "title": "Букет «Розовая вуаль»",
+      "composition": "Состав букета: Гортензия, ранункулюс, сирень, ажурная роза, зелень",
+      "priceRub": 10150,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-розовая-вуаль-414294128381.jpg"
+    },
+    {
+      "id": "966283635281",
+      "title": "Букет «Ванильное небо»",
+      "composition": "Состав букета: Пионовидная роза, аллиум, эвкалипт",
+      "priceRub": 14850,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-ванильное-небо-966283635281.jpg"
+    },
+    {
+      "id": "369693804461",
+      "title": "Букет «Silver moon»",
+      "composition": "Состав букета: Пионовидная роза, гортензия, сирень, эвкалипт",
+      "priceRub": 13200,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-silver-moon-369693804461.jpg"
+    },
+    {
+      "id": "967328266861",
+      "title": "Букет «Для любимой»",
+      "composition": "Состав букета: Пионовидная роза, ранункулюс, аллиум, эустома, эвкалипт",
+      "priceRub": 6600,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-для-любимой-967328266861.jpg"
+    },
+    {
+      "id": "971221478321",
+      "title": "Букет «Утро в Париже»",
+      "composition": "Состав букета: Пионовидные тюльпаны",
+      "priceRub": 8800,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-утро-в-париже-971221478321.jpg"
+    },
+    {
+      "id": "909993130881",
+      "title": "Букет «Нежнее нежного»",
+      "composition": "Состав букета: Амариллис, пионовидная роза, сирень, диантус, эустома, гортензия, эвкалипт",
+      "priceRub": 14850,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-нежнее-нежного-909993130881.jpg"
+    },
+    {
+      "id": "759405946851",
+      "title": "Букет «Мария Антуанетта»",
+      "composition": "Состав букета: Альстромерия, пионовидная роза, диантус, джениста, эвкалипт",
+      "priceRub": 6050,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-мария-антуанетта-759405946851.jpg"
+    },
+    {
+      "id": "166963649691",
+      "title": "Букет «Сицилия»",
+      "composition": "Состав букета: Пионовидная роза, гортензия, аллиум, амариллис, вишневые ветви, эвкалипт",
+      "priceRub": 7500,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-сицилия-166963649691.jpg"
+    },
+    {
+      "id": "129778365801",
+      "title": "Букет «Хочу пионы!»",
+      "composition": "Состав букета: Пионовидная роза, пион, аллиум, эустома, гвоздика, вишневые ветви, эвкалипт",
+      "priceRub": 8250,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-хочу-пионы-129778365801.jpg"
+    },
+    {
+      "id": "231684422821",
+      "title": "Букет \"Sunset\"",
+      "composition": "Состав букета: Гортензия, Амарилис, Роза одиночная, Гипсофилла, Пион, Астильба, Роза кустовая, Эустома, Эвкалипт, Роза кустовая",
+      "priceRub": 14850,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-sunset-231684422821.jpg"
+    },
+    {
+      "id": "852432799721",
+      "title": "Букет \"Коррида\"",
+      "composition": "Состав букета: Гортензия, Роза одиночная, Альстромерия, Гвоздика, Эустома, Эвкалипт, Роза кустовая, Картадерия",
+      "priceRub": 6050,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-коррида-852432799721.jpg"
+    },
+    {
+      "id": "784542669841",
+      "title": "Букет \"Южные ночи\"",
+      "composition": "Состав букета: Пион, Роза одиночная, Роза кустовая, Эустома, Роза кустовая, Эвкалипт, Писташ",
+      "priceRub": 19950,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-южные-ночи-784542669841.jpg"
+    },
+    {
+      "id": "452757903671",
+      "title": "Букет \"Пламенное сердце\"",
+      "composition": "Состав букета: Антуриум, Эустома, Илекс, Эвкалипт, Гвоздика, Роза кустовая, Маттиола, Озотамнус, Роза одиночная, Гортензия, Пион, Писташ",
+      "priceRub": 18400,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-пламенное-сердце-452757903671.jpg"
+    },
+    {
+      "id": "256104258901",
+      "title": "Букет \"Амстердам\"",
+      "composition": "Состав букета: роза одноглавая, эустома, хризантема одноголовая, маттиола, роза кустовая, ваксфлауэр, эвкалипт, писташ",
+      "priceRub": 10250,
+      "image": "https://kidw3st.github.io/pion/images/catalog/bukety/букет-амстердам-256104258901.jpg"
+    }
+  ]
+}

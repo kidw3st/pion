@@ -1,0 +1,28 @@
+{
+  "slug": "roses",
+  "title": "roses",
+  "url": "https://kidw3st.github.io/pion/roses/",
+  "products": [
+    {
+      "id": "774353662692",
+      "title": "Роза кустовая",
+      "composition": "",
+      "priceRub": 900,
+      "image": "https://kidw3st.github.io/pion/images/catalog/roses/роза-кустовая-774353662692.jpg"
+    },
+    {
+      "id": "461465734632",
+      "title": "Кустовая роза",
+      "composition": "",
+      "priceRub": 900,
+      "image": "https://kidw3st.github.io/pion/images/catalog/roses/кустовая-роза-461465734632.jpg"
+    },
+    {
+      "id": "445957348222",
+      "title": "Роза пионовидная",
+      "composition": "",
+      "priceRub": 540,
+      "image": "https://kidw3st.github.io/pion/images/catalog/roses/роза-пионовидная-445957348222.jpg"
+    }
+  ]
+}

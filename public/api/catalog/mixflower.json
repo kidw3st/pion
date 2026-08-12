@@ -1,0 +1,42 @@
+{
+  "slug": "mixflower",
+  "title": "mixflower",
+  "url": "https://kidw3st.github.io/pion/mixflower/",
+  "products": [
+    {
+      "id": "487459075762",
+      "title": "Гербера",
+      "composition": "",
+      "priceRub": 500,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/гербера-487459075762.jpg"
+    },
+    {
+      "id": "231413216562",
+      "title": "Эустома",
+      "composition": "",
+      "priceRub": 960,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/эустома-231413216562.jpg"
+    },
+    {
+      "id": "190677993032",
+      "title": "Маттиола",
+      "composition": "",
+      "priceRub": 550,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/маттиола-190677993032.jpg"
+    },
+    {
+      "id": "336402911061",
+      "title": "Ранункулюс",
+      "composition": "",
+      "priceRub": 950,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/ранункулюс-336402911061.jpg"
+    },
+    {
+      "id": "606038973211",
+      "title": "Гербера",
+      "composition": "",
+      "priceRub": 500,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/гербера-606038973211.jpg"
+    }
+  ]
+}
