@@ -148,13 +148,17 @@
   background: var(--color-white);
 }
 
+/* Once the viewport is narrower than the 1200px container the text would run
+   into the edge (and under the arrows), so give it the arrows' width back. */
+@media (max-width: 1240px) {
+  .inner {
+    padding: 0 60px;
+  }
+}
+
 @media (max-width: 960px) {
   .slider {
     height: 460px;
-  }
-
-  .inner {
-    padding: 0 60px;
   }
 
   .title {

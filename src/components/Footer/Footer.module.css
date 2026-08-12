@@ -1,47 +1,124 @@
+/* Live footer: white band with the logo and legal details on the left, the
+   link columns in the middle, and the VK link on the right. The VK promo band
+   above it is a separate section (VkBlock), not part of the footer. */
 .footer {
-  background: var(--color-text-dark);
-  color: var(--color-white);
-  padding: 48px 40px;
+  background: var(--color-white);
+  padding: 60px 40px;
 }
 
-.vkBlock {
-  text-align: center;
-  margin-bottom: 32px;
-}
-
-.vkBlock a {
-  display: inline-block;
-  margin-top: 12px;
-  padding: 10px 20px;
-  border: 1px solid var(--color-white);
-}
-
-.columns {
+.inner {
   display: flex;
-  gap: 48px;
-  flex-wrap: wrap;
+  gap: 60px;
+  max-width: 1160px;
+  margin: 0 auto;
 }
 
-.column h4 {
-  font-size: 13px;
-  letter-spacing: 1px;
-  margin-bottom: 12px;
+.brand {
+  flex: none;
+  width: 300px;
 }
 
-.column ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-size: 13px;
-  opacity: 0.85;
+.logo {
+  display: block;
+}
+
+.logo img {
+  display: block;
+  width: 130px;
+  height: auto;
 }
 
 .legal {
-  margin-top: 32px;
-  font-size: 11px;
+  margin: 16px 0 0;
+  font-size: 12px;
+  font-weight: 300;
+  line-height: 18px;
+  color: var(--color-text-dark);
+  opacity: 0.75;
+  white-space: pre-line;
+}
+
+.payment {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+  font-size: 12px;
+  color: var(--color-text-dark);
+  opacity: 0.75;
+}
+
+.columns {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40px;
+}
+
+.columnTitle {
+  margin: 0 0 16px;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: var(--color-text-dark);
+}
+
+.columnList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 300;
+}
+
+.columnList a {
+  color: var(--color-text-dark);
+  transition: opacity 0.2s ease-in-out;
+}
+
+.columnList a:hover {
   opacity: 0.6;
-  line-height: 1.6;
+}
+
+.vkLink {
+  flex: none;
+  align-self: flex-end;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--color-text-dark);
+  text-align: center;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.vkLink:hover {
+  opacity: 0.6;
+}
+
+@media (max-width: 900px) {
+  .footer {
+    padding: 40px 20px;
+  }
+
+  .inner {
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .brand {
+    width: 100%;
+  }
+
+  .columns {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 28px;
+  }
+
+  .vkLink {
+    align-self: flex-start;
+    text-align: left;
+  }
 }

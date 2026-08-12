@@ -169,19 +169,52 @@
   "features": [
     {
       "title": "Всегда свежие цветы в нашем салоне",
-      "description": "Мы используем лучшие свежесрезанные цветы"
+      "description": "Мы используем лучшие свежесрезанные цветы",
+      "icon": "/images/site/features/wallpaper.svg"
     },
     {
       "title": "Фото и видео букета перед доставкой",
-      "description": "Только приятные сюрпризы для вас и ваших близких"
+      "description": "Только приятные сюрпризы для вас и ваших близких",
+      "icon": "/images/site/features/camera.svg"
     },
     {
       "title": "Экспресс-доставка по Перми",
-      "description": "Бережно собираем букет и доставляем прямо к двери"
+      "description": "Бережно собираем букет и доставляем прямо к двери",
+      "icon": "/images/site/features/rocket.svg"
     },
     {
       "title": "Заказ из любой точки мира",
-      "description": "Мы подключили на сайт оплату банковской картой"
+      "description": "Мы подключили на сайт оплату банковской картой",
+      "icon": "/images/site/features/credit-card.svg"
     }
-  ]
+  ],
+  "bouquetBlock": {
+    "title": "Соберите свой\nидеальный букет",
+    "text": "Вы можете заказать букет, цветочную коробку, корзину, композицию по вашим параметрам и пожеланиям, заполнив форму ниже",
+    "buttonText": "Заказать",
+    "image": "/images/site/bouquet-block.jpg"
+  },
+  "uds": {
+    "title": "UDS",
+    "subtitle": "Система лояльности Пион",
+    "buttonText": "Узнать подробнее",
+    "buttonHref": "/uds",
+    "images": [
+      "/images/site/uds-1.jpg",
+      "/images/site/uds-2.jpg",
+      "/images/site/uds-3.jpg"
+    ]
+  },
+  "vk": {
+    "title": "ПОДПИСЫВАЙТЕСЬ\nНА НАШУ ГРУППУ VK",
+    "text": "Еще больше фото, отзывы\nи возможность заказать любой букет",
+    "buttonText": "ПЕРЕЙТИ В ГРУППУ VK",
+    "href": "https://vk.com/pionpermcveti",
+    "images": [
+      "/images/site/vk-1.jpg",
+      "/images/site/vk-2.jpg",
+      "/images/site/vk-3.jpg",
+      "/images/site/vk-4.jpg"
+    ]
+  }
 }

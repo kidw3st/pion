@@ -1,0 +1,129 @@
+/* Live block (t677): an overlapping three-photo collage on the left with the
+   loyalty-programme copy and its black CTA to the right. */
+.section {
+  padding: 0 40px 80px;
+  background: var(--color-bg-light);
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  gap: 60px;
+  max-width: 1160px;
+  margin: 0 auto;
+}
+
+.collage {
+  position: relative;
+  flex: none;
+  width: 520px;
+  height: 420px;
+}
+
+.shotOne,
+.shotTwo,
+.shotThree {
+  position: absolute;
+  object-fit: cover;
+}
+
+.shotOne {
+  top: 0;
+  left: 0;
+  width: 300px;
+  height: 300px;
+}
+
+.shotTwo {
+  top: 120px;
+  left: 250px;
+  width: 210px;
+  height: 150px;
+}
+
+.shotThree {
+  top: 230px;
+  left: 130px;
+  width: 220px;
+  height: 160px;
+}
+
+.body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  font-size: 40px;
+  font-weight: 500;
+  line-height: 48px;
+  color: var(--color-text-dark);
+}
+
+.subtitle {
+  margin: 16px 0 0;
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 26px;
+  color: var(--color-text-dark);
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  margin-top: 36px;
+  padding: 0 40px;
+  background: var(--color-black);
+  color: var(--color-white);
+  font-size: 15px;
+  font-weight: 500;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.button:hover {
+  opacity: 0.85;
+}
+
+@media (max-width: 900px) {
+  .section {
+    padding: 0 20px 48px;
+  }
+
+  .inner {
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .collage {
+    width: 100%;
+    max-width: 420px;
+    height: 340px;
+  }
+
+  .shotOne {
+    width: 240px;
+    height: 240px;
+  }
+
+  .shotTwo {
+    top: 100px;
+    left: 200px;
+    width: 170px;
+    height: 120px;
+  }
+
+  .shotThree {
+    top: 190px;
+    left: 100px;
+    width: 180px;
+    height: 130px;
+  }
+
+  .title {
+    font-size: 30px;
+    line-height: 38px;
+  }
+}

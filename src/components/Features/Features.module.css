@@ -1,0 +1,71 @@
+/* Live block (t503): full-width accent band, items stacked in a single
+   centred column with the icon to the left of each item's text. */
+.section {
+  padding: 60px 40px;
+  background: var(--color-accent);
+}
+
+.list {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 34px;
+}
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+}
+
+.icon {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+}
+
+/* Icons ship as dark monochrome SVGs; the band needs them white. */
+.icon img {
+  width: 40px;
+  height: 40px;
+  filter: brightness(0) invert(1);
+}
+
+.body {
+  min-width: 0;
+}
+
+.title {
+  margin: 0;
+  color: var(--color-white);
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 26px;
+  white-space: pre-line;
+}
+
+.text {
+  margin: 8px 0 0;
+  color: var(--color-white);
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 24px;
+  opacity: 0.9;
+  white-space: pre-line;
+}
+
+@media (max-width: 720px) {
+  .section {
+    padding: 40px 20px;
+  }
+
+  .item {
+    gap: 18px;
+  }
+}

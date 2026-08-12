@@ -1,35 +1,44 @@
+/* "Новинки": centred heading over a three-up product row on the light band. */
 .newSection {
-  padding: 48px 40px;
-  text-align: center;
+  padding: 70px 40px 80px;
+  background: var(--color-bg-light);
+}
+
+.newHeading {
+  max-width: 1160px;
+  margin: 0 auto 40px;
+  font-size: 40px;
+  font-weight: 600;
+  line-height: 48px;
+  color: var(--color-text-dark);
 }
 
 .newGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 32px;
-  margin-top: 24px;
-  text-align: left;
-}
-
-.features {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 24px;
-  padding: 48px 40px;
-  background: var(--color-bg-light);
-}
-
-.feature h3 {
-  font-size: 15px;
-}
-
-.feature p {
-  font-size: 13px;
-  opacity: 0.7;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40px;
+  max-width: 1160px;
+  margin: 0 auto;
 }
 
 @media (max-width: 900px) {
-  .features {
+  .newSection {
+    padding: 48px 20px;
+  }
+
+  .newHeading {
+    font-size: 28px;
+    line-height: 34px;
+  }
+
+  .newGrid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+  }
+}
+
+@media (max-width: 600px) {
+  .newGrid {
+    grid-template-columns: 1fr;
   }
 }

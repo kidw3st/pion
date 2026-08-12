@@ -1,7 +1,10 @@
 import { getSite, getCatalog } from '@/lib/content';
 import { HeroSlider } from '@/components/HeroSlider/HeroSlider';
 import { ProductCard } from '@/components/ProductCard/ProductCard';
-import { BouquetBuilderCta } from '@/components/BouquetBuilder/BouquetBuilderCta';
+import { Features } from '@/components/Features/Features';
+import { BouquetBlock } from '@/components/BouquetBlock/BouquetBlock';
+import { UdsBlock } from '@/components/UdsBlock/UdsBlock';
+import { VkBlock } from '@/components/VkBlock/VkBlock';
 import styles from './page.module.css';
 
 export default async function HomePage() {
@@ -13,22 +16,21 @@ export default async function HomePage() {
       <HeroSlider slides={site.heroSlides} />
 
       <section className={styles.newSection}>
-        <h2>Новинки</h2>
+        <h2 className={styles.newHeading}>Новинки</h2>
         <div className={styles.newGrid}>
-          {newProducts.map((p) => <ProductCard key={p.uid} product={p} />)}
+          {newProducts.map((p) => (
+            <ProductCard key={p.uid} product={p} isNew />
+          ))}
         </div>
       </section>
 
-      <section className={styles.features}>
-        {site.features.map((f) => (
-          <div key={f.title} className={styles.feature}>
-            <h3>{f.title}</h3>
-            <p>{f.description}</p>
-          </div>
-        ))}
-      </section>
+      <Features features={site.features} />
 
-      <BouquetBuilderCta />
+      <BouquetBlock data={site.bouquetBlock} />
+
+      <UdsBlock data={site.uds} />
+
+      <VkBlock data={site.vk} />
     </main>
   );
 }
