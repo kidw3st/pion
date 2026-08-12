@@ -293,11 +293,19 @@ async function scrapeHome(page) {
     await page.waitForTimeout(1000);
 
     rawSlides = await page.evaluate(() => {
+    // Slide headings are deliberately multi-line (Tilda authors break them with
+    // <br>), and the break is part of the design — collapsing it both changes
+    // the block's height and glues words together ("подпискаот салона").
+    // innerText reflects what is actually rendered, line breaks included.
     function cleanText(el) {
       if (!el) return '';
-      const clone = el.cloneNode(true);
-      clone.querySelectorAll('style, script').forEach((s) => s.remove());
-      return clone.textContent.replace(/\s+/g, ' ').trim();
+      const raw = el.innerText ?? el.textContent ?? '';
+      return raw
+        .split('\n')
+        .map((line) => line.replace(/[^\S\n]+/g, ' ').trim())
+        .join('\n')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
     }
     function isVisible(el) {
       const rec = el.closest('.r.t-rec') || el;
@@ -388,9 +396,14 @@ async function main() {
   const browser = await chromium.launch({ channel: browserChannel });
   const page = await browser.newPage();
 
+  // `node scripts/scrape.mjs home` refreshes only the homepage, which is quick
+  // — useful when a fix only affects the hero and re-running every category and
+  // page would take far longer for no benefit.
+  const onlyHome = process.argv[2] === 'home';
+
   await mkdir(path.join(ROOT, 'data', 'catalog'), { recursive: true });
   await mkdir(path.join(ROOT, 'data', 'pages'), { recursive: true });
-  for (const slug of CATEGORY_SLUGS) {
+  for (const slug of onlyHome ? [] : CATEGORY_SLUGS) {
     const products = await scrapeCategory(slug);
     if (products === null) {
       // Defensive fallback: shouldn't trigger given the static
@@ -414,7 +427,7 @@ async function main() {
     console.log(`${slug}: ${products.length} products`);
   }
 
-  for (const slug of PAGE_SLUGS) {
+  for (const slug of onlyHome ? [] : PAGE_SLUGS) {
     const blocks = await scrapePage(page, slug);
     await writeFile(
       path.join(ROOT, 'data', 'pages', `${slug}.json`),

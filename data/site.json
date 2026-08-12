@@ -107,7 +107,7 @@
       "title": "ПИОН - для вас",
       "subtitle": "Каждую неделю мы показываем поставку свежих цветов",
       "buttonText": "Посмотреть витрину",
-      "buttonHref": "https://instagram.com/pionperm",
+      "buttonHref": "instagram.com/pionperm",
       "image": "/images/site/hero-0.jpg"
     },
     {
@@ -132,7 +132,7 @@
       "image": "/images/site/hero-3.jpg"
     },
     {
-      "title": "Цветочная подпискаот салона \"Пион\"",
+      "title": "Цветочная подписка\nот салона \"Пион\"",
       "subtitle": "Эстетическое удовольствие с доставкой на дом",
       "buttonText": "Подробности",
       "buttonHref": "/flower-delivery",

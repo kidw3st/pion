@@ -53,11 +53,71 @@ const BLOCKS = {
       return out;
     },
   },
+
+  hero: {
+    clip: { x: 0, y: 90, height: 630 },
+    // The carousel rotates on both sites, and slides differ in height, so a
+    // straight comparison would be measuring two different slides. Pin both to
+    // the first slide before reading anything.
+    prepare: () => {
+      const dot = document.querySelector(
+        '.t-slds__bullet, [aria-label="Перейти к слайду 1"]',
+      );
+      if (dot instanceof HTMLElement) dot.click();
+    },
+    measure: () => {
+      const vis = (el) => el && el.offsetParent !== null;
+      const R = (el) => {
+        if (!el) return null;
+        const r = el.getBoundingClientRect();
+        return { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width), h: Math.round(r.height) };
+      };
+      const S = (el, prop) => (el ? getComputedStyle(el).getPropertyValue(prop) : null);
+
+      // Live markup is a Tilda t734 slider; ours is a single rendered slide.
+      const block = document.querySelector('.t734') || document.querySelector('main > div');
+      if (!block) return { _error: 'hero not found' };
+
+      // Only the on-screen slide matters — the live slider keeps the others
+      // parked off to the side.
+      const slides = [...block.querySelectorAll('.t-slds__item')].filter(vis);
+      const slide =
+        slides.find((s) => s.getBoundingClientRect().x >= 0 && s.getBoundingClientRect().x < 50) || block;
+
+      const title = slide.querySelector('[class*="title"], h1, h2');
+      const descr = slide.querySelector('[class*="descr"], p');
+      const btn = slide.querySelector('a[class*="btn"], a[class*="button"]');
+      const arrows = [...block.querySelectorAll('[class*="arrow"]')].filter(
+        (a) => vis(a) && a.getBoundingClientRect().width < 80,
+      );
+      const dots = [...block.querySelectorAll('[class*="bullet"], [class*="dot"]')].filter(
+        (d) => vis(d) && d.getBoundingClientRect().width < 40,
+      );
+
+      return {
+        hero: { ...R(block), h: Math.round(block.getBoundingClientRect().height) },
+        title: { ...R(title), size: S(title, 'font-size'), weight: S(title, 'font-weight'), color: S(title, 'color') },
+        subtitle: { ...R(descr), size: S(descr, 'font-size'), weight: S(descr, 'font-weight') },
+        button: {
+          ...R(btn),
+          bg: S(btn, 'background-color'),
+          border: S(btn, 'border-top-width'),
+          size: S(btn, 'font-size'),
+        },
+        arrowL: R(arrows[0]),
+        dotsCount: dots.length,
+      };
+    },
+  },
 };
 
 async function measure(page, url, block, width, shotPath) {
   await page.goto(url, { waitUntil: 'load', timeout: 60000 });
   await page.waitForTimeout(3500);
+  if (block.prepare) {
+    await page.evaluate(block.prepare);
+    await page.waitForTimeout(1500);
+  }
   const data = await page.evaluate(block.measure);
   data._docWidth = await page.evaluate(() => document.documentElement.scrollWidth);
   if (shotPath) {

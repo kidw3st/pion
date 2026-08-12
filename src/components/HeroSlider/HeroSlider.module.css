@@ -1,8 +1,14 @@
+/* Measured against the live hero (t734) at 1866px:
+   630px tall, photo cover-fitted under a top-to-bottom dark gradient, text
+   column in a 1160px centred container, title 30px/500 in #ffd8d8, subtitle
+   20px/300 white, and an outlined (not filled) button 60px tall. Side arrows
+   sit in 60px-wide full-height hit areas; the chevron itself is 17x32. */
+
 .slider {
   position: relative;
-  height: 520px;
+  height: 630px;
   overflow: hidden;
-  background: var(--color-bg-light);
+  background: var(--color-black);
 }
 
 .imageWrap {
@@ -12,56 +18,158 @@
 
 .image {
   object-fit: cover;
+  object-position: 50% 50%;
 }
 
-.content {
+.overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.3));
+}
+
+/* Live text column: 1160px wide, sitting in a 1200px centred container with
+   the slack on the right — so its left edge is 20px left of dead centre. */
+.inner {
   position: relative;
   z-index: 1;
   height: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding-left: 64px;
-  max-width: 480px;
-  color: var(--color-white);
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+  align-items: center;
 }
 
-.content h2 {
-  font-size: 36px;
-  margin: 0 0 12px;
+.content {
+  width: 1160px;
+  max-width: 100%;
+  color: var(--color-white);
+}
+
+/* The live block puts 100px of padding above the heading rather than moving the
+   whole column down — the text group stays vertically centred around it. */
+.title {
+  margin: 0;
+  padding-top: 100px;
+  color: #ffd8d8;
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 31.5px;
+  white-space: pre-line;
+}
+
+.subtitle {
+  margin: 30px 0 0;
+  padding-top: 10px;
+  color: var(--color-white);
+  font-size: 20px;
+  font-weight: 300;
+  line-height: 31px;
+  white-space: pre-line;
 }
 
 .button {
-  margin-top: 20px;
-  display: inline-block;
-  background: var(--color-accent);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 60px;
+  margin-top: 50px;
+  padding: 0 60px;
+  border: 2px solid var(--color-border);
+  background: transparent;
   color: var(--color-white);
-  padding: 14px 28px;
-  width: fit-content;
+  font-size: 16px;
   font-weight: 600;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.button:hover {
+  background: var(--color-white);
+  color: var(--color-black);
+}
+
+/* Full-height 60px columns at each edge, chevron centred inside. */
+.arrow {
+  position: absolute;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-white);
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.arrow:hover {
+  opacity: 1;
+}
+
+.arrowLeft {
+  left: 0;
+}
+
+.arrowRight {
+  right: 0;
+}
+
+.arrowRight svg {
+  transform: rotate(180deg);
 }
 
 .dots {
   position: absolute;
-  bottom: 24px;
+  bottom: 30px;
   left: 50%;
   transform: translateX(-50%);
+  z-index: 2;
   display: flex;
-  gap: 8px;
-  z-index: 1;
+  gap: 10px;
 }
 
-.dot, .dotActive {
+.dot,
+.dotActive {
   width: 10px;
   height: 10px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(255, 255, 255, 0.5);
-  cursor: pointer;
   padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
 }
 
 .dotActive {
   background: var(--color-white);
+}
+
+@media (max-width: 960px) {
+  .slider {
+    height: 460px;
+  }
+
+  .inner {
+    padding: 0 60px;
+  }
+
+  .title {
+    font-size: 26px;
+    line-height: 28px;
+  }
+
+  .subtitle {
+    font-size: 17px;
+    line-height: 26px;
+  }
+
+  .button {
+    height: 52px;
+    margin-top: 32px;
+    padding: 0 32px;
+  }
 }
