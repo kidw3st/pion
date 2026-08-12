@@ -7,7 +7,9 @@ import { CartButton } from '@/components/Header/CartButton';
 import { WebMcpTools } from '@/components/AgentTools/WebMcpTools';
 import { VkBlock } from '@/components/VkBlock/VkBlock';
 import { Footer } from '@/components/Footer/Footer';
+import { JsonLd } from '@/components/JsonLd/JsonLd';
 import { getSite } from '@/lib/content';
+import { SITE_URL, localBusinessJsonLd } from '@/lib/seo';
 import './globals.css';
 
 const montserrat = Montserrat({
@@ -17,8 +19,15 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: 'Салон цветов и подарков «Пион»',
-  description: 'Букеты и подарки с доставкой по Перми',
+  metadataBase: new URL(SITE_URL),
+  // Pages set their own title; this is the suffix they are wrapped in, and the
+  // fallback for any route that does not.
+  title: {
+    default: 'Салон цветов «Пион» — доставка букетов в Перми',
+    template: '%s | Салон цветов «Пион», Пермь',
+  },
+  description:
+    'Авторские букеты, композиции и подарки с доставкой по Перми. Салон «Пион», ул. Газеты Звезда, 27. Ежедневно с 10:00 до 22:00.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -29,6 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ru" className={montserrat.variable}>
       <body>
+        <JsonLd data={localBusinessJsonLd()} />
         <CartProvider>
           <Header />
           {children}

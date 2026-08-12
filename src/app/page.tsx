@@ -1,10 +1,24 @@
+import type { Metadata } from 'next';
 import { getSite, getCatalog } from '@/lib/content';
+import { buildMetadata } from '@/lib/seo';
 import { HeroSlider } from '@/components/HeroSlider/HeroSlider';
 import { ProductCard } from '@/components/ProductCard/ProductCard';
 import { Features } from '@/components/Features/Features';
 import { BouquetBlock } from '@/components/BouquetBlock/BouquetBlock';
 import { UdsBlock } from '@/components/UdsBlock/UdsBlock';
 import styles from './page.module.css';
+
+// The homepage keeps the site-wide default title (no "| Пион, Пермь" suffix on
+// top of a name that already contains it), so it is set explicitly here.
+export const metadata: Metadata = {
+  ...buildMetadata({
+    title: 'Салон цветов «Пион» — доставка букетов в Перми',
+    description:
+      'Авторские букеты, композиции и подарки с доставкой по Перми. Фото букета перед отправкой, оплата картой онлайн, самовывоз со скидкой 5%. Ежедневно 10:00–22:00.',
+    path: '/',
+  }),
+  title: { absolute: 'Салон цветов «Пион» — доставка букетов в Перми' },
+};
 
 export default async function HomePage() {
   const site = getSite();
