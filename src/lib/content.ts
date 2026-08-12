@@ -1,5 +1,6 @@
-import type { Product, PageSection, SiteData } from './types';
+import type { Product, PageSection, SiteData, CatalogTile, CategoryMeta } from './types';
 import siteJson from '../../data/site.json';
+import catalogMetaJson from '../../data/catalog-meta.json';
 
 // `flowers` and `indoorflowers` were originally listed as store categories,
 // but live investigation (2026-08-11) found neither has a Tilda store-widget
@@ -36,6 +37,17 @@ export const CATEGORY_LABELS: Record<CategorySlug, string> = {
 
 export function getSite(): SiteData {
   return siteJson as SiteData;
+}
+
+/** Photo tiles on the /catalog overview, scraped from the live grid. */
+export function getCatalogTiles(): CatalogTile[] {
+  return catalogMetaJson.tiles as CatalogTile[];
+}
+
+/** Cover/heading chrome for a category page; null for slugs without any. */
+export function getCategoryMeta(slug: string): CategoryMeta | null {
+  const all = catalogMetaJson.categories as Record<string, CategoryMeta>;
+  return all[slug] ?? null;
 }
 
 export async function getCatalog(slug: string): Promise<Product[] | null> {

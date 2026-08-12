@@ -6,16 +6,20 @@ import styles from './PageSections.module.css';
 
 /**
  * Page header: the title over a slowly cross-fading stack of photos, matching
- * the cover block the live pages open with.
+ * the cover block the live pages open with. Category pages use a taller cover
+ * (870px on the live site) than the static pages (810px), so the height is a
+ * prop; dots appear when there is more than one photo, as on the live covers.
  */
 export function PageCover({
   title,
   subtitle,
   images,
+  height,
 }: {
   title: string;
   subtitle: string;
   images: string[];
+  height?: number;
 }) {
   const [index, setIndex] = useState(0);
 
@@ -26,7 +30,7 @@ export function PageCover({
   }, [images.length, index]);
 
   return (
-    <section className={styles.cover}>
+    <section className={styles.cover} style={height ? { height } : undefined}>
       {images.map((src, i) => (
         <div
           key={src}
@@ -41,6 +45,20 @@ export function PageCover({
         <h1 className={styles.coverTitle}>{title}</h1>
         {subtitle && <p className={styles.coverSubtitle}>{subtitle}</p>}
       </div>
+
+      {images.length > 1 && (
+        <div className={styles.coverDots}>
+          {images.map((src, i) => (
+            <button
+              key={src}
+              type="button"
+              aria-label={`Перейти к фото ${i + 1}`}
+              className={i === index ? styles.coverDotActive : styles.coverDot}
+              onClick={() => setIndex(i)}
+            />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

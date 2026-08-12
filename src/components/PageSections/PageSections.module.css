@@ -60,6 +60,32 @@
   white-space: pre-line;
 }
 
+.coverDots {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  gap: 10px;
+}
+
+.coverDot,
+.coverDotActive {
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.coverDotActive {
+  background: var(--color-white);
+}
+
 /* Text section */
 .text {
   padding: 80px 40px;

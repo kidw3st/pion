@@ -20,6 +20,23 @@ export type PageSection =
   | { kind: 'quote'; text: string; image: string }
   | { kind: 'gallery'; images: string[] };
 
+/** One tile on the /catalog overview grid. */
+export interface CatalogTile {
+  label: string;
+  href: string;
+  image: string;
+}
+
+/** Per-category page chrome: cover, optional heading, "не нашли" band flag. */
+export interface CategoryMeta {
+  title: string | null;
+  sub: string | null;
+  covers: string[];
+  heading: string | null;
+  headingSub: string | null;
+  hasNotFound: boolean;
+}
+
 export interface HeroSlide {
   title: string;
   subtitle: string;

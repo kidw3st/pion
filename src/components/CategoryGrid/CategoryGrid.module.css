@@ -1,27 +1,351 @@
-.section {
-  padding: 48px 40px;
-}
+/* Measured from the live /bukety store at 1866px: centred heading band
+   (h1 42px/600), a 1200px container with three 360px cards per row (60px
+   gaps), card photo 400px tall, title 20px/700, grey 14px composition line,
+   16px price, stacked buttons, and a "Загрузить еще" button under the grid. */
 
 .heading {
+  padding: 60px 20px 40px;
   text-align: center;
-  margin-bottom: 24px;
+  background: var(--color-bg-light);
+}
+
+.headingTitle {
+  margin: 0;
+  font-size: 42px;
+  font-weight: 600;
+  color: var(--color-text-dark);
+}
+
+.headingSub {
+  margin: 16px 0 0;
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--color-text-dark);
+}
+
+.store {
+  padding: 20px 20px 80px;
+  background: var(--color-bg-light);
+}
+
+.inner {
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .toolbar {
   display: flex;
   justify-content: flex-end;
-  margin-bottom: 16px;
-  font-size: 13px;
+  margin-bottom: 24px;
+}
+
+.sortLabel {
+  font-size: 14px;
+  color: var(--color-text-dark);
+}
+
+.sortSelect {
+  margin-left: 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-text-dark);
+  font-family: inherit;
+  font-size: 14px;
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 32px;
+  grid-template-columns: repeat(3, 360px);
+  justify-content: space-between;
+  row-gap: 60px;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+}
+
+.cardPhotoBtn {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 400px;
+  padding: 0;
+  border: none;
+  background: var(--color-bg-light-2);
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.cardPhoto {
+  object-fit: cover;
+}
+
+.cardTitle {
+  margin: 20px 0 0;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 27px;
+  color: var(--color-text-dark);
+}
+
+.cardDescr {
+  margin: 8px 0 0;
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 20px;
+  color: #777777;
+}
+
+.cardPrice {
+  margin-top: 14px;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--color-text-dark);
+}
+
+.cardButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 26px;
+  border: 2px solid var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-white);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.btnPrimary:hover {
+  opacity: 0.85;
+}
+
+.btnSecondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 26px;
+  border: 1px solid var(--color-accent);
+  background: transparent;
+  color: var(--color-text-dark);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.btnSecondary:hover {
+  background: var(--color-accent);
+  color: var(--color-white);
+}
+
+.moreWrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 60px;
+}
+
+.moreBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 44px;
+  border: none;
+  background: var(--color-accent);
+  color: var(--color-white);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.moreBtn:hover {
+  opacity: 0.85;
 }
 
 .empty {
+  padding: 60px 0 20px;
   text-align: center;
-  padding: 48px 16px;
-  opacity: 0.6;
+  font-size: 17px;
+  font-weight: 300;
+  color: var(--color-text-dark);
+  opacity: 0.7;
+}
+
+/* "Не нашли, что искали?" band (t185): light strip, 22px text left,
+   outlined button right. */
+.notFound {
+  padding: 75px 40px;
+  background: var(--color-bg-light-2);
+}
+
+.notFoundInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+  max-width: 1160px;
+  margin: 0 auto;
+}
+
+.notFoundText {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 300;
+  line-height: 34px;
+  color: var(--color-text-dark);
+}
+
+.notFoundBtn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  padding: 0 44px;
+  border: 1px solid var(--color-accent);
+  background: transparent;
+  color: var(--color-text-dark);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+.notFoundBtn:hover {
+  background: var(--color-accent);
+  color: var(--color-white);
+}
+
+/* Product popup */
+.popupOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.popup {
+  position: relative;
+  display: flex;
+  gap: 40px;
+  width: min(1000px, 100%);
+  max-height: 90vh;
+  padding: 40px;
+  background: var(--color-white);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.16);
+  overflow: auto;
+}
+
+.popupClose {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  padding: 0;
+  border: none;
+  background: none;
+  font-size: 30px;
+  line-height: 1;
+  color: var(--color-black);
+  cursor: pointer;
+}
+
+.popupPhoto {
+  position: relative;
+  flex: none;
+  width: 440px;
+  height: 440px;
+  background: var(--color-bg-light-2);
+}
+
+.popupBody {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.popupTitle {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--color-text-dark);
+}
+
+.popupPrice {
+  margin-top: 12px;
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--color-text-dark);
+}
+
+.popupDescr {
+  margin: 20px 0 0;
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 24px;
+  color: var(--color-text-dark);
+}
+
+.popupNote {
+  margin: 16px 0 24px;
+  font-size: 13px;
+  font-weight: 300;
+  line-height: 20px;
+  color: #777777;
+}
+
+@media (max-width: 1240px) {
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 32px;
+  }
+}
+
+@media (max-width: 720px) {
+  .headingTitle {
+    font-size: 30px;
+  }
+
+  .headingSub {
+    font-size: 17px;
+  }
+
+  .cardPhotoBtn {
+    height: 320px;
+  }
+
+  .notFoundInner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .popup {
+    flex-direction: column;
+    padding: 24px;
+  }
+
+  .popupPhoto {
+    width: 100%;
+    height: 300px;
+  }
 }

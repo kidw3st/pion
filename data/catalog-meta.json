@@ -1,0 +1,173 @@
+{
+  "tiles": [
+    {
+      "label": "Цветы",
+      "href": "/flowers",
+      "image": "/images/site/catalog-tiles/tile-0.jpg"
+    },
+    {
+      "label": "Букеты",
+      "href": "/bukety",
+      "image": "/images/site/catalog-tiles/tile-1.jpg"
+    },
+    {
+      "label": "Корзины цветов",
+      "href": "/korziny",
+      "image": "/images/site/catalog-tiles/tile-2.jpg"
+    },
+    {
+      "label": "Коробки с цветами",
+      "href": "/korobki",
+      "image": "/images/site/catalog-tiles/tile-3.jpg"
+    },
+    {
+      "label": "Комплимент",
+      "href": "/valentinesday",
+      "image": "/images/site/catalog-tiles/tile-4.jpg"
+    },
+    {
+      "label": "Свадебные букеты",
+      "href": "/wedding",
+      "image": "/images/site/catalog-tiles/tile-5.jpg"
+    },
+    {
+      "label": "Создать уникальный букет",
+      "href": "#popup:individual",
+      "image": "/images/site/catalog-tiles/tile-6.jpg"
+    },
+    {
+      "label": "Комнатные растения",
+      "href": "/indoorflowers",
+      "image": "/images/site/catalog-tiles/tile-7.jpg"
+    },
+    {
+      "label": "Шоколад",
+      "href": "/chocolate",
+      "image": "/images/site/catalog-tiles/tile-8.jpg"
+    },
+    {
+      "label": "Лучшее для дома",
+      "href": "/luchshee",
+      "image": "/images/site/catalog-tiles/tile-9.jpg"
+    },
+    {
+      "label": "Воздушные шары",
+      "href": "/balloons",
+      "image": "/images/site/catalog-tiles/tile-10.jpg"
+    },
+    {
+      "label": "Продукция Flame",
+      "href": "/flame",
+      "image": "/images/site/catalog-tiles/tile-11.jpg"
+    }
+  ],
+  "categories": {
+    "bukety": {
+      "title": "Букеты",
+      "sub": "Стильные и уникальные букеты, сделанные с душой",
+      "covers": [
+        "/images/site/category-covers/bukety-0.jpg",
+        "/images/site/category-covers/bukety-1.jpg"
+      ],
+      "heading": "БУКЕТЫ",
+      "headingSub": "Шикарные букеты на любой вкус",
+      "hasNotFound": true
+    },
+    "korziny": {
+      "title": "Корзины цветов",
+      "sub": "Сделано с любовью от команды салона цветов \"Пион\"",
+      "covers": [
+        "/images/site/category-covers/korziny-0.jpg"
+      ],
+      "heading": null,
+      "headingSub": null,
+      "hasNotFound": true
+    },
+    "korobki": {
+      "title": "Цветочные коробки",
+      "sub": "Сделано с любовью от команды салона цветов \"Пион\"",
+      "covers": [
+        "/images/site/category-covers/korobki-0.jpg",
+        "/images/site/category-covers/korobki-1.jpg",
+        "/images/site/category-covers/korobki-2.jpg"
+      ],
+      "heading": null,
+      "headingSub": null,
+      "hasNotFound": true
+    },
+    "wedding": {
+      "title": "Открываем свадебный сезон 2025",
+      "sub": "Самые красивые букеты\nв самый важный день",
+      "covers": [
+        "/images/site/category-covers/wedding-0.jpg"
+      ],
+      "heading": null,
+      "headingSub": null,
+      "hasNotFound": false
+    },
+    "balloons": {
+      "title": "Воздушные шары от салона \"Пион\"",
+      "sub": "Если вы хотите заказать охапку воздушных шаров - напишите нам, и мы подберем для вас идеальную композицию!",
+      "covers": [
+        "/images/site/category-covers/balloons-0.jpg"
+      ],
+      "heading": null,
+      "headingSub": null,
+      "hasNotFound": false
+    },
+    "chocolate": {
+      "title": "ШОКОЛАД СhocoME",
+      "sub": "Самое вкусное дополнение к цветам!",
+      "covers": [
+        "/images/site/category-covers/chocolate-0.jpg"
+      ],
+      "heading": null,
+      "headingSub": null,
+      "hasNotFound": false
+    },
+    "luchshee": {
+      "title": "Лучшее для дома\nи офиса",
+      "sub": "Искусственные композиции, вазы, декор!",
+      "covers": [
+        "/images/site/category-covers/luchshee-0.jpg"
+      ],
+      "heading": null,
+      "headingSub": null,
+      "hasNotFound": false
+    },
+    "flame": {
+      "title": "Ароматы Flame Moscow",
+      "sub": null,
+      "covers": [
+        "/images/site/category-covers/flame-0.jpg"
+      ],
+      "heading": null,
+      "headingSub": null,
+      "hasNotFound": false
+    },
+    "pions": {
+      "title": null,
+      "sub": null,
+      "covers": [],
+      "heading": null,
+      "headingSub": null,
+      "hasNotFound": false
+    },
+    "roses": {
+      "title": null,
+      "sub": null,
+      "covers": [],
+      "heading": null,
+      "headingSub": null,
+      "hasNotFound": false
+    },
+    "mixflower": {
+      "title": null,
+      "sub": null,
+      "covers": [],
+      "heading": null,
+      "headingSub": null,
+      "hasNotFound": false
+    }
+  }
+}
