@@ -3,6 +3,7 @@ import { Montserrat } from 'next/font/google';
 import { CartProvider } from '@/components/Cart/CartContext';
 import { CartDrawer } from '@/components/Cart/CartDrawer';
 import { Header } from '@/components/Header/Header';
+import { CartButton } from '@/components/Header/CartButton';
 import { Footer } from '@/components/Footer/Footer';
 import './globals.css';
 
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Header />
           {children}
           <Footer />
+          <CartButton />
           <CartDrawer />
         </CartProvider>
       </body>

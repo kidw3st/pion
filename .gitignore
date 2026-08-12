@@ -38,3 +38,6 @@ next-env.d.ts
 
 # SDD workspace (task briefs, reports, review diffs)
 .superpowers/
+
+# layout comparison screenshots
+tmp/

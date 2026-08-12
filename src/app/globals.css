@@ -1,5 +1,7 @@
 :root {
   --color-accent: #b08d7a;
+  /* Header/footer bar colour, sampled from the live site (not the accent). */
+  --color-header: #d2b8a4;
   --color-black: #000000;
   --color-white: #ffffff;
   --color-bg-light: #f4f4f4;
