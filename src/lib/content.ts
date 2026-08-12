@@ -1,4 +1,4 @@
-import type { Product, ContentBlock, SiteData } from './types';
+import type { Product, PageSection, SiteData } from './types';
 import siteJson from '../../data/site.json';
 
 // `flowers` and `indoorflowers` were originally listed as store categories,
@@ -44,8 +44,8 @@ export async function getCatalog(slug: string): Promise<Product[] | null> {
   return mod.default as Product[];
 }
 
-export async function getPage(slug: string): Promise<ContentBlock[] | null> {
+export async function getPage(slug: string): Promise<PageSection[] | null> {
   if (!(PAGE_SLUGS as readonly string[]).includes(slug)) return null;
   const mod = await import(`../../data/pages/${slug}.json`);
-  return mod.default as ContentBlock[];
+  return mod.default as PageSection[];
 }

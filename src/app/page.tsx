@@ -4,7 +4,6 @@ import { ProductCard } from '@/components/ProductCard/ProductCard';
 import { Features } from '@/components/Features/Features';
 import { BouquetBlock } from '@/components/BouquetBlock/BouquetBlock';
 import { UdsBlock } from '@/components/UdsBlock/UdsBlock';
-import { VkBlock } from '@/components/VkBlock/VkBlock';
 import styles from './page.module.css';
 
 export default async function HomePage() {
@@ -29,8 +28,6 @@ export default async function HomePage() {
       <BouquetBlock data={site.bouquetBlock} />
 
       <UdsBlock data={site.uds} />
-
-      <VkBlock data={site.vk} />
     </main>
   );
 }

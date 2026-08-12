@@ -131,33 +131,22 @@ export async function scrapeCategory(slug, categoryUrl = `${SITE}/${slug}`) {
   return products;
 }
 
-// Generic scraper for the site's static/promo pages (about, delivery info,
-// stock, etc). Tilda pages don't use semantic <h1-3>/<p> for their real
-// content — text lives in divs carrying the shared `.t-title` / `.t-text` /
-// `.t-descr` classes regardless of which numbered block type rendered them
-// (confirmed by inspecting the live DOM: raw HTML has zero <h1-3> and zero
-// top-level <p> tags on /about, /contacts, /delivery-and-payment, /stock).
+// Scrape a static/promo page as a list of composed sections rather than a flat
+// run of headings, paragraphs and images.
 //
-// Two more things the live DOM revealed that the naive selectors don't
-// handle:
-//   1. Every page embeds the same global "quick order" cart form and popup
-//      markup (Tilda's shared store widget), which contains form-field
-//      labels like "Ваше имя" / "Ваш телефон" that would otherwise pollute
-//      every page's scraped text. We exclude it, along with the header menu
-//      (.t228) and tooltip nav (.t978), which repeat the same nav text.
-//   2. Tilda renders the same header/logo text 4-6 times in the DOM (one
-//      copy per responsive breakpoint variant), so headings are deduped by
-//      exact text, keeping the first occurrence.
+// The live pages are built from Tilda "records" (.r.t-rec), each of which is a
+// designed block: a cover with the page title over a photo, a text section, a
+// row of people cards, a pull quote beside a photo. Flattening those into
+// heading/paragraph/image in document order threw the composition away — every
+// image rendered full width, one under another, which made our copies roughly
+// three times taller than the originals.
+//
+// The VK band and the footer (record type 396) repeat on every page and are
+// rendered by our layout, so they are skipped here.
 async function scrapePage(page, slug) {
-  // Same transient Tilda-fetch failure mode as scrapeCategory() can leave a
-  // page's content blocks (or the global store-widget markup embedded on
-  // every page) half-initialized on first load. There's no store-specific
-  // empty-state message to key off here, so just retry a plain reload
-  // whenever we come up with zero blocks. See scrapeCategory() for the
-  // empirical basis of attempt count / backoff (store.tildacdn.com times
-  // out on roughly 2 of every 5 requests in this environment).
   const maxAttempts = 8;
-  let rawBlocks = [];
+  let raw = [];
+
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     if (attempt === 1) {
       await page.goto(`${SITE}/${slug}`, { waitUntil: 'load', timeout: 60000 });
@@ -166,94 +155,133 @@ async function scrapePage(page, slug) {
       await page.waitForTimeout(4000 + Math.random() * 3000);
       await page.reload({ waitUntil: 'load', timeout: 60000 });
     }
+    await page.waitForTimeout(1200);
+
+    // Lazy-loaded images only expose their real src once scrolled into view.
+    await page.evaluate(async () => {
+      for (let y = 0; y < document.body.scrollHeight; y += 600) {
+        window.scrollTo(0, y);
+        await new Promise((r) => setTimeout(r, 110));
+      }
+      window.scrollTo(0, 0);
+    });
     await page.waitForTimeout(1000);
 
-    rawBlocks = await page.evaluate(() => {
-    function cleanText(el) {
-      // Tilda sometimes puts a per-button/per-block <style> tag as a
-      // sibling inside the same element whose text we want; textContent
-      // would otherwise include the raw CSS.
-      const clone = el.cloneNode(true);
-      clone.querySelectorAll('style, script').forEach((s) => s.remove());
-      return clone.textContent.replace(/\s+/g, ' ').trim();
-    }
+    raw = await page.evaluate(() => {
+      const visible = (el) => el && el.offsetParent !== null;
 
-    const root = document.querySelector('#allrecords') || document.body;
-    const NOISE_SELECTOR =
-      'form, .t706, [class*="cartwin"], [class*="cartpage"], [id*="popup"], [class*="popup"], .t228, .t978';
-    function isNoise(el) {
-      return !!el.closest(NOISE_SELECTOR);
-    }
-    function extractBgSrc(el) {
-      const original = el.getAttribute('data-original');
-      if (original) return original;
-      const style = el.getAttribute('style') || '';
-      const match = style.match(/url\((['"]?)(.*?)\1\)/);
-      return match ? match[2] : null;
-    }
+      // innerText normalised per line: keeps the deliberate line breaks in
+      // headings without gluing words together the way collapsing whitespace
+      // across the whole string does.
+      const lines = (el) => {
+        if (!el) return [];
+        return (el.innerText || '')
+          .split('\n')
+          .map((l) => l.replace(/[^\S\n]+/g, ' ').trim())
+          .filter(Boolean);
+      };
+      const textOf = (el) => lines(el).join('\n');
 
-    const out = [];
-    const seenHeadings = new Set();
-    const nodes = root.querySelectorAll('.t-title, .t-text, .t-descr, img, [class*="bgimg"]');
-    nodes.forEach((el) => {
-      if (isNoise(el)) return;
+      const coverSrc = (el) => {
+        const bg = el.getAttribute('data-content-cover-bg');
+        if (bg) return bg;
+        const m = (el.getAttribute('style') || '').match(/url\((['"]?)(.*?)\1\)/);
+        return m ? m[2] : null;
+      };
 
-      if (el.tagName === 'IMG') {
-        // Tilda lazy-loads: `src` starts as a tiny placeholder/thumbnail,
-        // the full-res URL lives in `data-original` (same lazy-load pattern
-        // the old browser-based store-card scraper used to handle).
-        const src = el.getAttribute('data-original') || el.getAttribute('src');
-        if (src && !src.toLowerCase().endsWith('.svg')) {
-          out.push({ type: 'image', src, alt: el.getAttribute('alt') || '' });
+      const out = [];
+      const records = [...document.querySelectorAll('.r.t-rec')].filter(
+        (r) => visible(r) && r.getBoundingClientRect().height > 60,
+      );
+
+      for (const rec of records) {
+        if (rec.getAttribute('data-record-type') === '396') continue;
+
+        const covers = [...rec.querySelectorAll('.t-cover__carrier')].map(coverSrc).filter(Boolean);
+        const photos = [...rec.querySelectorAll('img')]
+          .filter((i) => i.getBoundingClientRect().width > 120)
+          .map((i) => i.getAttribute('data-original') || i.src)
+          .filter((s) => s && !s.toLowerCase().endsWith('.svg'));
+
+        const titleEl = rec.querySelector('.t-title, [class*="__title"], h1, h2');
+        const bodyEls = [...rec.querySelectorAll('.t-descr, .t-text, [class*="__descr"]')].filter(
+          (e) => visible(e) && textOf(e),
+        );
+        const title = textOf(titleEl);
+        const body = [...new Set(bodyEls.map(textOf))].join('\n\n');
+
+        if (covers.length) {
+          out.push({ kind: 'cover', title, subtitle: body, images: [...new Set(covers)] });
+          continue;
         }
-        return;
+
+        // A people row repeats a short name + role pair several times over.
+        const cardEls = [...rec.querySelectorAll('[class*="col"], [class*="item"]')].filter((c) => {
+          const l = lines(c);
+          return l.length === 2 && l[0].length < 40 && l[1].length < 40;
+        });
+        if (cardEls.length >= 2) {
+          const seen = new Set();
+          const items = [];
+          for (const c of cardEls) {
+            const [t, s] = lines(c);
+            const key = `${t}|${s}`;
+            if (seen.has(key)) continue;
+            seen.add(key);
+            items.push({ title: t, subtitle: s });
+          }
+          if (items.length >= 2) {
+            out.push({ kind: 'cards', items });
+            continue;
+          }
+        }
+
+        if (photos.length === 1 && title) {
+          out.push({ kind: 'quote', text: title, image: photos[0] });
+          continue;
+        }
+        if (photos.length > 1) {
+          out.push({ kind: 'gallery', images: [...new Set(photos)] });
+          continue;
+        }
+        if (title || body) out.push({ kind: 'text', title, body });
       }
 
-      const cls = el.className ? el.className.toString() : '';
-      if (cls.includes('bgimg')) {
-        const src = extractBgSrc(el);
-        if (src) out.push({ type: 'image', src, alt: '' });
-        return;
-      }
-
-      const text = cleanText(el);
-      if (!text) return;
-      if (cls.includes('t-title')) {
-        if (seenHeadings.has(text)) return;
-        seenHeadings.add(text);
-        out.push({ type: 'heading', text });
-      } else {
-        out.push({ type: 'paragraph', text });
-      }
+      return out;
     });
-    return out;
-  });
 
-    if (rawBlocks.length > 0) break;
+    if (raw.length > 0) break;
   }
 
-  // Responsive variants of the same block frequently reuse the exact same
-  // image URL; dedupe by resolved absolute URL so we don't download/list it
-  // twice under different index names.
-  const seenImg = new Set();
-  const blocks = [];
-  let imgIndex = 0;
-  for (const block of rawBlocks) {
-    if (block.type !== 'image') {
-      blocks.push(block);
-      continue;
-    }
-    const abs = new URL(block.src, SITE).href;
-    if (seenImg.has(abs)) continue;
-    seenImg.add(abs);
-
+  // Pull referenced images local, de-duplicating by resolved URL so a photo
+  // reused across sections is downloaded once.
+  const localFor = new Map();
+  let index = 0;
+  const localise = async (src) => {
+    const abs = new URL(src, SITE).href;
+    if (localFor.has(abs)) return localFor.get(abs);
     const ext = path.extname(new URL(abs).pathname) || '.jpg';
-    const fileName = `img-${imgIndex++}${ext}`;
-    const dest = path.join(ROOT, 'public', 'images', 'pages', slug, fileName);
-    await downloadImage(abs, dest);
-    blocks.push({ type: 'image', src: `/images/pages/${slug}/${fileName}`, alt: block.alt });
+    const fileName = `img-${index++}${ext}`;
+    await downloadImage(abs, path.join(ROOT, 'public', 'images', 'pages', slug, fileName));
+    const local = `/images/pages/${slug}/${fileName}`;
+    localFor.set(abs, local);
+    return local;
+  };
+
+  const sections = [];
+  for (const section of raw) {
+    if (section.kind === 'cover' || section.kind === 'gallery') {
+      const images = [];
+      for (const src of section.images) images.push(await localise(src));
+      sections.push({ ...section, images });
+    } else if (section.kind === 'quote') {
+      sections.push({ ...section, image: await localise(section.image) });
+    } else {
+      sections.push(section);
+    }
   }
-  return blocks;
+
+  return sections;
 }
 
 // Homepage scraper for the hero slider and (via main()) the "Новинки"

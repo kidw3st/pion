@@ -1,105 +1,31 @@
 [
   {
-    "type": "image",
-    "src": "/images/pages/indoorflowers/img-0.png",
-    "alt": ""
+    "kind": "cover",
+    "title": "Живые растения",
+    "subtitle": "Комнатные растения, которые идеально подойдут под ваш интерьер!",
+    "images": [
+      "/images/pages/indoorflowers/img-0.jpeg"
+    ]
   },
   {
-    "type": "image",
-    "src": "/images/pages/indoorflowers/img-1.png",
-    "alt": ""
-  },
-  {
-    "type": "image",
-    "src": "/images/pages/indoorflowers/img-2.png",
-    "alt": ""
-  },
-  {
-    "type": "heading",
-    "text": "Живые растения"
-  },
-  {
-    "type": "paragraph",
-    "text": "Комнатные растения, которые идеально подойдут под ваш интерьер!"
-  },
-  {
-    "type": "paragraph",
-    "text": "Комнатные растения, которые идеально подойдут под ваш интерьер!"
-  },
-  {
-    "type": "paragraph",
-    "text": "Комнатные растения, которые идеально подойдут под ваш интерьер!"
-  },
-  {
-    "type": "paragraph",
-    "text": "Комнатные растения, которые идеально подойдут под ваш интерьер!"
-  },
-  {
-    "type": "paragraph",
-    "text": "Комнатные растения, которые идеально подойдут под ваш интерьер!"
-  },
-  {
-    "type": "paragraph",
-    "text": "Комнатные растения, которые идеально подойдут под ваш интерьер!"
-  },
-  {
-    "type": "image",
-    "src": "/images/pages/indoorflowers/img-3.jpeg",
-    "alt": ""
-  },
-  {
-    "type": "image",
-    "src": "/images/pages/indoorflowers/img-4.jpeg",
-    "alt": ""
-  },
-  {
-    "type": "image",
-    "src": "/images/pages/indoorflowers/img-5.jpeg",
-    "alt": ""
-  },
-  {
-    "type": "image",
-    "src": "/images/pages/indoorflowers/img-6.jpeg",
-    "alt": ""
-  },
-  {
-    "type": "image",
-    "src": "/images/pages/indoorflowers/img-7.jpg",
-    "alt": ""
-  },
-  {
-    "type": "image",
-    "src": "/images/pages/indoorflowers/img-8.jpg",
-    "alt": ""
-  },
-  {
-    "type": "image",
-    "src": "/images/pages/indoorflowers/img-9.jpg",
-    "alt": ""
-  },
-  {
-    "type": "image",
-    "src": "/images/pages/indoorflowers/img-10.jpg",
-    "alt": ""
-  },
-  {
-    "type": "image",
-    "src": "/images/pages/indoorflowers/img-11.GIF",
-    "alt": ""
-  },
-  {
-    "type": "image",
-    "src": "/images/pages/indoorflowers/img-12.jpg",
-    "alt": ""
-  },
-  {
-    "type": "image",
-    "src": "/images/pages/indoorflowers/img-13.jpg",
-    "alt": ""
-  },
-  {
-    "type": "image",
-    "src": "/images/pages/indoorflowers/img-14.png",
-    "alt": ""
+    "kind": "cards",
+    "items": [
+      {
+        "title": "5700",
+        "subtitle": "р."
+      },
+      {
+        "title": "3600",
+        "subtitle": "р."
+      },
+      {
+        "title": "5200",
+        "subtitle": "р."
+      },
+      {
+        "title": "5100",
+        "subtitle": "р."
+      }
+    ]
   }
 ]

@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { CATEGORY_SLUGS, PAGE_SLUGS, CATEGORY_LABELS, getCatalog, getPage } from '@/lib/content';
 import { CategoryGrid } from '@/components/CategoryGrid/CategoryGrid';
-import { ContentBlocks } from '@/components/ContentBlocks/ContentBlocks';
+import { PageSections } from '@/components/PageSections/PageSections';
 
 export function generateStaticParams() {
   return [...CATEGORY_SLUGS, ...PAGE_SLUGS].map((slug) => ({ slug }));
@@ -17,8 +17,8 @@ export default async function SlugPage({ params }: { params: { slug: string } })
   }
 
   if ((PAGE_SLUGS as readonly string[]).includes(slug)) {
-    const blocks = (await getPage(slug)) ?? [];
-    return <ContentBlocks blocks={blocks} />;
+    const sections = (await getPage(slug)) ?? [];
+    return <PageSections sections={sections} />;
   }
 
   notFound();

@@ -1,0 +1,195 @@
+/* Page cover: title over a cross-fading photo stack, matching the ~810-900px
+   opening block the live pages use. */
+.cover {
+  position: relative;
+  height: 810px;
+  overflow: hidden;
+  background: var(--color-black);
+}
+
+.coverSlide,
+.coverSlideActive {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1.2s ease-in-out;
+}
+
+.coverSlideActive {
+  opacity: 1;
+}
+
+.coverImage {
+  object-fit: cover;
+  object-position: 50% 50%;
+}
+
+.coverOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.3));
+}
+
+.coverBody {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 0 20px;
+  color: var(--color-white);
+}
+
+.coverTitle {
+  margin: 0;
+  font-size: 42px;
+  font-weight: 500;
+  line-height: 52px;
+  white-space: pre-line;
+}
+
+.coverSubtitle {
+  margin: 24px 0 0;
+  max-width: 620px;
+  font-size: 18px;
+  font-weight: 300;
+  line-height: 28px;
+  white-space: pre-line;
+}
+
+/* Text section */
+.text {
+  padding: 80px 40px;
+  background: var(--color-white);
+}
+
+.inner {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.title {
+  margin: 0;
+  font-size: 34px;
+  font-weight: 500;
+  line-height: 44px;
+  color: var(--color-text-dark);
+  white-space: pre-line;
+}
+
+.body {
+  margin: 28px 0 0;
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 28px;
+  color: var(--color-text-dark);
+  white-space: pre-line;
+}
+
+/* People / role cards */
+.cards {
+  padding: 70px 40px;
+  background: var(--color-bg-light);
+}
+
+.cardsInner {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 40px;
+  max-width: 1160px;
+  margin: 0 auto;
+}
+
+.card {
+  text-align: center;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--color-text-dark);
+}
+
+.cardSubtitle {
+  margin: 8px 0 0;
+  font-size: 15px;
+  font-weight: 300;
+  color: var(--color-text-dark);
+  opacity: 0.7;
+}
+
+/* Pull quote above a wide photo */
+.quote {
+  padding: 70px 40px;
+  background: var(--color-white);
+}
+
+.quoteText {
+  margin: 0 0 40px;
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 34px;
+  letter-spacing: 0.5px;
+  color: var(--color-text-dark);
+  white-space: pre-line;
+}
+
+.quoteImage img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* Photo row */
+.gallery {
+  padding: 40px;
+  background: var(--color-white);
+}
+
+.galleryInner {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  max-width: 1160px;
+  margin: 0 auto;
+}
+
+.galleryShot {
+  position: relative;
+  height: 320px;
+}
+
+.galleryImage {
+  object-fit: cover;
+}
+
+@media (max-width: 900px) {
+  .cover {
+    height: 520px;
+  }
+
+  .coverTitle {
+    font-size: 30px;
+    line-height: 38px;
+  }
+
+  .text,
+  .quote,
+  .cards {
+    padding: 48px 20px;
+  }
+
+  .title {
+    font-size: 26px;
+    line-height: 34px;
+  }
+
+  .quoteText {
+    font-size: 18px;
+    line-height: 28px;
+  }
+}

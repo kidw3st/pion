@@ -7,11 +7,18 @@ export interface Product {
   slug: string;
 }
 
-export type ContentBlock =
-  | { type: 'heading'; text: string }
-  | { type: 'paragraph'; text: string }
-  | { type: 'image'; src: string; alt: string }
-  | { type: 'cta'; text: string; href: string };
+/**
+ * A static page is a sequence of composed sections, mirroring how the live
+ * site builds them. A flat list of headings/paragraphs/images loses the
+ * layout — every image ends up full width and stacked, which made these pages
+ * roughly three times taller than the originals.
+ */
+export type PageSection =
+  | { kind: 'cover'; title: string; subtitle: string; images: string[] }
+  | { kind: 'text'; title: string; body: string }
+  | { kind: 'cards'; items: { title: string; subtitle: string }[] }
+  | { kind: 'quote'; text: string; image: string }
+  | { kind: 'gallery'; images: string[] };
 
 export interface HeroSlide {
   title: string;
