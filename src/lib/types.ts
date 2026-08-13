@@ -16,9 +16,20 @@ export interface Product {
 export type PageSection =
   | { kind: 'cover'; title: string; subtitle: string; images: string[] }
   | { kind: 'text'; title: string; body: string }
+  | { kind: 'textImage'; title: string; body: string; image: string }
   | { kind: 'cards'; items: { title: string; subtitle: string }[] }
   | { kind: 'quote'; text: string; image: string }
-  | { kind: 'gallery'; images: string[] };
+  | { kind: 'gallery'; images: string[]; title?: string; body?: string }
+  | {
+      kind: 'contacts';
+      title: string;
+      intro: string;
+      phone: string;
+      email: string;
+      address: string;
+      hours: string;
+      vkHref: string;
+    };
 
 /** One tile on the /catalog overview grid. */
 export interface CatalogTile {

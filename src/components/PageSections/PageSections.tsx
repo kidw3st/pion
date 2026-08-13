@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import type { PageSection } from '@/lib/types';
 import { PageCover } from './PageCover';
+import { ContactsSection } from './ContactsSection';
 import styles from './PageSections.module.css';
 
 export function PageSections({ sections }: { sections: PageSection[] }) {
@@ -24,6 +25,35 @@ export function PageSections({ sections }: { sections: PageSection[] }) {
                 <div className={styles.inner}>
                   {section.title && <h2 className={styles.title}>{section.title}</h2>}
                   {section.body && <p className={styles.body}>{section.body}</p>}
+                </div>
+              </section>
+            );
+
+          case 'contacts':
+            return (
+              <ContactsSection
+                key={i}
+                title={section.title}
+                intro={section.intro}
+                phone={section.phone}
+                email={section.email}
+                address={section.address}
+                hours={section.hours}
+                vkHref={section.vkHref}
+              />
+            );
+
+          case 'textImage':
+            return (
+              <section key={i} className={styles.textImage}>
+                <div className={styles.textImageInner}>
+                  <div className={styles.textImageBody}>
+                    {section.title && <h2 className={styles.title}>{section.title}</h2>}
+                    {section.body && <p className={styles.body}>{section.body}</p>}
+                  </div>
+                  <div className={styles.textImagePhoto}>
+                    <Image src={section.image} alt="" fill sizes="560px" className={styles.cover} />
+                  </div>
                 </div>
               </section>
             );

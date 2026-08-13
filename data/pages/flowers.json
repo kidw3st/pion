@@ -10,7 +10,12 @@
     ]
   },
   {
-    "kind": "text",
+    "kind": "gallery",
+    "images": [
+      "/images/pages/flowers/img-3.jpg",
+      "/images/pages/flowers/img-4.jpg",
+      "/images/pages/flowers/img-5.jpg"
+    ],
     "title": "Розы",
     "body": ""
   }

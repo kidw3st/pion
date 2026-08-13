@@ -195,13 +195,64 @@ async function scrapePage(page, slug) {
       );
 
       for (const rec of records) {
-        if (rec.getAttribute('data-record-type') === '396') continue;
+        const recordType = rec.getAttribute('data-record-type');
+        if (recordType === '396') continue;
+
+        // The contacts block (t718) is a form beside the salon's details, not
+        // a run of prose — read its fields directly rather than flattening it.
+        if (recordType === '718') {
+          const text = lines(rec);
+          // Take the visible label, not the href: the link target is digits
+          // only ("+79082413741"), while the page shows it spaced for reading.
+          const linkText = (sel) => (rec.querySelector(sel)?.textContent || '').trim();
+          const tel = linkText('a[href^="tel:"]');
+          const mail = linkText('a[href^="mailto:"]');
+          const vk = [...rec.querySelectorAll('a')]
+            .map((a) => a.getAttribute('href') || '')
+            .find((h) => h.includes('vk.com')) || '';
+          const address = text.find((l) => /Пермь/.test(l)) || '';
+          const hoursStart = text.findIndex((l) => /Режим работы/i.test(l));
+          const hours = hoursStart === -1 ? '' : text.slice(hoursStart, hoursStart + 3).join('\n');
+          // Intro is what sits between the heading and the first contact detail.
+          const intro = text
+            .slice(1)
+            .filter((l) => !/^\+?\d|@|Пермь|Режим работы|^пн|^сб|ОТПРАВИТЬ|Нажимая/i.test(l))
+            .slice(0, 2)
+            .join('\n');
+
+          out.push({
+            kind: 'contacts',
+            title: text[0] || 'Контакты',
+            intro,
+            phone: tel,
+            email: mail,
+            address,
+            hours,
+            vkHref: vk,
+          });
+          continue;
+        }
 
         const covers = [...rec.querySelectorAll('.t-cover__carrier')].map(coverSrc).filter(Boolean);
-        const photos = [...rec.querySelectorAll('img')]
+
+        // Photos come two ways. Some blocks use a real <img>; the text-and-photo
+        // blocks (t480) paint theirs as a CSS background on a div, with the
+        // full-size file in data-original — looking only at <img> lost every
+        // one of those, which is why /stock, /uds and /delivery had no photos.
+        const tagged = [...rec.querySelectorAll('img')]
           .filter((i) => i.getBoundingClientRect().width > 120)
-          .map((i) => i.getAttribute('data-original') || i.src)
-          .filter((s) => s && !s.toLowerCase().endsWith('.svg'));
+          .map((i) => i.getAttribute('data-original') || i.src);
+        const painted = [...rec.querySelectorAll('[data-original], [class*="bgimg"]')]
+          .filter((e) => e.getBoundingClientRect().width > 120)
+          .map((e) => {
+            const original = e.getAttribute('data-original');
+            if (original) return original;
+            const m = getComputedStyle(e).backgroundImage.match(/url\((['"]?)(.*?)\1\)/);
+            return m ? m[2] : null;
+          });
+        const photos = [...new Set([...tagged, ...painted])].filter(
+          (s) => s && !s.toLowerCase().endsWith('.svg'),
+        );
 
         const titleEl = rec.querySelector('.t-title, [class*="__title"], h1, h2');
         const bodyEls = [...rec.querySelectorAll('.t-descr, .t-text, [class*="__descr"]')].filter(
@@ -236,12 +287,18 @@ async function scrapePage(page, slug) {
           }
         }
 
+        // A block carrying both copy and a photo is a textImage, not a choice
+        // between the two — picking one used to silently drop the other.
+        if (photos.length === 1 && body) {
+          out.push({ kind: 'textImage', title, body, image: photos[0] });
+          continue;
+        }
         if (photos.length === 1 && title) {
           out.push({ kind: 'quote', text: title, image: photos[0] });
           continue;
         }
         if (photos.length > 1) {
-          out.push({ kind: 'gallery', images: [...new Set(photos)] });
+          out.push({ kind: 'gallery', images: photos, title, body });
           continue;
         }
         if (title || body) out.push({ kind: 'text', title, body });
@@ -274,7 +331,7 @@ async function scrapePage(page, slug) {
       const images = [];
       for (const src of section.images) images.push(await localise(src));
       sections.push({ ...section, images });
-    } else if (section.kind === 'quote') {
+    } else if (section.kind === 'quote' || section.kind === 'textImage') {
       sections.push({ ...section, image: await localise(section.image) });
     } else {
       sections.push(section);

@@ -115,6 +115,60 @@
   white-space: pre-line;
 }
 
+/* Copy beside a square photo, matching the live t480 blocks used by the
+   promotions, delivery and loyalty pages (photo 560x560 at desktop). */
+.textImage {
+  padding: 70px 40px;
+  background: var(--color-white);
+}
+
+.textImageInner {
+  display: flex;
+  align-items: center;
+  gap: 60px;
+  max-width: 1160px;
+  margin: 0 auto;
+}
+
+.textImageBody {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.textImagePhoto {
+  position: relative;
+  flex: none;
+  width: 560px;
+  max-width: 100%;
+  aspect-ratio: 1;
+  background: var(--color-bg-light);
+}
+
+.cover {
+  object-fit: cover;
+}
+
+/* Alternate sides so a run of these blocks does not read as one column. */
+.textImage:nth-of-type(even) .textImageInner {
+  flex-direction: row-reverse;
+}
+
+@media (max-width: 1000px) {
+  .textImage {
+    padding: 48px 20px;
+  }
+
+  .textImageInner,
+  .textImage:nth-of-type(even) .textImageInner {
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .textImagePhoto {
+    width: 100%;
+  }
+}
+
 /* People / role cards */
 .cards {
   padding: 70px 40px;
@@ -168,6 +222,196 @@
   display: block;
   width: 100%;
   height: auto;
+}
+
+/* Contacts: salon details beside a message form (live block is 821px tall,
+   heading 42px/600 starting at the shared 1160px column). */
+.contacts {
+  padding: 90px 40px;
+  background: var(--color-white);
+}
+
+.contactsInner {
+  display: flex;
+  gap: 80px;
+  max-width: 1160px;
+  margin: 0 auto;
+}
+
+.contactsInfo {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.contactsTitle {
+  margin: 0;
+  font-size: 42px;
+  font-weight: 600;
+  line-height: 52px;
+  color: var(--color-text-dark);
+}
+
+.contactsIntro {
+  margin: 20px 0 0;
+  max-width: 420px;
+  font-size: 17px;
+  font-weight: 300;
+  line-height: 27px;
+  color: var(--color-text-dark);
+  white-space: pre-line;
+}
+
+.contactsList {
+  margin: 36px 0 0;
+}
+
+.contactsRow {
+  display: flex;
+  gap: 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.contactsRow dt {
+  flex: none;
+  width: 140px;
+  font-size: 14px;
+  font-weight: 300;
+  color: var(--color-text-dark);
+  opacity: 0.7;
+}
+
+.contactsRow dd {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--color-text-dark);
+}
+
+.contactsHours {
+  white-space: pre-line;
+  line-height: 24px;
+}
+
+.contactsVk {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 28px;
+  color: var(--color-black);
+  font-size: 15px;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.contactsVk:hover {
+  opacity: 0.7;
+}
+
+.contactsFormWrap {
+  flex: none;
+  width: 460px;
+  max-width: 100%;
+}
+
+.contactsForm {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.contactsForm label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--color-text-dark);
+}
+
+.contactsForm input,
+.contactsForm textarea {
+  padding: 11px 14px;
+  border: 1px solid var(--color-border);
+  background: var(--color-white);
+  color: var(--color-text-dark);
+  font-family: inherit;
+  font-size: 15px;
+  resize: vertical;
+}
+
+.contactsForm input:focus,
+.contactsForm textarea:focus {
+  outline: none;
+  border-color: var(--color-accent);
+}
+
+.contactsSubmit {
+  align-self: flex-start;
+  padding: 15px 46px;
+  border: none;
+  background: var(--color-black);
+  color: var(--color-white);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.contactsSubmit:hover {
+  opacity: 0.85;
+}
+
+.contactsError {
+  font-size: 13px;
+  color: #b00020;
+}
+
+.contactsConsent {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 300;
+  line-height: 18px;
+  color: var(--color-text-dark);
+  opacity: 0.65;
+}
+
+.contactsConsent a {
+  text-decoration: underline;
+}
+
+.contactsThanks h2 {
+  margin: 0 0 12px;
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--color-text-dark);
+}
+
+.contactsThanks p {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 300;
+  color: var(--color-text-dark);
+}
+
+@media (max-width: 1000px) {
+  .contacts {
+    padding: 48px 20px;
+  }
+
+  .contactsInner {
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .contactsTitle {
+    font-size: 30px;
+    line-height: 38px;
+  }
+
+  .contactsFormWrap {
+    width: 100%;
+  }
 }
 
 /* Photo row */

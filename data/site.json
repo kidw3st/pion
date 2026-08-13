@@ -104,16 +104,6 @@
   },
   "heroSlides": [
     {
-      "title": "Авторские букеты с доставкой по Перми",
-      "subtitle": "",
-      "benefits": "Фото букета до отправки · Оплата картой онлайн · Самовывоз −5% · Букеты от 4 100 ₽",
-      "buttonText": "Выбрать готовый букет",
-      "buttonHref": "/bukety",
-      "secondaryButtonText": "Собрать индивидуальный",
-      "secondaryButtonHref": "#bouquet-builder",
-      "image": "/images/site/hero-0.jpg"
-    },
-    {
       "title": "ПИОН - для вас",
       "subtitle": "Каждую неделю мы показываем поставку свежих цветов",
       "buttonText": "Посмотреть витрину",
