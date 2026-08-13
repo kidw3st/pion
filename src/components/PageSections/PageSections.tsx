@@ -64,6 +64,17 @@ export function PageSections({ sections }: { sections: PageSection[] }) {
                 <div className={styles.cardsInner}>
                   {section.items.map((item) => (
                     <div key={item.title + item.subtitle} className={styles.card}>
+                      {item.image && (
+                        <div className={styles.cardPhoto}>
+                          <Image
+                            src={item.image}
+                            alt={item.title}
+                            fill
+                            sizes="260px"
+                            className={styles.cover}
+                          />
+                        </div>
+                      )}
                       <h3 className={styles.cardTitle}>{item.title}</h3>
                       <p className={styles.cardSubtitle}>{item.subtitle}</p>
                     </div>

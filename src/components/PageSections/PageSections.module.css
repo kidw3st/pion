@@ -187,6 +187,15 @@
   text-align: center;
 }
 
+/* Portraits run 260x440 on the live block — a tall crop, not a square. */
+.cardPhoto {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 260 / 440;
+  margin-bottom: 20px;
+  background: var(--color-bg-light-2);
+}
+
 .cardTitle {
   margin: 0;
   font-size: 20px;

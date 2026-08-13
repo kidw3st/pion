@@ -279,7 +279,22 @@ async function scrapePage(page, slug) {
             const key = `${t}|${s}`;
             if (seen.has(key)) continue;
             seen.add(key);
-            items.push({ title: t, subtitle: s });
+
+            // Portraits are painted as backgrounds too, same as the t480
+            // blocks — an <img> lookup alone leaves every card photoless.
+            const shot = [...c.querySelectorAll('[data-original], [class*="bgimg"]')].find(
+              (e) => e.getBoundingClientRect().width > 60,
+            );
+            const image =
+              shot?.getAttribute('data-original') ||
+              (shot
+                ? (getComputedStyle(shot).backgroundImage.match(/url\((['"]?)(.*?)\1\)/) || [])[2]
+                : null) ||
+              c.querySelector('img')?.getAttribute('data-original') ||
+              c.querySelector('img')?.src ||
+              null;
+
+            items.push({ title: t, subtitle: s, image: image || undefined });
           }
           if (items.length >= 2) {
             out.push({ kind: 'cards', items });
@@ -331,6 +346,12 @@ async function scrapePage(page, slug) {
       const images = [];
       for (const src of section.images) images.push(await localise(src));
       sections.push({ ...section, images });
+    } else if (section.kind === 'cards') {
+      const items = [];
+      for (const item of section.items) {
+        items.push(item.image ? { ...item, image: await localise(item.image) } : item);
+      }
+      sections.push({ ...section, items });
     } else if (section.kind === 'quote' || section.kind === 'textImage') {
       sections.push({ ...section, image: await localise(section.image) });
     } else {

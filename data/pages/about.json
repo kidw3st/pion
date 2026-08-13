@@ -19,21 +19,24 @@
     "items": [
       {
         "title": "Наталья Барсукова",
-        "subtitle": "Управляющая салона"
+        "subtitle": "Управляющая салона",
+        "image": "/images/pages/about/img-3.jpg"
       },
       {
         "title": "Юлия Дубровских",
-        "subtitle": "Флорист"
+        "subtitle": "Флорист",
+        "image": "/images/pages/about/img-4.jpg"
       },
       {
         "title": "Ксения Женихова",
-        "subtitle": "Флорист"
+        "subtitle": "Флорист",
+        "image": "/images/pages/about/img-5.jpg"
       }
     ]
   },
   {
     "kind": "quote",
     "text": "МЫ ТЩАТЕЛЬНО ОТБИРАЕМ ЛУЧШИЕ СЕЗОННЫЕ СВЕЖИЕ ЦВЕТЫ, А ЗАТЕМ СОЗДАЕМ АВТОРСКИЕ БУКЕТЫ И КОМПОЗИЦИИ С УНИКАЛЬНЫМ ПОЧЕРКОМ КОМАНДЫ \"ПИОН\"",
-    "image": "/images/pages/about/img-3.jpg"
+    "image": "/images/pages/about/img-6.jpg"
   }
 ]

@@ -17,7 +17,7 @@ export type PageSection =
   | { kind: 'cover'; title: string; subtitle: string; images: string[] }
   | { kind: 'text'; title: string; body: string }
   | { kind: 'textImage'; title: string; body: string; image: string }
-  | { kind: 'cards'; items: { title: string; subtitle: string }[] }
+  | { kind: 'cards'; items: { title: string; subtitle: string; image?: string }[] }
   | { kind: 'quote'; text: string; image: string }
   | { kind: 'gallery'; images: string[]; title?: string; body?: string }
   | {
