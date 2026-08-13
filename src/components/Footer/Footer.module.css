@@ -1,21 +1,27 @@
-/* Live footer: white band with the logo and legal details on the left, the
-   link columns in the middle, and the VK link on the right. The VK promo band
-   above it is a separate section (VkBlock), not part of the footer. */
+/* Measured from the live footer at 1866px: a 450px white band whose content
+   sits on the same four-column grid the rest of the site uses — 260px columns
+   on a 300px pitch, first column starting at x=353 (the centred 1160px
+   container). Column one holds the logo and legal details with the payment
+   marks below; the VK link sits under the second column, not out at the right
+   edge. */
 .footer {
   background: var(--color-white);
-  padding: 60px 40px;
+  padding: 75px 40px 97px;
 }
 
 .inner {
-  display: flex;
-  gap: 60px;
+  display: grid;
+  grid-template-columns: repeat(4, 260px);
+  justify-content: space-between;
+  align-items: start;
+  row-gap: 29px;
   max-width: 1160px;
   margin: 0 auto;
 }
 
 .brand {
-  flex: none;
-  width: 300px;
+  grid-column: 1;
+  grid-row: 1;
 }
 
 .logo {
@@ -24,54 +30,38 @@
 
 .logo img {
   display: block;
-  width: 130px;
+  width: 120px;
   height: auto;
 }
 
 .legal {
-  margin: 16px 0 0;
-  font-size: 12px;
+  margin: 18px 0 0;
+  font-size: 11px;
   font-weight: 300;
-  line-height: 18px;
+  line-height: 17px;
   color: var(--color-text-dark);
-  opacity: 0.75;
   white-space: pre-line;
 }
 
-.payment {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 24px;
-  font-size: 12px;
-  color: var(--color-text-dark);
-  opacity: 0.75;
-}
-
-.columns {
-  flex: 1 1 auto;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 40px;
+.column {
+  grid-row: 1;
 }
 
 .columnTitle {
-  margin: 0 0 16px;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  color: var(--color-text-dark);
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #525252;
 }
 
 .columnList {
   margin: 0;
   padding: 0;
   list-style: none;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
   font-size: 14px;
   font-weight: 300;
+  line-height: 28px;
 }
 
 .columnList a {
@@ -83,42 +73,78 @@
   opacity: 0.6;
 }
 
+/* Bottom row: payment marks under the brand, VK link under the first
+   link column. */
+.payment {
+  grid-column: 1;
+  grid-row: 2;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 14px;
+  color: var(--color-black);
+}
+
+.payment img {
+  width: 70px;
+  height: auto;
+}
+
+/* The live link sits centred in its column rather than flush with the links
+   above it. */
 .vkLink {
-  flex: none;
-  align-self: flex-end;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 20px;
-  color: var(--color-text-dark);
-  text-align: center;
+  grid-column: 2;
+  grid-row: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  color: var(--color-black);
   transition: opacity 0.2s ease-in-out;
 }
 
 .vkLink:hover {
-  opacity: 0.6;
+  opacity: 0.7;
 }
 
-@media (max-width: 900px) {
+.vkText {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  text-align: center;
+}
+
+.vkBadge {
+  width: 52px;
+  height: 53px;
+  transition: transform 0.9s ease-in-out;
+}
+
+.vkLink:hover .vkBadge {
+  transform: rotate(360deg);
+}
+
+@media (max-width: 1240px) {
   .footer {
-    padding: 40px 20px;
+    padding: 48px 20px;
   }
 
   .inner {
-    flex-direction: column;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 32px;
   }
 
-  .brand {
-    width: 100%;
-  }
-
-  .columns {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 28px;
-  }
-
+  .brand,
+  .column,
+  .payment,
   .vkLink {
-    align-self: flex-start;
-    text-align: left;
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .inner {
+    grid-template-columns: 1fr;
   }
 }
