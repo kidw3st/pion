@@ -2,7 +2,7 @@
    centred in a 635px band, 90px padding above and 45px below, every child
    placed at a fixed offset from the canvas' top-left corner. */
 .section {
-  background: var(--color-bg-light);
+  background: var(--color-white);
   padding: 90px 0 45px;
 }
 
