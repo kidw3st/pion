@@ -12,7 +12,7 @@
     "kind": "textImage",
     "title": "Больше,\nчем цветочный салон",
     "body": "Ирина Дылдина, руководитель \"ПИОН\"\n\nНаша команда занимается любимым делом\nи вкладывает душу и любовь в каждый цветок.\nВсе для того, чтобы наши клиенты получали максимум удовольствия от нашей работы.\nМы постоянно растем и предлагаем новые решения для наших клиентов: от цветочной подписки до композиций для дома. Мы хотим, чтобы вы получали эстетическое удовольствия, смотря на наши букеты.",
-    "image": "/images/pages/about/img-2.jpg"
+    "image": "/images/pages/about/img-2.webp"
   },
   {
     "kind": "cards",
@@ -20,17 +20,17 @@
       {
         "title": "Наталья Барсукова",
         "subtitle": "Управляющая салона",
-        "image": "/images/pages/about/img-3.jpg"
+        "image": "/images/pages/about/img-3.webp"
       },
       {
         "title": "Юлия Дубровских",
         "subtitle": "Флорист",
-        "image": "/images/pages/about/img-4.jpg"
+        "image": "/images/pages/about/img-4.webp"
       },
       {
         "title": "Ксения Женихова",
         "subtitle": "Флорист",
-        "image": "/images/pages/about/img-5.jpg"
+        "image": "/images/pages/about/img-5.webp"
       }
     ]
   },

@@ -189,6 +189,19 @@ async function scrapePage(page, slug) {
         return m ? m[2] : null;
       };
 
+      // Picks the file a background element actually shows.
+      //
+      // `data-original` is the untouched upload, which is the right choice when
+      // the block displays the whole picture. But where the design crops — the
+      // team portraits are a 260x440 cut from a group photo — the original is a
+      // different image entirely, so the served crop is what must be taken.
+      // Tilda marks those with `/-/cover/` in the optimised URL.
+      const paintedSrc = (el) => {
+        const shown = (getComputedStyle(el).backgroundImage.match(/url\((['"]?)(.*?)\1\)/) || [])[2];
+        if (shown && shown.includes('/-/cover/')) return shown;
+        return el.getAttribute('data-original') || shown || null;
+      };
+
       const out = [];
       const records = [...document.querySelectorAll('.r.t-rec')].filter(
         (r) => visible(r) && r.getBoundingClientRect().height > 60,
@@ -244,12 +257,7 @@ async function scrapePage(page, slug) {
           .map((i) => i.getAttribute('data-original') || i.src);
         const painted = [...rec.querySelectorAll('[data-original], [class*="bgimg"]')]
           .filter((e) => e.getBoundingClientRect().width > 120)
-          .map((e) => {
-            const original = e.getAttribute('data-original');
-            if (original) return original;
-            const m = getComputedStyle(e).backgroundImage.match(/url\((['"]?)(.*?)\1\)/);
-            return m ? m[2] : null;
-          });
+          .map(paintedSrc);
         const photos = [...new Set([...tagged, ...painted])].filter(
           (s) => s && !s.toLowerCase().endsWith('.svg'),
         );
@@ -286,10 +294,7 @@ async function scrapePage(page, slug) {
               (e) => e.getBoundingClientRect().width > 60,
             );
             const image =
-              shot?.getAttribute('data-original') ||
-              (shot
-                ? (getComputedStyle(shot).backgroundImage.match(/url\((['"]?)(.*?)\1\)/) || [])[2]
-                : null) ||
+              (shot ? paintedSrc(shot) : null) ||
               c.querySelector('img')?.getAttribute('data-original') ||
               c.querySelector('img')?.src ||
               null;
