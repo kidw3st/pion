@@ -611,15 +611,46 @@ async function main() {
   const site = JSON.parse(await readFile(siteJsonPath, 'utf-8'));
   site.heroSlides = heroSlides;
 
-  const bukety = JSON.parse(
-    await readFile(path.join(ROOT, 'data', 'catalog', 'bukety.json'), 'utf-8')
-  );
-  site.newProducts = bukety.slice(0, 3).map((p) => ({
-    title: p.title,
-    subtitle: p.description,
-    price: p.price,
-    image: p.images[0] || '',
-  }));
+  // "Новинки" is its own hand-built block on the homepage with its own copy and
+  // prices — it is not the first few bouquets from the catalogue, which is what
+  // this used to substitute.
+  const featured = await page.evaluate(() => {
+    const rec = [...document.querySelectorAll('.r.t-rec')].find(
+      (r) => r.getAttribute('data-record-type') === '776' && r.offsetParent !== null,
+    );
+    if (!rec) return [];
+    return [...rec.querySelectorAll('[class*="__col"]')]
+      .filter((c) => (c.innerText || '').trim())
+      .map((col) => {
+        const img = col.querySelector('img');
+        // Lines run: NEW, title, description, price, "р.", button label.
+        const parts = (col.innerText || '')
+          .split('\n')
+          .map((s) => s.trim())
+          .filter(Boolean);
+        const priceIndex = parts.findIndex((p) => /^\d[\d\s]*$/.test(p));
+        return {
+          title: parts[1] || '',
+          subtitle: parts[2] || '',
+          price: priceIndex === -1 ? 0 : Number(parts[priceIndex].replace(/\D/g, '')),
+          image: img ? img.getAttribute('data-original') || img.src : null,
+        };
+      })
+      .filter((p) => p.title && p.price);
+  });
+
+  site.newProducts = [];
+  for (const item of featured) {
+    let local = '';
+    if (item.image) {
+      const abs = new URL(item.image, SITE).href;
+      const ext = path.extname(new URL(abs).pathname) || '.jpg';
+      const fileName = `new-${slugify(item.title)}${ext}`;
+      await downloadImage(abs, path.join(ROOT, 'public', 'images', 'site', fileName));
+      local = `/images/site/${fileName}`;
+    }
+    site.newProducts.push({ ...item, image: local });
+  }
 
   await writeFile(siteJsonPath, JSON.stringify(site, null, 2), 'utf-8');
   console.log(`home: ${heroSlides.length} hero slides, ${site.newProducts.length} new products`);

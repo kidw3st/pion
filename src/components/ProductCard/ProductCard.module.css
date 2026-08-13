@@ -16,21 +16,22 @@
   object-fit: cover;
 }
 
+/* Measured on the live block: 51x50 circle in the accent colour, 10px in from
+   the photo's top-right corner, white 12px label. */
 .badge {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 10px;
+  right: 10px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 46px;
-  height: 46px;
+  width: 51px;
+  height: 50px;
   border-radius: 50%;
-  background: var(--color-header);
+  background: var(--color-accent);
   color: var(--color-white);
   font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
+  font-weight: 400;
 }
 
 .title {

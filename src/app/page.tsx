@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { getSite, getCatalog } from '@/lib/content';
+import { getSite } from '@/lib/content';
 import { buildMetadata } from '@/lib/seo';
 import { HeroSlider } from '@/components/HeroSlider/HeroSlider';
 import { ProductCard } from '@/components/ProductCard/ProductCard';
@@ -23,9 +23,18 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const site = getSite();
-  // A three-item teaser gave visitors nothing to choose between; a real
-  // shop window lets them pick without a second click.
-  const showcase = (await getCatalog('bukety'))?.slice(0, 9) ?? [];
+
+  // "Новинки" is the salon's own selection with its own copy and prices, so it
+  // comes from site data rather than the first few items of a category. Shaped
+  // into the catalogue's Product form to reuse the same card.
+  const featured = site.newProducts.map((p) => ({
+    uid: `new-${p.title}`,
+    title: p.title,
+    description: p.subtitle,
+    price: p.price,
+    images: p.image ? [p.image] : [],
+    slug: '',
+  }));
 
   return (
     <main>
@@ -34,8 +43,8 @@ export default async function HomePage() {
       <section className={styles.newSection}>
         <h2 className={styles.newHeading}>Новинки</h2>
         <div className={styles.newGrid}>
-          {showcase.map((p, i) => (
-            <ProductCard key={p.uid} product={p} isNew={i < 3} />
+          {featured.map((p) => (
+            <ProductCard key={p.uid} product={p} isNew />
           ))}
         </div>
         <div className={styles.newMore}>
