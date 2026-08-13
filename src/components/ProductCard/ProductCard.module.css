@@ -9,7 +9,7 @@
 .imageWrap {
   position: relative;
   aspect-ratio: 1;
-  background: var(--color-bg-light);
+  background: var(--color-white);
 }
 
 .image {

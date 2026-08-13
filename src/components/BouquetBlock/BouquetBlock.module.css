@@ -2,7 +2,7 @@
    both sitting in the shared 1160px content column on the light background. */
 .section {
   padding: 80px 40px;
-  background: var(--color-bg-light);
+  background: var(--color-white);
 }
 
 .inner {
