@@ -14,12 +14,10 @@ export function PageCover({
   title,
   subtitle,
   images,
-  height,
 }: {
   title: string;
   subtitle: string;
   images: string[];
-  height?: number;
 }) {
   const [index, setIndex] = useState(0);
 
@@ -30,7 +28,7 @@ export function PageCover({
   }, [images.length, index]);
 
   return (
-    <section className={styles.cover} style={height ? { height } : undefined}>
+    <section className={styles.cover}>
       {images.map((src, i) => (
         <div
           key={src}

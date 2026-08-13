@@ -96,7 +96,7 @@ export default async function SlugPage({ params }: { params: { slug: string } })
         {products.length > 0 && <JsonLd data={productListJsonLd(products, `/${slug}/`)} />}
 
         {meta?.title && meta.covers.length > 0 && (
-          <PageCover title={meta.title} subtitle={meta.sub ?? ''} images={meta.covers} height={870} />
+          <PageCover title={meta.title} subtitle={meta.sub ?? ''} images={meta.covers} />
         )}
         <CategoryGrid
           products={products}

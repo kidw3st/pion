@@ -1,8 +1,12 @@
 /* Page cover: title over a cross-fading photo stack, matching the ~810-900px
    opening block the live pages use. */
+/* Fills whatever is left of the screen under the 90px header, so the cover
+   always reaches the bottom edge instead of stopping short and letting the
+   next section show through as a band. */
 .cover {
   position: relative;
-  height: 810px;
+  height: calc(100vh - 90px);
+  min-height: 480px;
   overflow: hidden;
   background: var(--color-black);
 }
@@ -172,7 +176,7 @@
 /* People / role cards */
 .cards {
   padding: 70px 40px;
-  background: var(--color-bg-light);
+  background: var(--color-white);
 }
 
 .cardsInner {
