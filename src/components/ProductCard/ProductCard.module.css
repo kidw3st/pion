@@ -16,12 +16,14 @@
   object-fit: cover;
 }
 
-/* Measured on the live block: 51x50 circle in the accent colour, 10px in from
-   the photo's top-right corner, white 12px label. */
+/* Measured on the live block: 51x50 circle in the accent colour with a white
+   12px label. It straddles the photo's top edge — 10px above it, 10px in from
+   the right — rather than sitting inside the corner. */
 .badge {
   position: absolute;
-  top: 10px;
+  top: -10px;
   right: 10px;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
