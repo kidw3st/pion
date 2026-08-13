@@ -427,6 +427,120 @@
   }
 }
 
+/* Links on to sub-sections: full-bleed photo tiles, three across, matching
+   the tile grid used on /catalog. */
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.tile {
+  position: relative;
+  display: block;
+  aspect-ratio: 467 / 443;
+  overflow: hidden;
+}
+
+.tile .cover {
+  transition: transform 0.4s ease-in-out;
+}
+
+.tile:hover .cover {
+  transform: scale(1.04);
+}
+
+.tileShade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.4));
+}
+
+.tileLabel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 82.6%;
+  transform: translateY(-50%);
+  z-index: 1;
+  text-align: center;
+  color: var(--color-white);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+/* Goods published on the page rather than through the store. */
+.products {
+  padding: 70px 40px 80px;
+  background: var(--color-white);
+}
+
+.productsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 40px;
+  max-width: 1160px;
+  margin: 0 auto;
+}
+
+.product {
+  display: flex;
+  flex-direction: column;
+}
+
+.productPhoto {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 360 / 496;
+  background: var(--color-bg-light-2);
+}
+
+.productTitle {
+  margin: 18px 0 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--color-text-dark);
+}
+
+.productPrice {
+  margin-top: 10px;
+  font-size: 16px;
+  color: var(--color-text-dark);
+}
+
+.productBtn {
+  align-self: flex-start;
+  margin-top: 16px;
+  padding: 12px 26px;
+  border: 2px solid var(--color-accent);
+  background: var(--color-accent);
+  color: var(--color-white);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.productBtn:hover {
+  opacity: 0.85;
+}
+
+@media (max-width: 900px) {
+  .tiles {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .products {
+    padding: 48px 20px;
+  }
+}
+
+@media (max-width: 560px) {
+  .tiles {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Photo row */
 .gallery {
   padding: 40px;

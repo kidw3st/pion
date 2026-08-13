@@ -246,6 +246,48 @@ async function scrapePage(page, slug) {
           continue;
         }
 
+        // Grid of links to other pages (t694) — how /flowers offers Розы,
+        // Пионы and Разные цветы. Without this the page is a dead end.
+        if (recordType === '694') {
+          const seenHref = new Set();
+          const tiles = [];
+          for (const col of rec.querySelectorAll('[class*="__col"]')) {
+            const link = col.querySelector('a');
+            const href = link?.getAttribute('href');
+            const label = lines(col)[0];
+            if (!href || !label || seenHref.has(href)) continue;
+            seenHref.add(href);
+            const shot = [...col.querySelectorAll('*')].find((e) =>
+              getComputedStyle(e).backgroundImage.includes('url'),
+            );
+            tiles.push({ label, href, image: shot ? paintedSrc(shot) : null });
+          }
+          if (tiles.length) {
+            out.push({ kind: 'tiles', tiles });
+            continue;
+          }
+        }
+
+        // Goods laid out by hand rather than held in the Tilda store (t776),
+        // which is how the indoor plants are published — name, price, photo.
+        if (recordType === '776') {
+          const items = [];
+          for (const col of rec.querySelectorAll('[class*="__col"]')) {
+            const parts = lines(col);
+            const title = parts[0];
+            const price = Number((parts[1] || '').replace(/[^\d]/g, ''));
+            if (!title || !price || /Артикул/i.test(title)) continue;
+            const shot = [...col.querySelectorAll('*')].find((e) =>
+              getComputedStyle(e).backgroundImage.includes('url'),
+            );
+            items.push({ title, price, image: shot ? paintedSrc(shot) : null });
+          }
+          if (items.length) {
+            out.push({ kind: 'products', items });
+            continue;
+          }
+        }
+
         const covers = [...rec.querySelectorAll('.t-cover__carrier')].map(coverSrc).filter(Boolean);
 
         // Photos come two ways. Some blocks use a real <img>; the text-and-photo
@@ -351,6 +393,13 @@ async function scrapePage(page, slug) {
       const images = [];
       for (const src of section.images) images.push(await localise(src));
       sections.push({ ...section, images });
+    } else if (section.kind === 'tiles' || section.kind === 'products') {
+      const key = section.kind === 'tiles' ? 'tiles' : 'items';
+      const list = [];
+      for (const item of section[key]) {
+        list.push(item.image ? { ...item, image: await localise(item.image) } : item);
+      }
+      sections.push({ ...section, [key]: list });
     } else if (section.kind === 'cards') {
       const items = [];
       for (const item of section.items) {
@@ -507,14 +556,23 @@ async function main() {
   const browser = await chromium.launch({ channel: browserChannel });
   const page = await browser.newPage();
 
-  // `node scripts/scrape.mjs home` refreshes only the homepage, which is quick
-  // — useful when a fix only affects the hero and re-running every category and
-  // page would take far longer for no benefit.
-  const onlyHome = process.argv[2] === 'home';
+  // Partial runs, so a fix touching one page does not cost a full scrape:
+  //   scrape.mjs home                     -> homepage only
+  //   scrape.mjs pages                    -> every static page
+  //   scrape.mjs pages flowers about      -> just those pages
+  const mode = process.argv[2];
+  const onlyHome = mode === 'home';
+  const onlyPages = mode === 'pages';
+  const requested = process.argv.slice(3);
+  const pageSlugs = onlyHome
+    ? []
+    : requested.length
+      ? PAGE_SLUGS.filter((s) => requested.includes(s))
+      : PAGE_SLUGS;
 
   await mkdir(path.join(ROOT, 'data', 'catalog'), { recursive: true });
   await mkdir(path.join(ROOT, 'data', 'pages'), { recursive: true });
-  for (const slug of onlyHome ? [] : CATEGORY_SLUGS) {
+  for (const slug of onlyHome || onlyPages ? [] : CATEGORY_SLUGS) {
     const products = await scrapeCategory(slug);
     if (products === null) {
       // Defensive fallback: shouldn't trigger given the static
@@ -538,7 +596,7 @@ async function main() {
     console.log(`${slug}: ${products.length} products`);
   }
 
-  for (const slug of onlyHome ? [] : PAGE_SLUGS) {
+  for (const slug of pageSlugs) {
     const blocks = await scrapePage(page, slug);
     await writeFile(
       path.join(ROOT, 'data', 'pages', `${slug}.json`),

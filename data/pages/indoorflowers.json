@@ -8,23 +8,27 @@
     ]
   },
   {
-    "kind": "cards",
+    "kind": "products",
     "items": [
       {
-        "title": "5700",
-        "subtitle": "р."
+        "title": "Антуриум",
+        "price": 5700,
+        "image": "/images/pages/indoorflowers/img-1.webp"
       },
       {
-        "title": "3600",
-        "subtitle": "р."
+        "title": "Спатифилум",
+        "price": 3600,
+        "image": "/images/pages/indoorflowers/img-2.webp"
       },
       {
-        "title": "5200",
-        "subtitle": "р."
+        "title": "Алоказия",
+        "price": 5200,
+        "image": "/images/pages/indoorflowers/img-3.webp"
       },
       {
-        "title": "5100",
-        "subtitle": "р."
+        "title": "Флебодиум",
+        "price": 5100,
+        "image": "/images/pages/indoorflowers/img-4.webp"
       }
     ]
   }

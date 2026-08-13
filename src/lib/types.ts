@@ -18,6 +18,10 @@ export type PageSection =
   | { kind: 'text'; title: string; body: string }
   | { kind: 'textImage'; title: string; body: string; image: string }
   | { kind: 'cards'; items: { title: string; subtitle: string; image?: string }[] }
+  /** Links on to other pages, e.g. /flowers offering its three sub-sections. */
+  | { kind: 'tiles'; tiles: { label: string; href: string; image: string | null }[] }
+  /** Goods published outside the Tilda store, laid out by hand on the page. */
+  | { kind: 'products'; items: { title: string; price: number; image: string | null }[] }
   | { kind: 'quote'; text: string; image: string }
   | { kind: 'gallery'; images: string[]; title?: string; body?: string }
   | {

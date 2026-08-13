@@ -1,7 +1,9 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import type { PageSection } from '@/lib/types';
 import { PageCover } from './PageCover';
 import { ContactsSection } from './ContactsSection';
+import { PageProducts } from './PageProducts';
 import styles from './PageSections.module.css';
 
 export function PageSections({ sections }: { sections: PageSection[] }) {
@@ -28,6 +30,24 @@ export function PageSections({ sections }: { sections: PageSection[] }) {
                 </div>
               </section>
             );
+
+          case 'tiles':
+            return (
+              <section key={i} className={styles.tiles}>
+                {section.tiles.map((tile) => (
+                  <Link key={tile.href} href={tile.href} className={styles.tile}>
+                    {tile.image && (
+                      <Image src={tile.image} alt="" fill sizes="33vw" className={styles.cover} />
+                    )}
+                    <span className={styles.tileShade} />
+                    <span className={styles.tileLabel}>{tile.label}</span>
+                  </Link>
+                ))}
+              </section>
+            );
+
+          case 'products':
+            return <PageProducts key={i} items={section.items} />;
 
           case 'contacts':
             return (

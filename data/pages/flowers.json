@@ -10,13 +10,23 @@
     ]
   },
   {
-    "kind": "gallery",
-    "images": [
-      "/images/pages/flowers/img-3.jpg",
-      "/images/pages/flowers/img-4.jpg",
-      "/images/pages/flowers/img-5.jpg"
-    ],
-    "title": "Розы",
-    "body": ""
+    "kind": "tiles",
+    "tiles": [
+      {
+        "label": "Розы",
+        "href": "/roses",
+        "image": "/images/pages/flowers/img-3.jpg"
+      },
+      {
+        "label": "Пионы",
+        "href": "/pions",
+        "image": "/images/pages/flowers/img-4.jpg"
+      },
+      {
+        "label": "Разные цветы",
+        "href": "/mixflower",
+        "image": "/images/pages/flowers/img-5.jpg"
+      }
+    ]
   }
 ]
