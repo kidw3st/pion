@@ -48,22 +48,32 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
 
       <div className={styles.inner}>
         <div className={styles.content}>
-          <h2 className={styles.title}>{slide.title}</h2>
+          <h2 className={slide.benefits ? styles.offerTitle : styles.title}>{slide.title}</h2>
+          {slide.benefits && <p className={styles.benefits}>{slide.benefits}</p>}
           {slide.subtitle && <p className={styles.subtitle}>{slide.subtitle}</p>}
-          {isExternalHref(slide.buttonHref) ? (
-            <a
-              href={slide.buttonHref}
-              target="_blank"
-              rel="noreferrer noopener"
-              className={styles.button}
-            >
-              {slide.buttonText}
-            </a>
-          ) : (
-            <Link href={slide.buttonHref} className={styles.button}>
-              {slide.buttonText}
-            </Link>
-          )}
+
+          <div className={styles.actions}>
+            {isExternalHref(slide.buttonHref) ? (
+              <a
+                href={slide.buttonHref}
+                target="_blank"
+                rel="noreferrer noopener"
+                className={styles.button}
+              >
+                {slide.buttonText}
+              </a>
+            ) : (
+              <Link href={slide.buttonHref} className={styles.button}>
+                {slide.buttonText}
+              </Link>
+            )}
+
+            {slide.secondaryButtonText && slide.secondaryButtonHref && (
+              <a href={slide.secondaryButtonHref} className={styles.buttonSecondary}>
+                {slide.secondaryButtonText}
+              </a>
+            )}
+          </div>
         </div>
       </div>
 

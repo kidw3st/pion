@@ -104,6 +104,16 @@
   },
   "heroSlides": [
     {
+      "title": "Авторские букеты с доставкой по Перми",
+      "subtitle": "",
+      "benefits": "Фото букета до отправки · Оплата картой онлайн · Самовывоз −5% · Букеты от 4 100 ₽",
+      "buttonText": "Выбрать готовый букет",
+      "buttonHref": "/bukety",
+      "secondaryButtonText": "Собрать индивидуальный",
+      "secondaryButtonHref": "#bouquet-builder",
+      "image": "/images/site/hero-0.jpg"
+    },
+    {
       "title": "ПИОН - для вас",
       "subtitle": "Каждую неделю мы показываем поставку свежих цветов",
       "buttonText": "Посмотреть витрину",
@@ -218,5 +228,31 @@
     ],
     "badge": "/images/site/pion-badge.svg",
     "watermark": "PION"
+  },
+  "delivery": {
+    "options": [
+      {
+        "id": "zone-5",
+        "label": "Доставка до 5 км от салона",
+        "priceRub": 500
+      },
+      {
+        "id": "zone-7",
+        "label": "Доставка до 7 км от салона",
+        "priceRub": 800
+      },
+      {
+        "id": "zone-9",
+        "label": "Доставка до 9 км от салона",
+        "priceRub": 950
+      },
+      {
+        "id": "pickup",
+        "label": "Самовывоз: ул. Газеты Звезда, 27",
+        "priceRub": 0,
+        "discountPercent": 5
+      }
+    ],
+    "note": "Стоимость доставки зависит от расстояния от салона. При самовывозе — скидка 5% на заказ."
   }
 }

@@ -2,25 +2,29 @@
 
 import { useState } from 'react';
 import { useCart } from '@/components/Cart/CartContext';
+import { getSite } from '@/lib/content';
 import { validateCheckout, type CheckoutValues } from './validateCheckout';
+import { orderTotals } from './orderTotals';
 import styles from './CheckoutForm.module.css';
 
-const DELIVERY_OPTIONS = [
-  { value: '1', label: 'До 5км от нашего магазина - 500 рублей' },
-  { value: '2', label: 'До 7км от нашего магазина - 800 рублей' },
-  { value: '3', label: 'До 9км от нашего магазина - 950 рублей' },
-  { value: 'pickup', label: 'Самовывоз из нашего салона по адресу ул.Газеты Звезда, 27. При самовывозе - скидка 5%' },
-];
+// Delivery zones and prices come from data/site.json so the checkout, the
+// delivery page and the agent-facing data can never quote different numbers.
+const DELIVERY = getSite().delivery;
 
 const initialValues: CheckoutValues = {
-  name: '', email: '', phone: '', deliveryOption: '1', address: '', paymentMethod: '',
+  name: '', email: '', phone: '', deliveryOption: DELIVERY.options[0].id, address: '', paymentMethod: '',
 };
+
+const rub = (value: number) => `${value.toLocaleString('ru-RU')} ₽`;
 
 export function CheckoutForm() {
   const { items, total, clear } = useCart();
   const [values, setValues] = useState<CheckoutValues>(initialValues);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
+
+  const chosenOption = DELIVERY.options.find((o) => o.id === values.deliveryOption) ?? null;
+  const totals = orderTotals(total, chosenOption);
 
   function update<K extends keyof CheckoutValues>(key: K, value: CheckoutValues[K]) {
     setValues((v) => ({ ...v, [key]: value }));
@@ -51,10 +55,33 @@ export function CheckoutForm() {
 
       <ul className={styles.summary}>
         {items.map((item) => (
-          <li key={item.uid}>{item.title} × {item.quantity} — {item.price * item.quantity} ₽</li>
+          <li key={item.uid}>
+            {item.title} × {item.quantity} — {rub(item.price * item.quantity)}
+          </li>
         ))}
       </ul>
-      <p className={styles.total}>Сумма: {total} ₽</p>
+
+      <div className={styles.totals}>
+        <div className={styles.totalsRow}>
+          <span>Товары</span>
+          <span>{rub(totals.goods)}</span>
+        </div>
+        <div className={styles.totalsRow}>
+          <span>{chosenOption?.id === 'pickup' ? 'Самовывоз' : 'Доставка'}</span>
+          <span>{totals.delivery === 0 ? 'бесплатно' : rub(totals.delivery)}</span>
+        </div>
+        {totals.discount > 0 && (
+          <div className={styles.totalsRow}>
+            <span>Скидка за самовывоз {chosenOption?.discountPercent}%</span>
+            <span>−{rub(totals.discount)}</span>
+          </div>
+        )}
+        <div className={styles.totalsFinal}>
+          <span>Итого к оплате</span>
+          <span>{rub(totals.total)}</span>
+        </div>
+        <p className={styles.totalsNote}>{DELIVERY.note}</p>
+      </div>
 
       <label>
         Ваше имя
@@ -81,16 +108,23 @@ export function CheckoutForm() {
 
       <fieldset>
         <legend>Доставка</legend>
-        {DELIVERY_OPTIONS.map((opt) => (
-          <label key={opt.value} className={styles.radioLabel}>
+        {DELIVERY.options.map((opt) => (
+          <label key={opt.id} className={styles.radioLabel}>
             <input
               type="radio"
               name="deliveryOption"
-              value={opt.value}
-              checked={values.deliveryOption === opt.value}
-              onChange={() => update('deliveryOption', opt.value)}
+              value={opt.id}
+              checked={values.deliveryOption === opt.id}
+              onChange={() => update('deliveryOption', opt.id)}
             />
-            {opt.label}
+            <span>
+              {opt.label}
+              {' — '}
+              <strong>
+                {opt.priceRub === 0 ? 'бесплатно' : rub(opt.priceRub)}
+                {opt.discountPercent ? `, скидка ${opt.discountPercent}%` : ''}
+              </strong>
+            </span>
           </label>
         ))}
       </fieldset>

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { getSite, getCatalog } from '@/lib/content';
 import { buildMetadata } from '@/lib/seo';
 import { HeroSlider } from '@/components/HeroSlider/HeroSlider';
@@ -22,7 +23,9 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const site = getSite();
-  const newProducts = (await getCatalog('bukety'))?.slice(0, 3) ?? [];
+  // A three-item teaser gave visitors nothing to choose between; a real
+  // shop window lets them pick without a second click.
+  const showcase = (await getCatalog('bukety'))?.slice(0, 9) ?? [];
 
   return (
     <main>
@@ -31,9 +34,14 @@ export default async function HomePage() {
       <section className={styles.newSection}>
         <h2 className={styles.newHeading}>Новинки</h2>
         <div className={styles.newGrid}>
-          {newProducts.map((p) => (
-            <ProductCard key={p.uid} product={p} isNew />
+          {showcase.map((p, i) => (
+            <ProductCard key={p.uid} product={p} isNew={i < 3} />
           ))}
+        </div>
+        <div className={styles.newMore}>
+          <Link href="/bukety" className={styles.newMoreBtn}>
+            Смотреть все букеты
+          </Link>
         </div>
       </section>
 

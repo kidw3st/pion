@@ -43,6 +43,24 @@ export interface HeroSlide {
   buttonText: string;
   buttonHref: string;
   image: string;
+  /** Short benefit line under the heading, e.g. "Фото букета до отправки · …". */
+  benefits?: string;
+  /** Second call to action, shown beside the first when present. */
+  secondaryButtonText?: string;
+  secondaryButtonHref?: string;
+}
+
+/** Delivery options and their prices — the single source for the whole site. */
+export interface DeliveryOption {
+  id: string;
+  label: string;
+  priceRub: number;
+  discountPercent?: number;
+}
+
+export interface DeliveryInfo {
+  options: DeliveryOption[];
+  note: string;
 }
 
 export interface FeaturedProduct {
@@ -104,4 +122,5 @@ export interface SiteData {
   bouquetBlock: BouquetBlock;
   uds: UdsBlock;
   vk: VkBlock;
+  delivery: DeliveryInfo;
 }
