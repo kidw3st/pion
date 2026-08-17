@@ -6,8 +6,19 @@ import Link from 'next/link';
 import type { HeroSlide } from '@/lib/types';
 import styles from './HeroSlider.module.css';
 
+/**
+ * Anything that is not a path of ours points somewhere else. A bare
+ * "instagram.com/pionperm" counts: treated as internal it becomes a link to a
+ * page of this site that does not exist, which is how the slider's Instagram
+ * button used to 404 instead of opening Instagram.
+ */
 function isExternalHref(href: string): boolean {
-  return href.startsWith('http://') || href.startsWith('https://');
+  return !href.startsWith('/') && !href.startsWith('#');
+}
+
+/** Gives a protocol-less external link the scheme the browser needs. */
+function externalUrl(href: string): string {
+  return /^[a-z][a-z0-9+.-]*:/i.test(href) ? href : `https://${href}`;
 }
 
 // Chevron used by the live slider's side arrows: a stroked polyline in a
@@ -55,7 +66,7 @@ export function HeroSlider({ slides }: { slides: HeroSlide[] }) {
           <div className={styles.actions}>
             {isExternalHref(slide.buttonHref) ? (
               <a
-                href={slide.buttonHref}
+                href={externalUrl(slide.buttonHref)}
                 target="_blank"
                 rel="noreferrer noopener"
                 className={styles.button}
