@@ -14,11 +14,15 @@ export function PageCover({
   title,
   subtitle,
   images,
+  headingLevel = 'h1',
 }: {
   title: string;
   subtitle: string;
   images: string[];
+  /** A page may carry only one h1; a second cover on the same page uses h2. */
+  headingLevel?: 'h1' | 'h2';
 }) {
+  const Heading = headingLevel;
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
@@ -35,12 +39,18 @@ export function PageCover({
           className={i === index ? styles.coverSlideActive : styles.coverSlide}
           aria-hidden={i === index ? undefined : true}
         >
-          <Image src={src} alt="" fill priority={i === 0} className={styles.coverImage} />
+          <Image
+            src={src}
+            alt={`${title} — салон цветов «Пион», Пермь${images.length > 1 ? `, фото ${i + 1}` : ''}`}
+            fill
+            priority={i === 0}
+            className={styles.coverImage}
+          />
         </div>
       ))}
       <div className={styles.coverOverlay} />
       <div className={styles.coverBody}>
-        <h1 className={styles.coverTitle}>{title}</h1>
+        <Heading className={styles.coverTitle}>{title}</Heading>
         {subtitle && <p className={styles.coverSubtitle}>{subtitle}</p>}
       </div>
 

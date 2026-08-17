@@ -2,5 +2,363 @@
   "slug": "luchshee",
   "title": "Лучшее для дома\nи офиса",
   "url": "https://kidw3st.github.io/pion/luchshee/",
-  "products": []
+  "products": [
+    {
+      "id": "601869152971",
+      "title": "ВАЗА ДЕКОРАТИВНАЯ СТЕКЛЯННАЯ FLORA",
+      "composition": "Высота:#nbsp;37,8 см<br />Ширина:#nbsp;22 см<br />Длина:#nbsp;24 см<br />Вес:#nbsp;4.2 кг<br /><strong> </strong>",
+      "priceRub": 26500,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-dekorativnaya-steklyannaya-flora-601869152971.webp"
+    },
+    {
+      "id": "336063986681",
+      "title": "Интерьерная композиция \"Яркий акцент\"",
+      "composition": "Интерьерная композиция выполнена из сухоцветов и искусственных цветов самого лучшего качества!",
+      "priceRub": 9600,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/interernaya-kompozitsiya-yarkii-aktsent-336063986681.webp"
+    },
+    {
+      "id": "815424570441",
+      "title": "Интерьерная композиция \"Солнце прованса\"",
+      "composition": "Интерьерная композиция выполнена из сухоцветов и искусственных цветов самого лучшего качества в керамической вазе.",
+      "priceRub": 8300,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/interernaya-kompozitsiya-solntse-provansa-815424570441.webp"
+    },
+    {
+      "id": "975849545081",
+      "title": "Интерьерная композиция \"Маковый сбор\"",
+      "composition": "Интерьерная композиция выполнена из сухоцветов и искусственных цветов самого лучшего качества!",
+      "priceRub": 8000,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/interernaya-kompozitsiya-makovyi-sbor-975849545081.webp"
+    },
+    {
+      "id": "566086262521",
+      "title": "Интерьерная композиция \"Утро на море\"",
+      "composition": "Интерьерная композиция выполнена из искусственных цветов самого лучшего качества!",
+      "priceRub": 19600,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/interernaya-kompozitsiya-utro-na-more-566086262521.webp"
+    },
+    {
+      "id": "197912229331",
+      "title": "Интерьерная композиция \"Lavender\"",
+      "composition": "Интерьерная композиция выполнена из искусственных цветов самого лучшего качества!",
+      "priceRub": 19500,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/interernaya-kompozitsiya-lavender-197912229331.webp"
+    },
+    {
+      "id": "537918045801",
+      "title": "Интерьерная композиция \"Red line\"",
+      "composition": "Интерьерная композиция выполнена из искусственных цветов самого лучшего качества!",
+      "priceRub": 10350,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/interernaya-kompozitsiya-red-line-537918045801.webp"
+    },
+    {
+      "id": "676713690801",
+      "title": "Интерьерная композиция \"Green day\"",
+      "composition": "Интерьерная композиция выполнена из искусственных цветов самого лучшего качества!",
+      "priceRub": 14900,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/interernaya-kompozitsiya-green-day-676713690801.webp"
+    },
+    {
+      "id": "421566467481",
+      "title": "Интерьерная композиция \"Global\"",
+      "composition": "Интерьерная композиция выполнена из искусственных цветов самого лучшего качества!",
+      "priceRub": 10300,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/interernaya-kompozitsiya-global-421566467481.webp"
+    },
+    {
+      "id": "184964591691",
+      "title": "Интерьерная композиция \"Salmon classic\"",
+      "composition": "Интерьерная композиция выполнена из искусственных цветов самого лучшего качества!",
+      "priceRub": 16900,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/interernaya-kompozitsiya-salmon-classic-184964591691.webp"
+    },
+    {
+      "id": "722995183411",
+      "title": "Интерьерная композиция \"Red pion\"",
+      "composition": "Интерьерная композиция выполнена из искусственных цветов самого лучшего качества в декоративной стеклянной вазе.",
+      "priceRub": 14000,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/interernaya-kompozitsiya-red-pion-722995183411.webp"
+    },
+    {
+      "id": "169445382121",
+      "title": "Интерьерная композиция \"Lilac\"",
+      "composition": "Интерьерная композиция выполнена из искусственных цветов самого лучшего качества.",
+      "priceRub": 11800,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/interernaya-kompozitsiya-lilac-169445382121.webp"
+    },
+    {
+      "id": "911904096741",
+      "title": "Интерьерная композиция \"Deep purple\"",
+      "composition": "Интерьерная композиция выполнена из сухоцветов и искусственных цветов самого лучшего качества в керамической вазе.",
+      "priceRub": 14800,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/interernaya-kompozitsiya-deep-purple-911904096741.webp"
+    },
+    {
+      "id": "226573039881",
+      "title": "ВАЗА ДЕКОРАТИВНАЯ СТЕКЛЯННАЯ FLOW",
+      "composition": "Высота:#nbsp;36 см<br />Ширина:#nbsp;19 см<br />Длина:#nbsp;24 см<br />Вес:#nbsp;3.6 кг<br /><br />",
+      "priceRub": 28650,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-dekorativnaya-steklyannaya-flow-226573039881.webp"
+    },
+    {
+      "id": "306725183081",
+      "title": "ВАЗА МЕТАЛЛИЧЕСКАЯ СЕРЕБРО/ШАМПАНЬ",
+      "composition": "Высота:#nbsp;34 см<br />Ширина:#nbsp;33 см<br />Длина:#nbsp;29 см<br />Вес:#nbsp;3.85 кг<br /><br />",
+      "priceRub": 21750,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-metallicheskaya-serebro-shampan-306725183081.webp"
+    },
+    {
+      "id": "850260450711",
+      "title": "ВАЗА СТЕКЛЯННАЯ СЕРЕБРИСТАЯ",
+      "composition": "Высота:#nbsp;25 см<br />Ширина:#nbsp;13 см<br />Длина:#nbsp;13 см<br />Вес:#nbsp;0.58 кг<br /><br />",
+      "priceRub": 6530,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-steklyannaya-serebristaya-850260450711.webp"
+    },
+    {
+      "id": "398263914731",
+      "title": "ВАЗА КЕРАМИЧЕСКАЯ ЗОЛОТАЯ",
+      "composition": "Высота:#nbsp;44,5 см<br />Ширина:#nbsp;25 см<br />Длина:#nbsp;12 см<br />Вес:#nbsp;2.5 кг<br /><br />",
+      "priceRub": 10560,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-keramicheskaya-zolotaya-398263914731.webp"
+    },
+    {
+      "id": "170735980311",
+      "title": "ВАЗА ДЕКОРАТИВНАЯ С КРЫШКОЙ \"ЯГУАР\"",
+      "composition": "Высота:#nbsp;28 см<br />Ширина:#nbsp;16 см<br />Длина:#nbsp;16 см<br />Вес:#nbsp;1.9 кг<br /><br /><br />",
+      "priceRub": 9450,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-dekorativnaya-s-kryshkoi-yaguar-170735980311.webp"
+    },
+    {
+      "id": "920050506511",
+      "title": "ШКАТУЛКА ГОЛУБАЯ СО СТРЕКОЗОЙ",
+      "composition": "Высота:#nbsp;9 см<br />Ширина:#nbsp;13 см<br />Длина:#nbsp;13 см<br />Вес:#nbsp;1.5 кг<br /><br /><br />",
+      "priceRub": 12150,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/shkatulka-golubaya-so-strekozoi-920050506511.webp"
+    },
+    {
+      "id": "341891016001",
+      "title": "ВАЗА КЕРАМИЧЕСКАЯ БЕЛАЯ С ЗОЛОТЫМ ДЕКОРОМ",
+      "composition": "Высота:#nbsp;30 см<br />Ширина:#nbsp;9 см<br />Длина:#nbsp;13 см<br />Вес:#nbsp;1.05 кг<br /><br /><br /><br />",
+      "priceRub": 12000,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-keramicheskaya-belaya-s-zolotym-dekorom-341891016001.webp"
+    },
+    {
+      "id": "734882194851",
+      "title": "ВАЗА ПЕРЛАМУТРОВОЕ СТЕКЛО (2)",
+      "composition": "12х30см",
+      "priceRub": 4600,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-perlamutrovoe-steklo-2-734882194851.webp"
+    },
+    {
+      "id": "240810847741",
+      "title": "ВАЗА ВИНТАЖ ПЕРЛАМУТРОВЫЙ (1)",
+      "composition": "<br /><br />",
+      "priceRub": 7600,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-vintazh-perlamutrovyi-1-240810847741.webp"
+    },
+    {
+      "id": "552080000021",
+      "title": "ВАЗА ВИНТАЖ ПЕРЛАМУТРОВЫЙ (2)",
+      "composition": "<br /><br />",
+      "priceRub": 7600,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-vintazh-perlamutrovyi-2-552080000021.webp"
+    },
+    {
+      "id": "126752244341",
+      "title": "ВАЗА КЕРАМИКА БИРЮЗОВАЯ",
+      "composition": "<br /><br />",
+      "priceRub": 2900,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-keramika-biryuzovaya-126752244341.webp"
+    },
+    {
+      "id": "312689588911",
+      "title": "ВАЗА ЗОЛОТОЕ СТЕКЛО",
+      "composition": "<br /><br />",
+      "priceRub": 1200,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-zolotoe-steklo-312689588911.webp"
+    },
+    {
+      "id": "180264527351",
+      "title": "ВАЗА КЕРАМИКА С КРЫШКОЙ",
+      "composition": "<br /><br />",
+      "priceRub": 6200,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-keramika-s-kryshkoi-180264527351.webp"
+    },
+    {
+      "id": "926717749291",
+      "title": "ВАЗА ГОРЧИЧНАЯ (1)",
+      "composition": "<br />12х12х30см",
+      "priceRub": 7200,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-gorchichnaya-1-926717749291.webp"
+    },
+    {
+      "id": "913288711211",
+      "title": "ВАЗА ГОРЧИЧНАЯ (2)",
+      "composition": "16х16х40см",
+      "priceRub": 9600,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-gorchichnaya-2-913288711211.webp"
+    },
+    {
+      "id": "647605207201",
+      "title": "ВАЗА ВИНТАЖ РУЧНАЯ РАБОТА",
+      "composition": "20х20х47см",
+      "priceRub": 10200,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-vintazh-ruchnaya-rabota-647605207201.webp"
+    },
+    {
+      "id": "384396476611",
+      "title": "ВАЗА ДЫМКА СТЕКЛО",
+      "composition": "26,5х12",
+      "priceRub": 3000,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-dymka-steklo-384396476611.webp"
+    },
+    {
+      "id": "862514064021",
+      "title": "ВАЗА СЕРЕБРО",
+      "composition": "40см",
+      "priceRub": 3250,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-serebro-862514064021.webp"
+    },
+    {
+      "id": "106709964341",
+      "title": "ВАЗА ПЕРЛАМУТРОВОЕ СТЕКЛО",
+      "composition": "12х10см",
+      "priceRub": 2250,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-perlamutrovoe-steklo-106709964341.webp"
+    },
+    {
+      "id": "656838956102",
+      "title": "КАНДЕЛЯБР НА 5 СВЕЧЕЙ ЗОЛОТО ЧЕРНЫЙ",
+      "composition": "25*50см",
+      "priceRub": 5800,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/kandelyabr-na-5-svechei-zoloto-chernyi-656838956102.webp"
+    },
+    {
+      "id": "839494656852",
+      "title": "ВАЗА СТЕКЛО ЗЕЛЕНАЯ",
+      "composition": "Н14*D20см <br /><br />",
+      "priceRub": 2900,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-steklo-zelenaya-839494656852.webp"
+    },
+    {
+      "id": "712758765212",
+      "title": "ВАЗА СТЕКЛО ЗЕЛЕНАЯ (2)",
+      "composition": "<br />24*20см",
+      "priceRub": 3800,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-steklo-zelenaya-2-712758765212.webp"
+    },
+    {
+      "id": "920438553682",
+      "title": "ВАЗА ШИШКА",
+      "composition": "Ручная работа. Сделано в Португалии",
+      "priceRub": 5400,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-shishka-920438553682.webp"
+    },
+    {
+      "id": "321410283562",
+      "title": "ВАЗА СИНЕЕ СТЕКЛО С ЗОЛОТОМ",
+      "composition": "34,5*20см",
+      "priceRub": 6500,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-sinee-steklo-s-zolotom-321410283562.webp"
+    },
+    {
+      "id": "784444938272",
+      "title": "ВАЗА КЕРАМИКА ВИНТАЖ",
+      "composition": "33,5*16,5",
+      "priceRub": 5400,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-keramika-vintazh-784444938272.webp"
+    },
+    {
+      "id": "433043320642",
+      "title": "ВАЗА КЕРАМИКА ВИНТАЖ (2)",
+      "composition": "25*18,5см",
+      "priceRub": 4200,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-keramika-vintazh-2-433043320642.webp"
+    },
+    {
+      "id": "642534917492",
+      "title": "ВАЗА КЕРАМИКА ВИНТАЖ (3)",
+      "composition": "40,5*16,5см",
+      "priceRub": 6000,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-keramika-vintazh-3-642534917492.webp"
+    },
+    {
+      "id": "597301181062",
+      "title": "ВАЗА ЦВЕТ МЕДЬ",
+      "composition": "35см",
+      "priceRub": 4800,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-tsvet-med-597301181062.webp"
+    },
+    {
+      "id": "988394035572",
+      "title": "ВАЗА ЦВЕТ МРАМОР",
+      "composition": "",
+      "priceRub": 3000,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-tsvet-mramor-988394035572.webp"
+    },
+    {
+      "id": "811636081772",
+      "title": "ВАЗА ЦВЕТ МРАМОР (2)",
+      "composition": "",
+      "priceRub": 3500,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-tsvet-mramor-2-811636081772.webp"
+    },
+    {
+      "id": "904855189892",
+      "title": "ВАЗА СТЕКЛО ЦВЕТ МЕТАЛЛ",
+      "composition": "",
+      "priceRub": 3700,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-steklo-tsvet-metall-904855189892.webp"
+    },
+    {
+      "id": "381448418402",
+      "title": "ПОДСВЕЧНИК СЕРЕБРО",
+      "composition": "",
+      "priceRub": 1400,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/podsvechnik-serebro-381448418402.webp"
+    },
+    {
+      "id": "658467581172",
+      "title": "КЛЕТКА ДЕКОРАТИВНАЯ ЗОЛОТО",
+      "composition": "",
+      "priceRub": 6000,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/kletka-dekorativnaya-zoloto-658467581172.webp"
+    },
+    {
+      "id": "645204585222",
+      "title": "ПОДСВЕЧНИК СЕРЕБРО ЦВЕТ",
+      "composition": "",
+      "priceRub": 1400,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/podsvechnik-serebro-tsvet-645204585222.webp"
+    },
+    {
+      "id": "961503593012",
+      "title": "ВАЗА ГОЛУБАЯ",
+      "composition": "",
+      "priceRub": 3900,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/vaza-golubaya-961503593012.webp"
+    },
+    {
+      "id": "907718723632",
+      "title": "ПОДСВЕЧНИК БЕНЗИН",
+      "composition": "",
+      "priceRub": 2500,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/podsvechnik-benzin-907718723632.webp"
+    },
+    {
+      "id": "609825691562",
+      "title": "ПОДСВЕЧНИК БЕНЗИН (2)",
+      "composition": "",
+      "priceRub": 3000,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/podsvechnik-benzin-2-609825691562.webp"
+    },
+    {
+      "id": "273323471132",
+      "title": "ПОДСВЕЧНИК ЗОЛОТОЙ МАТОВЫЙ",
+      "composition": "23*4,5см",
+      "priceRub": 1800,
+      "image": "https://kidw3st.github.io/pion/images/catalog/luchshee/podsvechnik-zolotoi-matovyi-273323471132.webp"
+    }
+  ]
 }

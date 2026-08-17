@@ -4,11 +4,39 @@
   "url": "https://kidw3st.github.io/pion/pions/",
   "products": [
     {
+      "id": "459493684671",
+      "title": "Пион Sara Bernhardt",
+      "composition": "Заказ от 7 шт, стоимость указана за 1 шт",
+      "priceRub": 1100,
+      "image": "https://kidw3st.github.io/pion/images/catalog/pions/pion-sara-bernhardt-459493684671.webp"
+    },
+    {
+      "id": "223784477451",
+      "title": "Пион Red Charm",
+      "composition": "Заказ от 7 шт, стоимость указана за 1 шт.",
+      "priceRub": 1100,
+      "image": "https://kidw3st.github.io/pion/images/catalog/pions/pion-red-charm-223784477451.webp"
+    },
+    {
+      "id": "571403210131",
+      "title": "Пион Дачезе Немо",
+      "composition": "Заказ от 7 шт, стоимость указана за 1 шт",
+      "priceRub": 2270,
+      "image": "https://kidw3st.github.io/pion/images/catalog/pions/pion-dacheze-nemo-571403210131.webp"
+    },
+    {
+      "id": "139588628681",
+      "title": "Пион",
+      "composition": "Заказ от 7 шт, стоимость указана за 1 шт",
+      "priceRub": 1100,
+      "image": "https://kidw3st.github.io/pion/images/catalog/pions/pion-139588628681.webp"
+    },
+    {
       "id": "599075013602",
       "title": "Пион корал шарм",
       "composition": "",
       "priceRub": 1100,
-      "image": "https://kidw3st.github.io/pion/images/catalog/pions/пион-корал-шарм-599075013602.jpg"
+      "image": "https://kidw3st.github.io/pion/images/catalog/pions/pion-koral-sharm-599075013602.webp"
     }
   ]
 }

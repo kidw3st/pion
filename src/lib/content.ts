@@ -1,4 +1,5 @@
 import type { Product, PageSection, SiteData, CatalogTile, CategoryMeta } from './types';
+import { dedupeProducts } from './dedupeProducts';
 import siteJson from '../../data/site.json';
 import catalogMetaJson from '../../data/catalog-meta.json';
 
@@ -50,10 +51,27 @@ export function getCategoryMeta(slug: string): CategoryMeta | null {
   return all[slug] ?? null;
 }
 
+/**
+ * Whether to show only what a customer can actually buy.
+ *
+ * The imported catalogue holds everything the shop has in Tilda — 403 items —
+ * of which roughly a quarter are switched on in the store and appear on
+ * pionperm.ru. This is set to false on purpose: the site shows the full range,
+ * including the items currently switched off. Set it to true to mirror the
+ * shop instead; the data files carry every product either way.
+ */
+const ONLY_ACTIVE_IN_STORE = false;
+
 export async function getCatalog(slug: string): Promise<Product[] | null> {
   if (!(CATEGORY_SLUGS as readonly string[]).includes(slug)) return null;
   const mod = await import(`../../data/catalog/${slug}.json`);
-  return mod.default as Product[];
+  const all = mod.default as Product[];
+  // Products imported before the `published` flag existed have none; treat a
+  // missing flag as "on sale" rather than hiding them.
+  const visible = ONLY_ACTIVE_IN_STORE ? all.filter((p) => p.published !== false) : all;
+  // The store data is kept faithful; the duplicates and "Copy:" leftovers it
+  // contains are filtered here, so a re-import cannot undo it.
+  return dedupeProducts(visible);
 }
 
 export async function getPage(slug: string): Promise<PageSection[] | null> {

@@ -38,6 +38,10 @@ export default async function HomePage() {
 
   return (
     <main>
+      {/* The homepage opens on a photo slider, so the heading that names the
+          page for search engines has no place in the design. */}
+      <h1 className="srOnly">Доставка цветов и букетов в Перми — салон «Пион»</h1>
+
       <HeroSlider slides={site.heroSlides} />
 
       <section className={styles.newSection}>

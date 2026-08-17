@@ -20,6 +20,7 @@ export function ContactsSection({
   address,
   hours,
   vkHref,
+  headingLevel = 'h1',
 }: {
   title: string;
   intro: string;
@@ -28,7 +29,10 @@ export function ContactsSection({
   address: string;
   hours: string;
   vkHref: string;
+  /** h1 only when this block opens the page; otherwise the page already has one. */
+  headingLevel?: 'h1' | 'h2';
 }) {
+  const Heading = headingLevel;
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
   const [message, setMessage] = useState('');
@@ -47,7 +51,7 @@ export function ContactsSection({
     <section className={styles.contacts}>
       <div className={styles.contactsInner}>
         <div className={styles.contactsInfo}>
-          <h1 className={styles.contactsTitle}>{title}</h1>
+          <Heading className={styles.contactsTitle}>{title}</Heading>
           {intro && <p className={styles.contactsIntro}>{intro}</p>}
 
           <dl className={styles.contactsList}>

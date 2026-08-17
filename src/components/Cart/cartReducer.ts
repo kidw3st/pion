@@ -45,10 +45,34 @@ export function cartReducer(state: CartState, action: CartAction): CartState {
     case 'CLEAR':
       return { items: [] };
     case 'HYDRATE':
-      return { items: action.items };
+      return { items: sanitizeItems(action.items) };
     default:
       return state;
   }
+}
+
+/**
+ * HYDRATE is the one action whose payload does not come from our own code:
+ * it is whatever localStorage holds, which anything running on the origin —
+ * an extension, an old buggy build, a person in DevTools — may have rewritten.
+ * Rendering trusts these fields (`price * quantity` lands in the order total),
+ * so anything malformed is dropped rather than carried into state.
+ */
+function sanitizeItems(raw: unknown): CartItem[] {
+  if (!Array.isArray(raw)) return [];
+  const items: CartItem[] = [];
+  for (const entry of raw) {
+    if (typeof entry !== 'object' || entry === null) continue;
+    const { uid, title, price, image, quantity } = entry as Record<string, unknown>;
+    if (typeof uid !== 'string' || uid === '' || typeof title !== 'string') continue;
+    if (typeof image !== 'string') continue;
+    if (typeof price !== 'number' || !Number.isFinite(price) || price < 0) continue;
+    if (typeof quantity !== 'number' || !Number.isInteger(quantity) || quantity < 1) continue;
+    if (items.some((i) => i.uid === uid)) continue;
+    // A hand-edited quantity of 1e9 would make every total nonsensical.
+    items.push({ uid, title, price, image, quantity: Math.min(quantity, 99) });
+  }
+  return items;
 }
 
 export function cartTotal(state: CartState): number {

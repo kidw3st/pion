@@ -26,3 +26,18 @@ a {
   color: inherit;
   text-decoration: none;
 }
+
+/* A heading the page needs for structure but the design does not show — the
+   homepage and the catalogue grid open with a photo, not with words. Clipped
+   rather than hidden, so screen readers and crawlers still read it. */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

@@ -1,12 +1,63 @@
 [
   {
+    "uid": "459493684671",
+    "title": "Пион Sara Bernhardt",
+    "description": "Заказ от 7 шт, стоимость указана за 1 шт",
+    "price": 1100,
+    "images": [
+      "/images/catalog/pions/pion-sara-bernhardt-459493684671.webp",
+      "/images/catalog/pions/pion-sara-bernhardt-459493684671-1.webp"
+    ],
+    "slug": "pion-sara-bernhardt",
+    "published": false
+  },
+  {
+    "uid": "223784477451",
+    "title": "Пион Red Charm",
+    "description": "Заказ от 7 шт, стоимость указана за 1 шт.",
+    "price": 1100,
+    "images": [
+      "/images/catalog/pions/pion-red-charm-223784477451.webp",
+      "/images/catalog/pions/pion-red-charm-223784477451-1.webp"
+    ],
+    "slug": "pion-red-charm",
+    "published": false
+  },
+  {
+    "uid": "571403210131",
+    "title": "Пион Дачезе Немо",
+    "description": "Заказ от 7 шт, стоимость указана за 1 шт",
+    "price": 2270,
+    "images": [
+      "/images/catalog/pions/pion-dacheze-nemo-571403210131.webp",
+      "/images/catalog/pions/pion-dacheze-nemo-571403210131-1.webp"
+    ],
+    "slug": "pion-dacheze-nemo",
+    "published": false
+  },
+  {
+    "uid": "139588628681",
+    "title": "Пион",
+    "description": "Заказ от 7 шт, стоимость указана за 1 шт",
+    "price": 1100,
+    "images": [
+      "/images/catalog/pions/pion-139588628681.webp",
+      "/images/catalog/pions/pion-139588628681-1.webp",
+      "/images/catalog/pions/pion-139588628681-2.webp",
+      "/images/catalog/pions/pion-139588628681-3.webp"
+    ],
+    "slug": "pion",
+    "published": false
+  },
+  {
     "uid": "599075013602",
     "title": "Пион корал шарм",
     "description": "",
     "price": 1100,
     "images": [
-      "/images/catalog/pions/пион-корал-шарм-599075013602.jpg"
+      "/images/catalog/pions/pion-koral-sharm-599075013602.webp"
     ],
-    "slug": "пион-корал-шарм"
+    "slug": "pion-koral-sharm",
+    "published": true
   }
 ]

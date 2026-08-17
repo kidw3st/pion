@@ -1,23 +1,261 @@
 [
   {
-    "uid": "774353662692",
-    "title": "Роза кустовая",
-    "description": "",
-    "price": 900,
+    "uid": "277503849741",
+    "title": "Роза Кантри Блю",
+    "description": "Заказ от 7 шт",
+    "price": 600,
     "images": [
-      "/images/catalog/roses/роза-кустовая-774353662692.jpg"
+      "/images/catalog/roses/roza-kantri-blyu-277503849741.webp"
     ],
-    "slug": "роза-кустовая"
+    "slug": "roza-kantri-blyu",
+    "published": false
   },
   {
-    "uid": "461465734632",
-    "title": "Кустовая роза",
+    "uid": "613796236101",
+    "title": "Роза Nina",
+    "description": "Заказ от 7 шт, цена указана за одну штуку",
+    "price": 450,
+    "images": [
+      "/images/catalog/roses/roza-nina-613796236101.webp",
+      "/images/catalog/roses/roza-nina-613796236101-1.webp"
+    ],
+    "slug": "roza-nina",
+    "published": false
+  },
+  {
+    "uid": "606151794791",
+    "title": "Роза Pink Mondial",
+    "description": "Заказ от 7 шт, цена указана за одну штуку",
+    "price": 450,
+    "images": [
+      "/images/catalog/roses/roza-pink-mondial-606151794791.webp"
+    ],
+    "slug": "roza-pink-mondial",
+    "published": false
+  },
+  {
+    "uid": "464266209691",
+    "title": "Роза кустовая Mansfield Park",
+    "description": "Заказ от 7 шт",
+    "price": 900,
+    "images": [
+      "/images/catalog/roses/roza-kustovaya-mansfield-park-464266209691.webp",
+      "/images/catalog/roses/roza-kustovaya-mansfield-park-464266209691-1.webp"
+    ],
+    "slug": "roza-kustovaya-mansfield-park",
+    "published": false
+  },
+  {
+    "uid": "571604678581",
+    "title": "Роза Maria Tereza",
+    "description": "Заказ от 7 шт",
+    "price": 600,
+    "images": [
+      "/images/catalog/roses/roza-maria-tereza-571604678581.webp",
+      "/images/catalog/roses/roza-maria-tereza-571604678581-1.webp"
+    ],
+    "slug": "roza-maria-tereza",
+    "published": false
+  },
+  {
+    "uid": "198293932071",
+    "title": "Роза Квинс Кроун",
+    "description": "Заказ от 7 шт",
+    "price": 600,
+    "images": [
+      "/images/catalog/roses/roza-kvins-kroun-198293932071.webp",
+      "/images/catalog/roses/roza-kvins-kroun-198293932071-1.webp"
+    ],
+    "slug": "roza-kvins-kroun",
+    "published": false
+  },
+  {
+    "uid": "974074915411",
+    "title": "Роза Toffi",
+    "description": "Заказ от 7 шт",
+    "price": 600,
+    "images": [
+      "/images/catalog/roses/roza-toffi-974074915411.webp",
+      "/images/catalog/roses/roza-toffi-974074915411-1.webp"
+    ],
+    "slug": "roza-toffi",
+    "published": false
+  },
+  {
+    "uid": "663246094811",
+    "title": "Роза кустовая Bombastic",
+    "description": "Заказ от 7 шт",
+    "price": 900,
+    "images": [
+      "/images/catalog/roses/roza-kustovaya-bombastic-663246094811.webp",
+      "/images/catalog/roses/roza-kustovaya-bombastic-663246094811-1.webp"
+    ],
+    "slug": "roza-kustovaya-bombastic",
+    "published": false
+  },
+  {
+    "uid": "482161619101",
+    "title": "Роза кустовая Lady Bombastic",
+    "description": "Заказ от 7 шт",
+    "price": 900,
+    "images": [
+      "/images/catalog/roses/roza-kustovaya-lady-bombastic-482161619101.webp",
+      "/images/catalog/roses/roza-kustovaya-lady-bombastic-482161619101-1.webp",
+      "/images/catalog/roses/roza-kustovaya-lady-bombastic-482161619101-2.webp"
+    ],
+    "slug": "roza-kustovaya-lady-bombastic",
+    "published": false
+  },
+  {
+    "uid": "582029484571",
+    "title": "Роза кустовая Peony Bubbles",
+    "description": "Заказ от 7 шт",
+    "price": 900,
+    "images": [
+      "/images/catalog/roses/roza-kustovaya-peony-bubbles-582029484571.webp",
+      "/images/catalog/roses/roza-kustovaya-peony-bubbles-582029484571-1.webp",
+      "/images/catalog/roses/roza-kustovaya-peony-bubbles-582029484571-2.webp"
+    ],
+    "slug": "roza-kustovaya-peony-bubbles",
+    "published": false
+  },
+  {
+    "uid": "536183665101",
+    "title": "Роза Pink Expression",
+    "description": "Заказ от 7 шт",
+    "price": 600,
+    "images": [
+      "/images/catalog/roses/roza-pink-expression-536183665101.webp",
+      "/images/catalog/roses/roza-pink-expression-536183665101-1.webp"
+    ],
+    "slug": "roza-pink-expression",
+    "published": false
+  },
+  {
+    "uid": "212475637361",
+    "title": "Роза кустовая Juliet",
+    "description": "Заказ от 7 шт",
+    "price": 900,
+    "images": [
+      "/images/catalog/roses/roza-kustovaya-juliet-212475637361.webp",
+      "/images/catalog/roses/roza-kustovaya-juliet-212475637361-1.webp",
+      "/images/catalog/roses/roza-kustovaya-juliet-212475637361-2.webp"
+    ],
+    "slug": "roza-kustovaya-juliet",
+    "published": false
+  },
+  {
+    "uid": "399375310671",
+    "title": "Кустовая роза MIX",
+    "description": "Заказ от 7 шт",
+    "price": 900,
+    "images": [
+      "/images/catalog/roses/kustovaya-roza-mix-399375310671.webp",
+      "/images/catalog/roses/kustovaya-roza-mix-399375310671-1.webp",
+      "/images/catalog/roses/kustovaya-roza-mix-399375310671-2.webp"
+    ],
+    "slug": "kustovaya-roza-mix",
+    "published": false
+  },
+  {
+    "uid": "669669824441",
+    "title": "Роза кустовая Мисти Баблс",
+    "description": "Заказ от 7 шт",
+    "price": 900,
+    "images": [
+      "/images/catalog/roses/roza-kustovaya-misti-babls-669669824441.webp"
+    ],
+    "slug": "roza-kustovaya-misti-babls",
+    "published": false
+  },
+  {
+    "uid": "637361091641",
+    "title": "Роза Playa Blanka",
+    "description": "Заказ от 7 шт, цена указана за одну штуку",
+    "price": 450,
+    "images": [
+      "/images/catalog/roses/roza-playa-blanka-637361091641.webp"
+    ],
+    "slug": "roza-playa-blanka",
+    "published": false
+  },
+  {
+    "uid": "697371823941",
+    "title": "Роза Kahala",
+    "description": "Заказ от 7 шт",
+    "price": 540,
+    "images": [
+      "/images/catalog/roses/roza-kahala-697371823941.webp"
+    ],
+    "slug": "roza-kahala",
+    "published": false
+  },
+  {
+    "uid": "904538333661",
+    "title": "Роза Pink O’Hara",
+    "description": "Заказ от 7 шт",
+    "price": 600,
+    "images": [
+      "/images/catalog/roses/roza-pink-o-hara-904538333661.webp",
+      "/images/catalog/roses/roza-pink-o-hara-904538333661-1.webp"
+    ],
+    "slug": "roza-pink-o-hara",
+    "published": false
+  },
+  {
+    "uid": "734221899891",
+    "title": "Роза Mondial",
+    "description": "Заказ от 7 шт, цена указана за одну штуку",
+    "price": 450,
+    "images": [
+      "/images/catalog/roses/roza-mondial-734221899891.webp"
+    ],
+    "slug": "roza-mondial",
+    "published": false
+  },
+  {
+    "uid": "667385551231",
+    "title": "Роза кустовая Bombastic",
     "description": "",
     "price": 900,
     "images": [
-      "/images/catalog/roses/кустовая-роза-461465734632.jpg"
+      "/images/catalog/roses/roza-kustovaya-bombastic-667385551231.webp"
     ],
-    "slug": "кустовая-роза"
+    "slug": "roza-kustovaya-bombastic",
+    "published": false
+  },
+  {
+    "uid": "444094662771",
+    "title": "Роза Explorer",
+    "description": "",
+    "price": 550,
+    "images": [
+      "/images/catalog/roses/roza-explorer-444094662771.webp"
+    ],
+    "slug": "roza-explorer",
+    "published": false
+  },
+  {
+    "uid": "161653384221",
+    "title": "Кустовая роза Mix",
+    "description": "",
+    "price": 900,
+    "images": [
+      "/images/catalog/roses/kustovaya-roza-mix-161653384221.webp"
+    ],
+    "slug": "kustovaya-roza-mix",
+    "published": false
+  },
+  {
+    "uid": "539222824281",
+    "title": "Кустовая Роза",
+    "description": "",
+    "price": 900,
+    "images": [
+      "/images/catalog/roses/kustovaya-roza-539222824281.webp"
+    ],
+    "slug": "kustovaya-roza",
+    "published": false
   },
   {
     "uid": "445957348222",
@@ -25,8 +263,33 @@
     "description": "",
     "price": 540,
     "images": [
-      "/images/catalog/roses/роза-пионовидная-445957348222.jpg"
+      "/images/catalog/roses/roza-pionovidnaya-445957348222.webp"
     ],
-    "slug": "роза-пионовидная"
+    "slug": "roza-pionovidnaya",
+    "published": true
+  },
+  {
+    "uid": "774353662692",
+    "title": "Роза кустовая",
+    "description": "",
+    "price": 900,
+    "images": [
+      "/images/catalog/roses/roza-kustovaya-774353662692.webp",
+      "/images/catalog/roses/roza-kustovaya-774353662692-1.webp",
+      "/images/catalog/roses/roza-kustovaya-774353662692-2.webp"
+    ],
+    "slug": "roza-kustovaya",
+    "published": true
+  },
+  {
+    "uid": "461465734632",
+    "title": "Кустовая роза",
+    "description": "",
+    "price": 900,
+    "images": [
+      "/images/catalog/roses/kustovaya-roza-461465734632.webp"
+    ],
+    "slug": "kustovaya-roza",
+    "published": true
   }
 ]

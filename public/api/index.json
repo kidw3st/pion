@@ -23,67 +23,67 @@
       "slug": "balloons",
       "title": "Воздушные шары от салона \"Пион\"",
       "url": "https://kidw3st.github.io/pion/balloons/",
-      "productCount": 0
+      "productCount": 11
     },
     {
       "slug": "bukety",
       "title": "Букеты",
       "url": "https://kidw3st.github.io/pion/bukety/",
-      "productCount": 104
+      "productCount": 108
     },
     {
       "slug": "chocolate",
       "title": "ШОКОЛАД СhocoME",
       "url": "https://kidw3st.github.io/pion/chocolate/",
-      "productCount": 0
+      "productCount": 15
     },
     {
       "slug": "flame",
       "title": "Ароматы Flame Moscow",
       "url": "https://kidw3st.github.io/pion/flame/",
-      "productCount": 0
+      "productCount": 59
     },
     {
       "slug": "korobki",
       "title": "Цветочные коробки",
       "url": "https://kidw3st.github.io/pion/korobki/",
-      "productCount": 0
+      "productCount": 58
     },
     {
       "slug": "korziny",
       "title": "Корзины цветов",
       "url": "https://kidw3st.github.io/pion/korziny/",
-      "productCount": 0
+      "productCount": 16
     },
     {
       "slug": "luchshee",
       "title": "Лучшее для дома\nи офиса",
       "url": "https://kidw3st.github.io/pion/luchshee/",
-      "productCount": 0
+      "productCount": 51
     },
     {
       "slug": "mixflower",
       "title": "mixflower",
       "url": "https://kidw3st.github.io/pion/mixflower/",
-      "productCount": 5
+      "productCount": 50
     },
     {
       "slug": "pions",
       "title": "pions",
       "url": "https://kidw3st.github.io/pion/pions/",
-      "productCount": 1
+      "productCount": 5
     },
     {
       "slug": "roses",
       "title": "roses",
       "url": "https://kidw3st.github.io/pion/roses/",
-      "productCount": 3
+      "productCount": 22
     },
     {
       "slug": "wedding",
       "title": "Открываем свадебный сезон 2025",
       "url": "https://kidw3st.github.io/pion/wedding/",
-      "productCount": 0
+      "productCount": 8
     }
   ],
   "note": "Статические файлы, не HTTP API. Заказ оформляется заявкой на сайте, оплата согласуется отдельно."

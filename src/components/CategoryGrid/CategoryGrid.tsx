@@ -83,12 +83,16 @@ export function CategoryGrid({
   title,
   subtitle,
   showNotFoundBand = false,
+  headingLevel = 'h1',
 }: {
   products: Product[];
   title: string;
   subtitle: string;
   showNotFoundBand?: boolean;
+  /** Categories that open with a cover already have their h1 there. */
+  headingLevel?: 'h1' | 'h2';
 }) {
+  const Heading = headingLevel;
   const [order, setOrder] = useState<SortOrder>('default');
   const [visible, setVisible] = useState(PAGE_SIZE);
   const [shown, setShown] = useState<Product | null>(null);
@@ -133,7 +137,7 @@ export function CategoryGrid({
     <>
       {(title || subtitle) && (
         <section className={styles.heading}>
-          {title && <h1 className={styles.headingTitle}>{title}</h1>}
+          {title && <Heading className={styles.headingTitle}>{title}</Heading>}
           {subtitle && <p className={styles.headingSub}>{subtitle}</p>}
         </section>
       )}

@@ -5,6 +5,13 @@ export interface Product {
   price: number;
   images: string[];
   slug: string;
+  /**
+   * Whether the product is switched on in the shop's own store. Most of the
+   * catalogue is currently switched off — those items exist in Tilda but the
+   * live site does not show them, so the flag is what lets us choose between
+   * mirroring the shop and showing everything it has.
+   */
+  published?: boolean;
 }
 
 /**

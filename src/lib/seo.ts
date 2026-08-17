@@ -47,7 +47,7 @@ export function buildMetadata({
       siteName: 'Салон цветов и подарков «Пион»',
       locale: 'ru_RU',
       type: 'website',
-      images: [{ url: absoluteUrl(image ?? '/images/site/logo.png') }],
+      images: [{ url: absoluteUrl(image ?? '/images/site/logo.webp') }],
     },
   };
 }
@@ -65,7 +65,7 @@ export function localBusinessJsonLd() {
     '@id': `${SITE_URL}/#florist`,
     name: 'Салон цветов и подарков «Пион»',
     url: absoluteUrl('/'),
-    image: absoluteUrl('/images/site/logo.png'),
+    image: absoluteUrl('/images/site/logo.webp'),
     telephone: site.phone,
     address: {
       '@type': 'PostalAddress',

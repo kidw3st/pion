@@ -2,5 +2,83 @@
   "slug": "balloons",
   "title": "Воздушные шары от салона \"Пион\"",
   "url": "https://kidw3st.github.io/pion/balloons/",
-  "products": []
+  "products": [
+    {
+      "id": "649497770461",
+      "title": "Связка шаров",
+      "composition": "Фонтан из шаров разного диаметра и цвета",
+      "priceRub": 5500,
+      "image": "https://kidw3st.github.io/pion/images/catalog/balloons/svyazka-sharov-649497770461.webp"
+    },
+    {
+      "id": "200514891731",
+      "title": "Фонтан шаров",
+      "composition": "Баблс, красное сердце большое, красное сердце стандартное",
+      "priceRub": 4000,
+      "image": "https://kidw3st.github.io/pion/images/catalog/balloons/fontan-sharov-200514891731.webp"
+    },
+    {
+      "id": "199184664321",
+      "title": "Шар фольгированный в форме сердца",
+      "composition": "<br /><br />",
+      "priceRub": 350,
+      "image": "https://kidw3st.github.io/pion/images/catalog/balloons/shar-folgirovannyi-v-forme-serdtsa-199184664321.webp"
+    },
+    {
+      "id": "249083222362",
+      "title": "Фонтан из фольгированных сердец",
+      "composition": "Шары 5 штук. Цвет может быть другим",
+      "priceRub": 1700,
+      "image": "https://kidw3st.github.io/pion/images/catalog/balloons/fontan-iz-folgirovannyh-serdets-249083222362.webp"
+    },
+    {
+      "id": "895074878712",
+      "title": "Фонтан из латексных шаров белый розовый",
+      "composition": "Количество: 7 штук.",
+      "priceRub": 1200,
+      "image": "https://kidw3st.github.io/pion/images/catalog/balloons/fontan-iz-lateksnyh-sharov-belyi-rozovyi-895074878712.webp"
+    },
+    {
+      "id": "476204973022",
+      "title": "Шар с конфетти",
+      "composition": "",
+      "priceRub": 200,
+      "image": "https://kidw3st.github.io/pion/images/catalog/balloons/shar-s-konfetti-476204973022.webp"
+    },
+    {
+      "id": "644041435082",
+      "title": "Фонтан шаров крем брюле",
+      "composition": "В составе: фольгированное сердце, шар хром, шар с конфетти",
+      "priceRub": 3500,
+      "image": "https://kidw3st.github.io/pion/images/catalog/balloons/fontan-sharov-krem-bryule-644041435082.webp"
+    },
+    {
+      "id": "413396896812",
+      "title": "Шар цифра",
+      "composition": "",
+      "priceRub": 1200,
+      "image": "https://kidw3st.github.io/pion/images/catalog/balloons/shar-tsifra-413396896812.webp"
+    },
+    {
+      "id": "692084966722",
+      "title": "Шар баблс с перьями",
+      "composition": "Цвет перьев может быть другим",
+      "priceRub": 1000,
+      "image": "https://kidw3st.github.io/pion/images/catalog/balloons/shar-babls-s-peryami-692084966722.webp"
+    },
+    {
+      "id": "475514196632",
+      "title": "Фонтан из шаров нежный",
+      "composition": "Шары в составе: фольгированное сердце, фольгированная звезда, шар латексный",
+      "priceRub": 1750,
+      "image": "https://kidw3st.github.io/pion/images/catalog/balloons/fontan-iz-sharov-nezhnyi-475514196632.webp"
+    },
+    {
+      "id": "684490789482",
+      "title": "Фонтан шаров бронза",
+      "composition": "Состав фонтана: фольгированное сердце, шар латексный хром, шар латексный",
+      "priceRub": 2300,
+      "image": "https://kidw3st.github.io/pion/images/catalog/balloons/fontan-sharov-bronza-684490789482.webp"
+    }
+  ]
 }

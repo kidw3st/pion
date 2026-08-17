@@ -4,9 +4,9 @@
     "title": "Цветы",
     "subtitle": "Свежесрезанные цветы чтобы радовать вас",
     "images": [
-      "/images/pages/flowers/img-0.jpg",
-      "/images/pages/flowers/img-1.jpg",
-      "/images/pages/flowers/img-2.jpg"
+      "/images/pages/flowers/img-0.webp",
+      "/images/pages/flowers/img-1.webp",
+      "/images/pages/flowers/img-2.webp"
     ]
   },
   {
@@ -15,17 +15,17 @@
       {
         "label": "Розы",
         "href": "/roses",
-        "image": "/images/pages/flowers/img-3.jpg"
+        "image": "/images/pages/flowers/img-3.webp"
       },
       {
         "label": "Пионы",
         "href": "/pions",
-        "image": "/images/pages/flowers/img-4.jpg"
+        "image": "/images/pages/flowers/img-4.webp"
       },
       {
         "label": "Разные цветы",
         "href": "/mixflower",
-        "image": "/images/pages/flowers/img-5.jpg"
+        "image": "/images/pages/flowers/img-5.webp"
       }
     ]
   }

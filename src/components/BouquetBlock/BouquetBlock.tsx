@@ -13,7 +13,13 @@ export function BouquetBlock({ data }: { data: BouquetBlockData }) {
     <section className={styles.section}>
       <div className={styles.inner}>
         <div className={styles.photo}>
-          <Image src={data.image} alt="" width={520} height={780} className={styles.image} />
+          <Image
+            src={data.image}
+            alt="Авторский букет, собранный флористом салона «Пион» в Перми"
+            width={520}
+            height={780}
+            className={styles.image}
+          />
         </div>
         <div className={styles.body}>
           <h2 className={styles.title}>{data.title}</h2>

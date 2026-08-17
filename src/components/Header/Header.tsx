@@ -18,7 +18,7 @@ export function Header() {
   return (
     <header className={styles.header}>
       <Link href="/" className={styles.logo} aria-label="Пион — на главную">
-        <Image src="/images/site/logo.png" alt="Пион" width={938} height={490} priority />
+        <Image src="/images/site/logo.webp" alt="Пион" width={938} height={490} priority />
       </Link>
 
       <nav className={styles.nav}>

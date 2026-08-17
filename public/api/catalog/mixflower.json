@@ -4,39 +4,354 @@
   "url": "https://kidw3st.github.io/pion/mixflower/",
   "products": [
     {
-      "id": "487459075762",
-      "title": "Гербера",
+      "id": "490424581951",
+      "title": "Роза Нина",
       "composition": "",
+      "priceRub": 450,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/roza-nina-490424581951.webp"
+    },
+    {
+      "id": "894243806821",
+      "title": "Сирень",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 1200,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/siren-894243806821.webp"
+    },
+    {
+      "id": "195452445801",
+      "title": "Тюльпан",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 350,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/tyulpan-195452445801.webp"
+    },
+    {
+      "id": "364803190591",
+      "title": "Гортензия Колумбия MIX",
+      "composition": "Заказ от 7 шт, цена указана за одну штуку",
+      "priceRub": 900,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/gortenziya-kolumbiya-mix-364803190591.webp"
+    },
+    {
+      "id": "956632315421",
+      "title": "Аллиум",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 400,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/allium-956632315421.webp"
+    },
+    {
+      "id": "276006239201",
+      "title": "Ранункулюс MIX",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 950,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/ranunkulyus-mix-276006239201.webp"
+    },
+    {
+      "id": "916918429861",
+      "title": "Гиацинт MIX",
+      "composition": "Заказ от 7 шт",
       "priceRub": 500,
-      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/гербера-487459075762.jpg"
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/giatsint-mix-916918429861.webp"
     },
     {
-      "id": "231413216562",
-      "title": "Эустома",
-      "composition": "",
-      "priceRub": 960,
-      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/эустома-231413216562.jpg"
+      "id": "666799408531",
+      "title": "Альстромерия",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 420,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/alstromeriya-666799408531.webp"
     },
     {
-      "id": "190677993032",
+      "id": "611985316231",
+      "title": "Вибурнум",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 800,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/viburnum-611985316231.webp"
+    },
+    {
+      "id": "140304984741",
+      "title": "Джениста MIX",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 400,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/dzhenista-mix-140304984741.webp"
+    },
+    {
+      "id": "102292212231",
+      "title": "Роза Секрет Гарден",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 350,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/roza-sekret-garden-102292212231.webp"
+    },
+    {
+      "id": "724635346401",
+      "title": "Мимоза",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 550,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/mimoza-724635346401.webp"
+    },
+    {
+      "id": "763137776721",
+      "title": "Протея",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 2500,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/proteya-763137776721.webp"
+    },
+    {
+      "id": "676418867981",
+      "title": "Роза кустовая Сильвер Баблс",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 650,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/roza-kustovaya-silver-babls-676418867981.webp"
+    },
+    {
+      "id": "548338745881",
+      "title": "Гортензия Голландия MIX",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 1300,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/gortenziya-gollandiya-mix-548338745881.webp"
+    },
+    {
+      "id": "667229669431",
+      "title": "Гермини MIX",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 420,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/germini-mix-667229669431.webp"
+    },
+    {
+      "id": "985519603071",
+      "title": "Эвкалипт",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 750,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/evkalipt-985519603071.webp"
+    },
+    {
+      "id": "932078410111",
+      "title": "Дельфиниум",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 1020,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/delfinium-932078410111.webp"
+    },
+    {
+      "id": "557198101071",
+      "title": "Нарцисс кустовой",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 420,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/nartsiss-kustovoi-557198101071.webp"
+    },
+    {
+      "id": "177149626601",
+      "title": "Гвоздика MIX",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 250,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/gvozdika-mix-177149626601.webp"
+    },
+    {
+      "id": "223796389271",
+      "title": "Антуриум mix",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 950,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/anturium-mix-223796389271.webp"
+    },
+    {
+      "id": "539294423891",
+      "title": "Глориоза",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 150,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/glorioza-539294423891.webp"
+    },
+    {
+      "id": "485668447091",
+      "title": "Алхемилла",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 200,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/alhemilla-485668447091.webp"
+    },
+    {
+      "id": "512027080371",
+      "title": "Ирис Касабланка",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 150,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/iris-kasablanka-512027080371.webp"
+    },
+    {
+      "id": "653344337181",
+      "title": "Гипсофилла",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 300,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/gipsofilla-653344337181.webp"
+    },
+    {
+      "id": "444265252171",
+      "title": "Эустома Lavender",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 400,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/eustoma-lavender-444265252171.webp"
+    },
+    {
+      "id": "499397938551",
+      "title": "Астильба",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 450,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/astilba-499397938551.webp"
+    },
+    {
+      "id": "846337017091",
+      "title": "Боувардия",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 250,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/bouvardiya-846337017091.webp"
+    },
+    {
+      "id": "625074087821",
+      "title": "Нарине",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 650,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/narine-625074087821.webp"
+    },
+    {
+      "id": "561281711911",
+      "title": "Подсолнух",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 900,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/podsolnuh-561281711911.webp"
+    },
+    {
+      "id": "673092166961",
+      "title": "Хризантема Vienna",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 550,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/hrizantema-vienna-673092166961.webp"
+    },
+    {
+      "id": "907748429951",
+      "title": "Хризантема Моmoko",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 450,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/hrizantema-momoko-907748429951.webp"
+    },
+    {
+      "id": "498592816191",
       "title": "Маттиола",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 550,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/mattiola-498592816191.webp"
+    },
+    {
+      "id": "187779513401",
+      "title": "Хризантема",
+      "composition": "",
+      "priceRub": 350,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/hrizantema-187779513401.webp"
+    },
+    {
+      "id": "295114847061",
+      "title": "Эустома Алиса белая",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 960,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/eustoma-alisa-belaya-295114847061.webp"
+    },
+    {
+      "id": "669488191731",
+      "title": "Хризантема Магнум",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 900,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/hrizantema-magnum-669488191731.webp"
+    },
+    {
+      "id": "352283636141",
+      "title": "Илекс",
+      "composition": "",
+      "priceRub": 1320,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/ileks-352283636141.webp"
+    },
+    {
+      "id": "475484396231",
+      "title": "Роза Shimmer",
+      "composition": "",
+      "priceRub": 400,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/roza-shimmer-475484396231.webp"
+    },
+    {
+      "id": "925685908381",
+      "title": "Пион",
+      "composition": "",
+      "priceRub": 1600,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/pion-925685908381.webp"
+    },
+    {
+      "id": "798714203111",
+      "title": "Гербера игольчатая",
       "composition": "",
       "priceRub": 550,
-      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/маттиола-190677993032.jpg"
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/gerbera-igolchataya-798714203111.webp"
     },
     {
-      "id": "336402911061",
-      "title": "Ранункулюс",
+      "id": "104577294571",
+      "title": "Оксипеталум",
       "composition": "",
-      "priceRub": 950,
-      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/ранункулюс-336402911061.jpg"
+      "priceRub": 500,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/oksipetalum-104577294571.webp"
+    },
+    {
+      "id": "423565317081",
+      "title": "Амарилис",
+      "composition": "",
+      "priceRub": 1740,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/amarilis-423565317081.webp"
+    },
+    {
+      "id": "201003417171",
+      "title": "Тюльпан пионовидный",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 350,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/tyulpan-pionovidnyi-201003417171.webp"
     },
     {
       "id": "606038973211",
       "title": "Гербера",
       "composition": "",
       "priceRub": 500,
-      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/гербера-606038973211.jpg"
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/gerbera-606038973211.webp"
+    },
+    {
+      "id": "336402911061",
+      "title": "Ранункулюс",
+      "composition": "",
+      "priceRub": 950,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/ranunkulyus-336402911061.webp"
+    },
+    {
+      "id": "559155724352",
+      "title": "Ромашка",
+      "composition": "",
+      "priceRub": 400,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/romashka-559155724352.webp"
+    },
+    {
+      "id": "257576989622",
+      "title": "Антуриум",
+      "composition": "",
+      "priceRub": 950,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/anturium-257576989622.webp"
+    },
+    {
+      "id": "231413216562",
+      "title": "Эустома",
+      "composition": "",
+      "priceRub": 960,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/eustoma-231413216562.webp"
+    },
+    {
+      "id": "724468857912",
+      "title": "Василек",
+      "composition": "",
+      "priceRub": 250,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/vasilek-724468857912.webp"
+    },
+    {
+      "id": "263874364132",
+      "title": "Гортензия",
+      "composition": "",
+      "priceRub": 1400,
+      "image": "https://kidw3st.github.io/pion/images/catalog/mixflower/gortenziya-263874364132.webp"
     }
   ]
 }

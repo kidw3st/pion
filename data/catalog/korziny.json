@@ -1,1 +1,186 @@
-[]
+[
+  {
+    "uid": "933562501721",
+    "title": "Корзина \"Пионовидная\"",
+    "description": "Розы, гортензия, ранункулюс, диантус, кустовая роза, эвкалипт",
+    "price": 30800,
+    "images": [
+      "/images/catalog/korziny/korzina-pionovidnaya-933562501721.webp",
+      "/images/catalog/korziny/korzina-pionovidnaya-933562501721-1.webp"
+    ],
+    "slug": "korzina-pionovidnaya",
+    "published": false
+  },
+  {
+    "uid": "612376250241",
+    "title": "Корзина \"Первый комплимент\"",
+    "description": "",
+    "price": 11550,
+    "images": [
+      "/images/catalog/korziny/korzina-pervyi-kompliment-612376250241.webp"
+    ],
+    "slug": "korzina-pervyi-kompliment",
+    "published": false
+  },
+  {
+    "uid": "627953422441",
+    "title": "Корзина \"Винтаж\"",
+    "description": "",
+    "price": 22250,
+    "images": [
+      "/images/catalog/korziny/korzina-vintazh-627953422441.webp",
+      "/images/catalog/korziny/korzina-vintazh-627953422441-1.webp"
+    ],
+    "slug": "korzina-vintazh",
+    "published": false
+  },
+  {
+    "uid": "185554481101",
+    "title": "Корзина \"Ласковый май\"",
+    "description": "",
+    "price": 20200,
+    "images": [
+      "/images/catalog/korziny/korzina-laskovyi-mai-185554481101.webp",
+      "/images/catalog/korziny/korzina-laskovyi-mai-185554481101-1.webp"
+    ],
+    "slug": "korzina-laskovyi-mai",
+    "published": false
+  },
+  {
+    "uid": "210709396071",
+    "title": "Корзина \"Лесная фея\"",
+    "description": "",
+    "price": 22550,
+    "images": [
+      "/images/catalog/korziny/korzina-lesnaya-feya-210709396071.webp"
+    ],
+    "slug": "korzina-lesnaya-feya",
+    "published": false
+  },
+  {
+    "uid": "580227384811",
+    "title": "Корзина \"Моя дорогая\"",
+    "description": "",
+    "price": 19600,
+    "images": [
+      "/images/catalog/korziny/korzina-moya-dorogaya-580227384811.webp"
+    ],
+    "slug": "korzina-moya-dorogaya",
+    "published": false
+  },
+  {
+    "uid": "397189409321",
+    "title": "Корзина \"На берегу лета\"",
+    "description": "",
+    "price": 25000,
+    "images": [
+      "/images/catalog/korziny/korzina-na-beregu-leta-397189409321.webp"
+    ],
+    "slug": "korzina-na-beregu-leta",
+    "published": false
+  },
+  {
+    "uid": "370075569761",
+    "title": "Корзина \"Сиреневый закат\"",
+    "description": "",
+    "price": 30800,
+    "images": [
+      "/images/catalog/korziny/korzina-sirenevyi-zakat-370075569761.webp",
+      "/images/catalog/korziny/korzina-sirenevyi-zakat-370075569761-1.webp"
+    ],
+    "slug": "korzina-sirenevyi-zakat",
+    "published": false
+  },
+  {
+    "uid": "128070523841",
+    "title": "Корзина \"Кружево\"",
+    "description": "Корзина с пионами",
+    "price": 74800,
+    "images": [
+      "/images/catalog/korziny/korzina-kruzhevo-128070523841.webp"
+    ],
+    "slug": "korzina-kruzhevo",
+    "published": false
+  },
+  {
+    "uid": "218913746731",
+    "title": "Корзина \"Лесное лукошко\"",
+    "description": "Гортензия, хризантема, буплеурум, амми, маттиола, ваксфлауэр, астильба, пионовидная роза",
+    "price": 24750,
+    "images": [
+      "/images/catalog/korziny/korzina-lesnoe-lukoshko-218913746731.webp"
+    ],
+    "slug": "korzina-lesnoe-lukoshko",
+    "published": false
+  },
+  {
+    "uid": "413491019161",
+    "title": "Корзина \"Омбре\"",
+    "description": "",
+    "price": 24750,
+    "images": [
+      "/images/catalog/korziny/korzina-ombre-413491019161.webp",
+      "/images/catalog/korziny/korzina-ombre-413491019161-1.webp",
+      "/images/catalog/korziny/korzina-ombre-413491019161-2.webp"
+    ],
+    "slug": "korzina-ombre",
+    "published": false
+  },
+  {
+    "uid": "137405573741",
+    "title": "Корзина \"Райские облака\"",
+    "description": "Гортензии. Цвет и количество согласовывается индивидуально",
+    "price": 44000,
+    "images": [
+      "/images/catalog/korziny/korzina-raiskie-oblaka-137405573741.webp"
+    ],
+    "slug": "korzina-raiskie-oblaka",
+    "published": false
+  },
+  {
+    "uid": "277699217121",
+    "title": "Корзина «Оранжевое настроение»",
+    "description": "В составе корзины: роза, илекс, тюльпан, эвкалипт",
+    "price": 19800,
+    "images": [
+      "/images/catalog/korziny/korzina-oranzhevoe-nastroenie-277699217121.webp"
+    ],
+    "slug": "korzina-oranzhevoe-nastroenie",
+    "published": false
+  },
+  {
+    "uid": "126548175481",
+    "title": "Корзина \"Луч солнца\"",
+    "description": "Розы, мимоза, нарциссы, аллиум, ранункулюсы, форзиция, декоративная зелень",
+    "price": 23100,
+    "images": [
+      "/images/catalog/korziny/korzina-luch-solntsa-126548175481.webp",
+      "/images/catalog/korziny/korzina-luch-solntsa-126548175481-1.webp"
+    ],
+    "slug": "korzina-luch-solntsa",
+    "published": false
+  },
+  {
+    "uid": "311902289801",
+    "title": "Корзина \"Счастливый случай\"",
+    "description": "Розы, мимоза, нарциссы, тюльпаны, ранункулюсы, эустома, декоративная зелень",
+    "price": 28600,
+    "images": [
+      "/images/catalog/korziny/korzina-schastlivyi-sluchai-311902289801.webp",
+      "/images/catalog/korziny/korzina-schastlivyi-sluchai-311902289801-1.webp"
+    ],
+    "slug": "korzina-schastlivyi-sluchai",
+    "published": false
+  },
+  {
+    "uid": "912224006891",
+    "title": "Корзина \"Весна пришла\"",
+    "description": "Розы, ранункулюс, гиацинт, джениста, кустовая роза, эвкалипт",
+    "price": 17600,
+    "images": [
+      "/images/catalog/korziny/korzina-vesna-prishla-912224006891.webp"
+    ],
+    "slug": "korzina-vesna-prishla",
+    "published": false
+  }
+]

@@ -137,9 +137,15 @@
   row-gap: 60px;
 }
 
+/* Compositions run from nothing to five lines, which used to leave the price
+   and the buttons at a different height in every card of a row. The card fills
+   its grid cell, the title reserves two lines, the composition is capped at
+   three, and the price block is pushed to the bottom — so those edges line up
+   across the row however much text a product has. */
 .card {
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 .cardPhotoBtn {
@@ -160,6 +166,7 @@
 
 .cardTitle {
   margin: 20px 0 0;
+  min-height: 54px;
   font-size: 20px;
   font-weight: 700;
   line-height: 27px;
@@ -167,6 +174,10 @@
 }
 
 .cardDescr {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
   margin: 8px 0 0;
   font-size: 14px;
   font-weight: 300;
@@ -175,7 +186,8 @@
 }
 
 .cardPrice {
-  margin-top: 14px;
+  margin-top: auto;
+  padding-top: 14px;
   font-size: 16px;
   font-weight: 400;
   color: var(--color-text-dark);

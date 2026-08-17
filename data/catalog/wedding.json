@@ -1,1 +1,90 @@
-[]
+[
+  {
+    "uid": "641261517482",
+    "title": "Нежность",
+    "description": "Состав букета: калла, эустома, роза кустовая",
+    "price": 13200,
+    "images": [
+      "/images/catalog/wedding/nezhnost-641261517482.webp"
+    ],
+    "slug": "nezhnost",
+    "published": false
+  },
+  {
+    "uid": "792885604252",
+    "title": "Пинововая нежность",
+    "description": "Состав букета: пион, эвкалипт",
+    "price": 19800,
+    "images": [
+      "/images/catalog/wedding/pinovovaya-nezhnost-792885604252.webp"
+    ],
+    "slug": "pinovovaya-nezhnost",
+    "published": false
+  },
+  {
+    "uid": "648976560422",
+    "title": "Счастье",
+    "description": "Состав букета: ранункулюс, латирус, роз",
+    "price": 23100,
+    "images": [
+      "/images/catalog/wedding/schaste-648976560422.webp"
+    ],
+    "slug": "schaste",
+    "published": false
+  },
+  {
+    "uid": "679671800672",
+    "title": "Суфле",
+    "description": "Состав букета: роза, орхидея, пион, кустовая роз",
+    "price": 14300,
+    "images": [
+      "/images/catalog/wedding/sufle-679671800672.webp"
+    ],
+    "slug": "sufle",
+    "published": false
+  },
+  {
+    "uid": "258642626132",
+    "title": "Белое облако",
+    "description": "Состав букета: диантус",
+    "price": 9900,
+    "images": [
+      "/images/catalog/wedding/beloe-oblako-258642626132.webp"
+    ],
+    "slug": "beloe-oblako",
+    "published": false
+  },
+  {
+    "uid": "936837767852",
+    "title": "Воздух",
+    "description": "Состав букета: эустома, статица, эвкалип",
+    "price": 11000,
+    "images": [
+      "/images/catalog/wedding/vozduh-936837767852.webp"
+    ],
+    "slug": "vozduh",
+    "published": false
+  },
+  {
+    "uid": "578956028252",
+    "title": "Нежная роза",
+    "description": "Состав букета: розы",
+    "price": 13200,
+    "images": [
+      "/images/catalog/wedding/nezhnaya-roza-578956028252.webp"
+    ],
+    "slug": "nezhnaya-roza",
+    "published": false
+  },
+  {
+    "uid": "623332930892",
+    "title": "Зефирка",
+    "description": "Состав букета: пион, роза кустовая, диантус, эвкалипт",
+    "price": 9900,
+    "images": [
+      "/images/catalog/wedding/zefirka-623332930892.webp"
+    ],
+    "slug": "zefirka",
+    "published": false
+  }
+]

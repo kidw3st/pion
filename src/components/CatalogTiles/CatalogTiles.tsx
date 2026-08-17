@@ -18,6 +18,8 @@ export function CatalogTiles({ tiles }: { tiles: CatalogTile[] }) {
 
   return (
     <main className={styles.grid}>
+      <h1 className="srOnly">Каталог цветов и подарков — салон «Пион», Пермь</h1>
+
       {tiles.map((tile) =>
         tile.href.startsWith('#') ? (
           <button

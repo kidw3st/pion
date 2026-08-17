@@ -11,13 +11,31 @@ export function UdsBlock({ data }: { data: UdsBlockData }) {
       <div className={styles.inner}>
         <div className={styles.collage}>
           {first && (
-            <Image src={first} alt="" width={420} height={300} className={styles.shotOne} />
+            <Image
+              src={first}
+              alt="Букеты салона «Пион» — участника программы лояльности UDS"
+              width={420}
+              height={300}
+              className={styles.shotOne}
+            />
           )}
           {second && (
-            <Image src={second} alt="" width={300} height={200} className={styles.shotTwo} />
+            <Image
+              src={second}
+              alt="Композиция из свежих цветов от салона «Пион»"
+              width={300}
+              height={200}
+              className={styles.shotTwo}
+            />
           )}
           {third && (
-            <Image src={third} alt="" width={300} height={200} className={styles.shotThree} />
+            <Image
+              src={third}
+              alt="Подарочная упаковка букета в салоне «Пион», Пермь"
+              width={300}
+              height={200}
+              className={styles.shotThree}
+            />
           )}
         </div>
 

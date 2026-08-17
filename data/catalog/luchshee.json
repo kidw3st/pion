@@ -1,1 +1,646 @@
-[]
+[
+  {
+    "uid": "601869152971",
+    "title": "ВАЗА ДЕКОРАТИВНАЯ СТЕКЛЯННАЯ FLORA",
+    "description": "Высота:#nbsp;37,8 см<br />Ширина:#nbsp;22 см<br />Длина:#nbsp;24 см<br />Вес:#nbsp;4.2 кг<br /><strong> </strong>",
+    "price": 26500,
+    "images": [
+      "/images/catalog/luchshee/vaza-dekorativnaya-steklyannaya-flora-601869152971.webp",
+      "/images/catalog/luchshee/vaza-dekorativnaya-steklyannaya-flora-601869152971-1.webp"
+    ],
+    "slug": "vaza-dekorativnaya-steklyannaya-flora",
+    "published": false
+  },
+  {
+    "uid": "336063986681",
+    "title": "Интерьерная композиция \"Яркий акцент\"",
+    "description": "Интерьерная композиция выполнена из сухоцветов и искусственных цветов самого лучшего качества!",
+    "price": 9600,
+    "images": [
+      "/images/catalog/luchshee/interernaya-kompozitsiya-yarkii-aktsent-336063986681.webp"
+    ],
+    "slug": "interernaya-kompozitsiya-yarkii-aktsent",
+    "published": false
+  },
+  {
+    "uid": "815424570441",
+    "title": "Интерьерная композиция \"Солнце прованса\"",
+    "description": "Интерьерная композиция выполнена из сухоцветов и искусственных цветов самого лучшего качества в керамической вазе.",
+    "price": 8300,
+    "images": [
+      "/images/catalog/luchshee/interernaya-kompozitsiya-solntse-provansa-815424570441.webp"
+    ],
+    "slug": "interernaya-kompozitsiya-solntse-provansa",
+    "published": false
+  },
+  {
+    "uid": "975849545081",
+    "title": "Интерьерная композиция \"Маковый сбор\"",
+    "description": "Интерьерная композиция выполнена из сухоцветов и искусственных цветов самого лучшего качества!",
+    "price": 8000,
+    "images": [
+      "/images/catalog/luchshee/interernaya-kompozitsiya-makovyi-sbor-975849545081.webp"
+    ],
+    "slug": "interernaya-kompozitsiya-makovyi-sbor",
+    "published": false
+  },
+  {
+    "uid": "566086262521",
+    "title": "Интерьерная композиция \"Утро на море\"",
+    "description": "Интерьерная композиция выполнена из искусственных цветов самого лучшего качества!",
+    "price": 19600,
+    "images": [
+      "/images/catalog/luchshee/interernaya-kompozitsiya-utro-na-more-566086262521.webp"
+    ],
+    "slug": "interernaya-kompozitsiya-utro-na-more",
+    "published": false
+  },
+  {
+    "uid": "197912229331",
+    "title": "Интерьерная композиция \"Lavender\"",
+    "description": "Интерьерная композиция выполнена из искусственных цветов самого лучшего качества!",
+    "price": 19500,
+    "images": [
+      "/images/catalog/luchshee/interernaya-kompozitsiya-lavender-197912229331.webp"
+    ],
+    "slug": "interernaya-kompozitsiya-lavender",
+    "published": false
+  },
+  {
+    "uid": "537918045801",
+    "title": "Интерьерная композиция \"Red line\"",
+    "description": "Интерьерная композиция выполнена из искусственных цветов самого лучшего качества!",
+    "price": 10350,
+    "images": [
+      "/images/catalog/luchshee/interernaya-kompozitsiya-red-line-537918045801.webp"
+    ],
+    "slug": "interernaya-kompozitsiya-red-line",
+    "published": false
+  },
+  {
+    "uid": "676713690801",
+    "title": "Интерьерная композиция \"Green day\"",
+    "description": "Интерьерная композиция выполнена из искусственных цветов самого лучшего качества!",
+    "price": 14900,
+    "images": [
+      "/images/catalog/luchshee/interernaya-kompozitsiya-green-day-676713690801.webp"
+    ],
+    "slug": "interernaya-kompozitsiya-green-day",
+    "published": false
+  },
+  {
+    "uid": "421566467481",
+    "title": "Интерьерная композиция \"Global\"",
+    "description": "Интерьерная композиция выполнена из искусственных цветов самого лучшего качества!",
+    "price": 10300,
+    "images": [
+      "/images/catalog/luchshee/interernaya-kompozitsiya-global-421566467481.webp"
+    ],
+    "slug": "interernaya-kompozitsiya-global",
+    "published": false
+  },
+  {
+    "uid": "184964591691",
+    "title": "Интерьерная композиция \"Salmon classic\"",
+    "description": "Интерьерная композиция выполнена из искусственных цветов самого лучшего качества!",
+    "price": 16900,
+    "images": [
+      "/images/catalog/luchshee/interernaya-kompozitsiya-salmon-classic-184964591691.webp"
+    ],
+    "slug": "interernaya-kompozitsiya-salmon-classic",
+    "published": false
+  },
+  {
+    "uid": "722995183411",
+    "title": "Интерьерная композиция \"Red pion\"",
+    "description": "Интерьерная композиция выполнена из искусственных цветов самого лучшего качества в декоративной стеклянной вазе.",
+    "price": 14000,
+    "images": [
+      "/images/catalog/luchshee/interernaya-kompozitsiya-red-pion-722995183411.webp"
+    ],
+    "slug": "interernaya-kompozitsiya-red-pion",
+    "published": false
+  },
+  {
+    "uid": "169445382121",
+    "title": "Интерьерная композиция \"Lilac\"",
+    "description": "Интерьерная композиция выполнена из искусственных цветов самого лучшего качества.",
+    "price": 11800,
+    "images": [
+      "/images/catalog/luchshee/interernaya-kompozitsiya-lilac-169445382121.webp"
+    ],
+    "slug": "interernaya-kompozitsiya-lilac",
+    "published": false
+  },
+  {
+    "uid": "911904096741",
+    "title": "Интерьерная композиция \"Deep purple\"",
+    "description": "Интерьерная композиция выполнена из сухоцветов и искусственных цветов самого лучшего качества в керамической вазе.",
+    "price": 14800,
+    "images": [
+      "/images/catalog/luchshee/interernaya-kompozitsiya-deep-purple-911904096741.webp",
+      "/images/catalog/luchshee/interernaya-kompozitsiya-deep-purple-911904096741-1.webp"
+    ],
+    "slug": "interernaya-kompozitsiya-deep-purple",
+    "published": false
+  },
+  {
+    "uid": "226573039881",
+    "title": "ВАЗА ДЕКОРАТИВНАЯ СТЕКЛЯННАЯ FLOW",
+    "description": "Высота:#nbsp;36 см<br />Ширина:#nbsp;19 см<br />Длина:#nbsp;24 см<br />Вес:#nbsp;3.6 кг<br /><br />",
+    "price": 28650,
+    "images": [
+      "/images/catalog/luchshee/vaza-dekorativnaya-steklyannaya-flow-226573039881.webp",
+      "/images/catalog/luchshee/vaza-dekorativnaya-steklyannaya-flow-226573039881-1.webp"
+    ],
+    "slug": "vaza-dekorativnaya-steklyannaya-flow",
+    "published": false
+  },
+  {
+    "uid": "306725183081",
+    "title": "ВАЗА МЕТАЛЛИЧЕСКАЯ СЕРЕБРО/ШАМПАНЬ",
+    "description": "Высота:#nbsp;34 см<br />Ширина:#nbsp;33 см<br />Длина:#nbsp;29 см<br />Вес:#nbsp;3.85 кг<br /><br />",
+    "price": 21750,
+    "images": [
+      "/images/catalog/luchshee/vaza-metallicheskaya-serebro-shampan-306725183081.webp",
+      "/images/catalog/luchshee/vaza-metallicheskaya-serebro-shampan-306725183081-1.webp"
+    ],
+    "slug": "vaza-metallicheskaya-serebro-shampan",
+    "published": false
+  },
+  {
+    "uid": "850260450711",
+    "title": "ВАЗА СТЕКЛЯННАЯ СЕРЕБРИСТАЯ",
+    "description": "Высота:#nbsp;25 см<br />Ширина:#nbsp;13 см<br />Длина:#nbsp;13 см<br />Вес:#nbsp;0.58 кг<br /><br />",
+    "price": 6530,
+    "images": [
+      "/images/catalog/luchshee/vaza-steklyannaya-serebristaya-850260450711.webp"
+    ],
+    "slug": "vaza-steklyannaya-serebristaya",
+    "published": false
+  },
+  {
+    "uid": "476818862071",
+    "title": "ВАЗА СТЕКЛЯННАЯ СЕРЕБРИСТАЯ",
+    "description": "<br />Высота:#nbsp;36 см<br />Ширина:#nbsp;13 см<br />Длина:#nbsp;13 см<br /><br />",
+    "price": 7800,
+    "images": [
+      "/images/catalog/luchshee/vaza-steklyannaya-serebristaya-476818862071.webp"
+    ],
+    "slug": "vaza-steklyannaya-serebristaya",
+    "published": false
+  },
+  {
+    "uid": "398263914731",
+    "title": "ВАЗА КЕРАМИЧЕСКАЯ ЗОЛОТАЯ",
+    "description": "Высота:#nbsp;44,5 см<br />Ширина:#nbsp;25 см<br />Длина:#nbsp;12 см<br />Вес:#nbsp;2.5 кг<br /><br />",
+    "price": 10560,
+    "images": [
+      "/images/catalog/luchshee/vaza-keramicheskaya-zolotaya-398263914731.webp",
+      "/images/catalog/luchshee/vaza-keramicheskaya-zolotaya-398263914731-1.webp"
+    ],
+    "slug": "vaza-keramicheskaya-zolotaya",
+    "published": false
+  },
+  {
+    "uid": "760536180841",
+    "title": "ВАЗА ДЕКОРАТИВНАЯ С КРЫШКОЙ \"ЯГУАР\"",
+    "description": "Высота:#nbsp;18 см<br />Ширина:#nbsp;21 см<br />Длина:#nbsp;21 см<br />Вес:#nbsp;1.7 кг<br /><br />",
+    "price": 10350,
+    "images": [
+      "/images/catalog/luchshee/vaza-dekorativnaya-s-kryshkoi-yaguar-760536180841.webp",
+      "/images/catalog/luchshee/vaza-dekorativnaya-s-kryshkoi-yaguar-760536180841-1.webp",
+      "/images/catalog/luchshee/vaza-dekorativnaya-s-kryshkoi-yaguar-760536180841-2.webp",
+      "/images/catalog/luchshee/vaza-dekorativnaya-s-kryshkoi-yaguar-760536180841-3.webp"
+    ],
+    "slug": "vaza-dekorativnaya-s-kryshkoi-yaguar",
+    "published": false
+  },
+  {
+    "uid": "207363630431",
+    "title": "ШКАТУЛКА ГОЛУБАЯ СО СТРЕКОЗОЙ",
+    "description": "Высота:#nbsp;13 см<br />Ширина:#nbsp;14 см<br />Длина:#nbsp;19 см<br />Вес:#nbsp;2.67 кг<br /><br />",
+    "price": 15900,
+    "images": [
+      "/images/catalog/luchshee/shkatulka-golubaya-so-strekozoi-207363630431.webp",
+      "/images/catalog/luchshee/shkatulka-golubaya-so-strekozoi-207363630431-1.webp",
+      "/images/catalog/luchshee/shkatulka-golubaya-so-strekozoi-207363630431-2.webp",
+      "/images/catalog/luchshee/shkatulka-golubaya-so-strekozoi-207363630431-3.webp"
+    ],
+    "slug": "shkatulka-golubaya-so-strekozoi",
+    "published": false
+  },
+  {
+    "uid": "170735980311",
+    "title": "ВАЗА ДЕКОРАТИВНАЯ С КРЫШКОЙ \"ЯГУАР\"",
+    "description": "Высота:#nbsp;28 см<br />Ширина:#nbsp;16 см<br />Длина:#nbsp;16 см<br />Вес:#nbsp;1.9 кг<br /><br /><br />",
+    "price": 9450,
+    "images": [
+      "/images/catalog/luchshee/vaza-dekorativnaya-s-kryshkoi-yaguar-170735980311.webp",
+      "/images/catalog/luchshee/vaza-dekorativnaya-s-kryshkoi-yaguar-170735980311-1.webp",
+      "/images/catalog/luchshee/vaza-dekorativnaya-s-kryshkoi-yaguar-170735980311-2.webp"
+    ],
+    "slug": "vaza-dekorativnaya-s-kryshkoi-yaguar",
+    "published": false
+  },
+  {
+    "uid": "341891016001",
+    "title": "ВАЗА КЕРАМИЧЕСКАЯ БЕЛАЯ С ЗОЛОТЫМ ДЕКОРОМ",
+    "description": "Высота:#nbsp;30 см<br />Ширина:#nbsp;9 см<br />Длина:#nbsp;13 см<br />Вес:#nbsp;1.05 кг<br /><br /><br /><br />",
+    "price": 12000,
+    "images": [
+      "/images/catalog/luchshee/vaza-keramicheskaya-belaya-s-zolotym-dekorom-341891016001.webp",
+      "/images/catalog/luchshee/vaza-keramicheskaya-belaya-s-zolotym-dekorom-341891016001-1.webp"
+    ],
+    "slug": "vaza-keramicheskaya-belaya-s-zolotym-dekorom",
+    "published": false
+  },
+  {
+    "uid": "734882194851",
+    "title": "ВАЗА ПЕРЛАМУТРОВОЕ СТЕКЛО (2)",
+    "description": "12х30см",
+    "price": 4600,
+    "images": [
+      "/images/catalog/luchshee/vaza-perlamutrovoe-steklo-2-734882194851.webp",
+      "/images/catalog/luchshee/vaza-perlamutrovoe-steklo-2-734882194851-1.webp"
+    ],
+    "slug": "vaza-perlamutrovoe-steklo-2",
+    "published": false
+  },
+  {
+    "uid": "920050506511",
+    "title": "ШКАТУЛКА ГОЛУБАЯ СО СТРЕКОЗОЙ",
+    "description": "Высота:#nbsp;9 см<br />Ширина:#nbsp;13 см<br />Длина:#nbsp;13 см<br />Вес:#nbsp;1.5 кг<br /><br /><br />",
+    "price": 12150,
+    "images": [
+      "/images/catalog/luchshee/shkatulka-golubaya-so-strekozoi-920050506511.webp",
+      "/images/catalog/luchshee/shkatulka-golubaya-so-strekozoi-920050506511-1.webp",
+      "/images/catalog/luchshee/shkatulka-golubaya-so-strekozoi-920050506511-2.webp"
+    ],
+    "slug": "shkatulka-golubaya-so-strekozoi",
+    "published": false
+  },
+  {
+    "uid": "240810847741",
+    "title": "ВАЗА ВИНТАЖ ПЕРЛАМУТРОВЫЙ (1)",
+    "description": "<br /><br />",
+    "price": 7600,
+    "images": [
+      "/images/catalog/luchshee/vaza-vintazh-perlamutrovyi-1-240810847741.webp",
+      "/images/catalog/luchshee/vaza-vintazh-perlamutrovyi-1-240810847741-1.webp"
+    ],
+    "slug": "vaza-vintazh-perlamutrovyi-1",
+    "published": false
+  },
+  {
+    "uid": "552080000021",
+    "title": "ВАЗА ВИНТАЖ ПЕРЛАМУТРОВЫЙ (2)",
+    "description": "<br /><br />",
+    "price": 7600,
+    "images": [
+      "/images/catalog/luchshee/vaza-vintazh-perlamutrovyi-2-552080000021.webp",
+      "/images/catalog/luchshee/vaza-vintazh-perlamutrovyi-2-552080000021-1.webp"
+    ],
+    "slug": "vaza-vintazh-perlamutrovyi-2",
+    "published": false
+  },
+  {
+    "uid": "126752244341",
+    "title": "ВАЗА КЕРАМИКА БИРЮЗОВАЯ",
+    "description": "<br /><br />",
+    "price": 2900,
+    "images": [
+      "/images/catalog/luchshee/vaza-keramika-biryuzovaya-126752244341.webp"
+    ],
+    "slug": "vaza-keramika-biryuzovaya",
+    "published": false
+  },
+  {
+    "uid": "312689588911",
+    "title": "ВАЗА ЗОЛОТОЕ СТЕКЛО",
+    "description": "<br /><br />",
+    "price": 1200,
+    "images": [
+      "/images/catalog/luchshee/vaza-zolotoe-steklo-312689588911.webp"
+    ],
+    "slug": "vaza-zolotoe-steklo",
+    "published": false
+  },
+  {
+    "uid": "180264527351",
+    "title": "ВАЗА КЕРАМИКА С КРЫШКОЙ",
+    "description": "<br /><br />",
+    "price": 6200,
+    "images": [
+      "/images/catalog/luchshee/vaza-keramika-s-kryshkoi-180264527351.webp",
+      "/images/catalog/luchshee/vaza-keramika-s-kryshkoi-180264527351-1.webp"
+    ],
+    "slug": "vaza-keramika-s-kryshkoi",
+    "published": false
+  },
+  {
+    "uid": "926717749291",
+    "title": "ВАЗА ГОРЧИЧНАЯ (1)",
+    "description": "<br />12х12х30см",
+    "price": 7200,
+    "images": [
+      "/images/catalog/luchshee/vaza-gorchichnaya-1-926717749291.webp",
+      "/images/catalog/luchshee/vaza-gorchichnaya-1-926717749291-1.webp"
+    ],
+    "slug": "vaza-gorchichnaya-1",
+    "published": false
+  },
+  {
+    "uid": "913288711211",
+    "title": "ВАЗА ГОРЧИЧНАЯ (2)",
+    "description": "16х16х40см",
+    "price": 9600,
+    "images": [
+      "/images/catalog/luchshee/vaza-gorchichnaya-2-913288711211.webp",
+      "/images/catalog/luchshee/vaza-gorchichnaya-2-913288711211-1.webp"
+    ],
+    "slug": "vaza-gorchichnaya-2",
+    "published": false
+  },
+  {
+    "uid": "647605207201",
+    "title": "ВАЗА ВИНТАЖ РУЧНАЯ РАБОТА",
+    "description": "20х20х47см",
+    "price": 10200,
+    "images": [
+      "/images/catalog/luchshee/vaza-vintazh-ruchnaya-rabota-647605207201.webp",
+      "/images/catalog/luchshee/vaza-vintazh-ruchnaya-rabota-647605207201-1.webp"
+    ],
+    "slug": "vaza-vintazh-ruchnaya-rabota",
+    "published": false
+  },
+  {
+    "uid": "384396476611",
+    "title": "ВАЗА ДЫМКА СТЕКЛО",
+    "description": "26,5х12",
+    "price": 3000,
+    "images": [
+      "/images/catalog/luchshee/vaza-dymka-steklo-384396476611.webp",
+      "/images/catalog/luchshee/vaza-dymka-steklo-384396476611-1.webp"
+    ],
+    "slug": "vaza-dymka-steklo",
+    "published": false
+  },
+  {
+    "uid": "862514064021",
+    "title": "ВАЗА СЕРЕБРО",
+    "description": "40см",
+    "price": 3250,
+    "images": [
+      "/images/catalog/luchshee/vaza-serebro-862514064021.webp"
+    ],
+    "slug": "vaza-serebro",
+    "published": false
+  },
+  {
+    "uid": "106709964341",
+    "title": "ВАЗА ПЕРЛАМУТРОВОЕ СТЕКЛО",
+    "description": "12х10см",
+    "price": 2250,
+    "images": [
+      "/images/catalog/luchshee/vaza-perlamutrovoe-steklo-106709964341.webp",
+      "/images/catalog/luchshee/vaza-perlamutrovoe-steklo-106709964341-1.webp"
+    ],
+    "slug": "vaza-perlamutrovoe-steklo",
+    "published": false
+  },
+  {
+    "uid": "656838956102",
+    "title": "КАНДЕЛЯБР НА 5 СВЕЧЕЙ ЗОЛОТО ЧЕРНЫЙ",
+    "description": "25*50см",
+    "price": 5800,
+    "images": [
+      "/images/catalog/luchshee/kandelyabr-na-5-svechei-zoloto-chernyi-656838956102.webp"
+    ],
+    "slug": "kandelyabr-na-5-svechei-zoloto-chernyi",
+    "published": false
+  },
+  {
+    "uid": "839494656852",
+    "title": "ВАЗА СТЕКЛО ЗЕЛЕНАЯ",
+    "description": "Н14*D20см <br /><br />",
+    "price": 2900,
+    "images": [
+      "/images/catalog/luchshee/vaza-steklo-zelenaya-839494656852.webp",
+      "/images/catalog/luchshee/vaza-steklo-zelenaya-839494656852-1.webp"
+    ],
+    "slug": "vaza-steklo-zelenaya",
+    "published": false
+  },
+  {
+    "uid": "712758765212",
+    "title": "ВАЗА СТЕКЛО ЗЕЛЕНАЯ (2)",
+    "description": "<br />24*20см",
+    "price": 3800,
+    "images": [
+      "/images/catalog/luchshee/vaza-steklo-zelenaya-2-712758765212.webp",
+      "/images/catalog/luchshee/vaza-steklo-zelenaya-2-712758765212-1.webp"
+    ],
+    "slug": "vaza-steklo-zelenaya-2",
+    "published": false
+  },
+  {
+    "uid": "920438553682",
+    "title": "ВАЗА ШИШКА",
+    "description": "Ручная работа. Сделано в Португалии",
+    "price": 5400,
+    "images": [
+      "/images/catalog/luchshee/vaza-shishka-920438553682.webp"
+    ],
+    "slug": "vaza-shishka",
+    "published": false
+  },
+  {
+    "uid": "321410283562",
+    "title": "ВАЗА СИНЕЕ СТЕКЛО С ЗОЛОТОМ",
+    "description": "34,5*20см",
+    "price": 6500,
+    "images": [
+      "/images/catalog/luchshee/vaza-sinee-steklo-s-zolotom-321410283562.webp",
+      "/images/catalog/luchshee/vaza-sinee-steklo-s-zolotom-321410283562-1.webp"
+    ],
+    "slug": "vaza-sinee-steklo-s-zolotom",
+    "published": false
+  },
+  {
+    "uid": "784444938272",
+    "title": "ВАЗА КЕРАМИКА ВИНТАЖ",
+    "description": "33,5*16,5",
+    "price": 5400,
+    "images": [
+      "/images/catalog/luchshee/vaza-keramika-vintazh-784444938272.webp",
+      "/images/catalog/luchshee/vaza-keramika-vintazh-784444938272-1.webp"
+    ],
+    "slug": "vaza-keramika-vintazh",
+    "published": false
+  },
+  {
+    "uid": "433043320642",
+    "title": "ВАЗА КЕРАМИКА ВИНТАЖ (2)",
+    "description": "25*18,5см",
+    "price": 4200,
+    "images": [
+      "/images/catalog/luchshee/vaza-keramika-vintazh-2-433043320642.webp",
+      "/images/catalog/luchshee/vaza-keramika-vintazh-2-433043320642-1.webp"
+    ],
+    "slug": "vaza-keramika-vintazh-2",
+    "published": false
+  },
+  {
+    "uid": "642534917492",
+    "title": "ВАЗА КЕРАМИКА ВИНТАЖ (3)",
+    "description": "40,5*16,5см",
+    "price": 6000,
+    "images": [
+      "/images/catalog/luchshee/vaza-keramika-vintazh-3-642534917492.webp",
+      "/images/catalog/luchshee/vaza-keramika-vintazh-3-642534917492-1.webp"
+    ],
+    "slug": "vaza-keramika-vintazh-3",
+    "published": false
+  },
+  {
+    "uid": "597301181062",
+    "title": "ВАЗА ЦВЕТ МЕДЬ",
+    "description": "35см",
+    "price": 4800,
+    "images": [
+      "/images/catalog/luchshee/vaza-tsvet-med-597301181062.webp"
+    ],
+    "slug": "vaza-tsvet-med",
+    "published": false
+  },
+  {
+    "uid": "988394035572",
+    "title": "ВАЗА ЦВЕТ МРАМОР",
+    "description": "",
+    "price": 3000,
+    "images": [
+      "/images/catalog/luchshee/vaza-tsvet-mramor-988394035572.webp",
+      "/images/catalog/luchshee/vaza-tsvet-mramor-988394035572-1.webp"
+    ],
+    "slug": "vaza-tsvet-mramor",
+    "published": false
+  },
+  {
+    "uid": "811636081772",
+    "title": "ВАЗА ЦВЕТ МРАМОР (2)",
+    "description": "",
+    "price": 3500,
+    "images": [
+      "/images/catalog/luchshee/vaza-tsvet-mramor-2-811636081772.webp",
+      "/images/catalog/luchshee/vaza-tsvet-mramor-2-811636081772-1.webp"
+    ],
+    "slug": "vaza-tsvet-mramor-2",
+    "published": false
+  },
+  {
+    "uid": "904855189892",
+    "title": "ВАЗА СТЕКЛО ЦВЕТ МЕТАЛЛ",
+    "description": "",
+    "price": 3700,
+    "images": [
+      "/images/catalog/luchshee/vaza-steklo-tsvet-metall-904855189892.webp",
+      "/images/catalog/luchshee/vaza-steklo-tsvet-metall-904855189892-1.webp"
+    ],
+    "slug": "vaza-steklo-tsvet-metall",
+    "published": false
+  },
+  {
+    "uid": "381448418402",
+    "title": "ПОДСВЕЧНИК СЕРЕБРО",
+    "description": "",
+    "price": 1400,
+    "images": [
+      "/images/catalog/luchshee/podsvechnik-serebro-381448418402.webp",
+      "/images/catalog/luchshee/podsvechnik-serebro-381448418402-1.webp"
+    ],
+    "slug": "podsvechnik-serebro",
+    "published": false
+  },
+  {
+    "uid": "658467581172",
+    "title": "КЛЕТКА ДЕКОРАТИВНАЯ ЗОЛОТО",
+    "description": "",
+    "price": 6000,
+    "images": [
+      "/images/catalog/luchshee/kletka-dekorativnaya-zoloto-658467581172.webp"
+    ],
+    "slug": "kletka-dekorativnaya-zoloto",
+    "published": false
+  },
+  {
+    "uid": "645204585222",
+    "title": "ПОДСВЕЧНИК СЕРЕБРО ЦВЕТ",
+    "description": "",
+    "price": 1400,
+    "images": [
+      "/images/catalog/luchshee/podsvechnik-serebro-tsvet-645204585222.webp",
+      "/images/catalog/luchshee/podsvechnik-serebro-tsvet-645204585222-1.webp"
+    ],
+    "slug": "podsvechnik-serebro-tsvet",
+    "published": false
+  },
+  {
+    "uid": "961503593012",
+    "title": "ВАЗА ГОЛУБАЯ",
+    "description": "",
+    "price": 3900,
+    "images": [
+      "/images/catalog/luchshee/vaza-golubaya-961503593012.webp"
+    ],
+    "slug": "vaza-golubaya",
+    "published": false
+  },
+  {
+    "uid": "907718723632",
+    "title": "ПОДСВЕЧНИК БЕНЗИН",
+    "description": "",
+    "price": 2500,
+    "images": [
+      "/images/catalog/luchshee/podsvechnik-benzin-907718723632.webp",
+      "/images/catalog/luchshee/podsvechnik-benzin-907718723632-1.webp"
+    ],
+    "slug": "podsvechnik-benzin",
+    "published": false
+  },
+  {
+    "uid": "609825691562",
+    "title": "ПОДСВЕЧНИК БЕНЗИН (2)",
+    "description": "",
+    "price": 3000,
+    "images": [
+      "/images/catalog/luchshee/podsvechnik-benzin-2-609825691562.webp",
+      "/images/catalog/luchshee/podsvechnik-benzin-2-609825691562-1.webp"
+    ],
+    "slug": "podsvechnik-benzin-2",
+    "published": false
+  },
+  {
+    "uid": "273323471132",
+    "title": "ПОДСВЕЧНИК ЗОЛОТОЙ МАТОВЫЙ",
+    "description": "23*4,5см",
+    "price": 1800,
+    "images": [
+      "/images/catalog/luchshee/podsvechnik-zolotoi-matovyi-273323471132.webp",
+      "/images/catalog/luchshee/podsvechnik-zolotoi-matovyi-273323471132-1.webp"
+    ],
+    "slug": "podsvechnik-zolotoi-matovyi",
+    "published": false
+  },
+  {
+    "uid": "876031801322",
+    "title": "Copy: КАНДЕЛЯБР НА 5 СВЕЧЕЙ ЗОЛОТО ЧЕРНЫЙ",
+    "description": "25*50см",
+    "price": 5800,
+    "images": [
+      "/images/catalog/luchshee/copy-kandelyabr-na-5-svechei-zoloto-chernyi-876031801322.webp"
+    ],
+    "slug": "copy-kandelyabr-na-5-svechei-zoloto-chernyi",
+    "published": false
+  }
+]

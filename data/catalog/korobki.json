@@ -1,1 +1,666 @@
-[]
+[
+  {
+    "uid": "556436355091",
+    "title": "Цветочная коробка \"Розовый закат\"",
+    "description": "Размер: XXL<br />Состав коробки: Пион, роза, эустома, гортензия, нарине, кустовая роза, эвкалипт",
+    "price": 55000,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-rozovyi-zakat-556436355091.webp",
+      "/images/catalog/korobki/tsvetochnaya-korobka-rozovyi-zakat-556436355091-1.webp",
+      "/images/catalog/korobki/tsvetochnaya-korobka-rozovyi-zakat-556436355091-2.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-rozovyi-zakat",
+    "published": false
+  },
+  {
+    "uid": "421703828461",
+    "title": "Цветочная коробка \"Летнее настроение\"",
+    "description": "Размер M<br />Состав коробки: пион, гортензия, роза кустовая, эустома, гвоздика, хризантема, эвкалипт",
+    "price": 10900,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-letnee-nastroenie-421703828461.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-letnee-nastroenie",
+    "published": false
+  },
+  {
+    "uid": "379795986101",
+    "title": "Цветочная коробка \"Ты мне нравишься\"",
+    "description": "Размер S<br />Состав: пионовидная роза, эустома, аллиум, кустовая роза, тюльпан, эвкалипт",
+    "price": 6400,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-ty-mne-nravishsya-379795986101.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-ty-mne-nravishsya",
+    "published": false
+  },
+  {
+    "uid": "735023074891",
+    "title": "Цветочная коробка \"Нежные чувства\"",
+    "description": "Размер M<br />Состав: гортензия, пион, пионовидная роза, кустовая роза, даинтус, озотамнус, астильба, эвкалипт",
+    "price": 11350,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-nezhnye-chuvstva-735023074891.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-nezhnye-chuvstva",
+    "published": false
+  },
+  {
+    "uid": "141942318771",
+    "title": "Цветочная коробка \"Искренние чувства\"",
+    "description": "Размер L<br />Состав: пион, пионовидная роза, кустовая роза, диантус, матиола, папоротник, эвкалипт",
+    "price": 8800,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-iskrennie-chuvstva-141942318771.webp",
+      "/images/catalog/korobki/tsvetochnaya-korobka-iskrennie-chuvstva-141942318771-1.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-iskrennie-chuvstva",
+    "published": false
+  },
+  {
+    "uid": "293278412051",
+    "title": "Цветочная коробка \"Сиреневый туман\"",
+    "description": "Размер S<br />Состав: пион, гортензия, пионовидная роза, эустома, кустовая роза, эвкалипт",
+    "price": 8300,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-sirenevyi-tuman-293278412051.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-sirenevyi-tuman",
+    "published": false
+  },
+  {
+    "uid": "270012889541",
+    "title": "Цветочная коробка \"Розовые облака\"",
+    "description": "Размер S<br />Состав: пион, эустома, эвкалипт",
+    "price": 17450,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-rozovye-oblaka-270012889541.webp",
+      "/images/catalog/korobki/tsvetochnaya-korobka-rozovye-oblaka-270012889541-1.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-rozovye-oblaka",
+    "published": false
+  },
+  {
+    "uid": "515441313561",
+    "title": "Цветочная коробка #8",
+    "description": "Размер S",
+    "price": 0,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-8-515441313561.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-8",
+    "published": false
+  },
+  {
+    "uid": "764497345621",
+    "title": "Цветочная коробка \"Черно-белое кино\"",
+    "description": "Размер L<br />Состав: протея, орхидея Фаленопсис, вибурнум, пионовидная роза. эустома, пион.",
+    "price": 19250,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-cherno-beloe-kino-764497345621.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-cherno-beloe-kino",
+    "published": false
+  },
+  {
+    "uid": "842188541181",
+    "title": "Цветочная коробка #10",
+    "description": "Размер M",
+    "price": 0,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-10-842188541181.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-10",
+    "published": false
+  },
+  {
+    "uid": "411363510911",
+    "title": "Цветочная коробка #11",
+    "description": "Размер M",
+    "price": 0,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-11-411363510911.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-11",
+    "published": false
+  },
+  {
+    "uid": "636898243981",
+    "title": "Цветочная коробка #12",
+    "description": "Размер M",
+    "price": 0,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-12-636898243981.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-12",
+    "published": false
+  },
+  {
+    "uid": "197450988471",
+    "title": "Цветочная коробка #13",
+    "description": "Размер M",
+    "price": 0,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-13-197450988471.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-13",
+    "published": false
+  },
+  {
+    "uid": "541356827461",
+    "title": "Цветочная коробка #14",
+    "description": "Размер M",
+    "price": 0,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-14-541356827461.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-14",
+    "published": false
+  },
+  {
+    "uid": "554048843381",
+    "title": "Цветочная коробка \"Клубничное парфэ\"",
+    "description": "Размер L<br />Состав: гортензия, пион, цветущие ветви, пионовидная роза, эустома, диантус, нефролепис, эвкалипт.",
+    "price": 32700,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-klubnichnoe-parfe-554048843381.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-klubnichnoe-parfe",
+    "published": false
+  },
+  {
+    "uid": "364837686141",
+    "title": "Цветочная коробка \"Экспрессия\"",
+    "description": "Размер L<br />Состав: гортензия, пион, пионовидная роза, матиола, эустома, кустовая роза, картадерия, нефролепис, эвкалипт.",
+    "price": 29700,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-ekspressiya-364837686141.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-ekspressiya",
+    "published": false
+  },
+  {
+    "uid": "615713796731",
+    "title": "Цветочная коробка #17",
+    "description": "Размер L",
+    "price": 0,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-17-615713796731.webp",
+      "/images/catalog/korobki/tsvetochnaya-korobka-17-615713796731-1.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-17",
+    "published": false
+  },
+  {
+    "uid": "379842551261",
+    "title": "Цветочная коробка #18",
+    "description": "Размер L",
+    "price": 0,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-18-379842551261.webp",
+      "/images/catalog/korobki/tsvetochnaya-korobka-18-379842551261-1.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-18",
+    "published": false
+  },
+  {
+    "uid": "417054841731",
+    "title": "Цветочная коробка #19",
+    "description": "Размер L",
+    "price": 0,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-19-417054841731.webp",
+      "/images/catalog/korobki/tsvetochnaya-korobka-19-417054841731-1.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-19",
+    "published": false
+  },
+  {
+    "uid": "536376259601",
+    "title": "Цветочная коробка #20",
+    "description": "Размер XL",
+    "price": 0,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-20-536376259601.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-20",
+    "published": false
+  },
+  {
+    "uid": "120011867771",
+    "title": "Цветочная коробка #21",
+    "description": "Размер XL",
+    "price": 0,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-21-120011867771.webp",
+      "/images/catalog/korobki/tsvetochnaya-korobka-21-120011867771-1.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-21",
+    "published": false
+  },
+  {
+    "uid": "850510421271",
+    "title": "Цветочная коробка #22",
+    "description": "Размер XL",
+    "price": 0,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-22-850510421271.webp",
+      "/images/catalog/korobki/tsvetochnaya-korobka-22-850510421271-1.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-22",
+    "published": false
+  },
+  {
+    "uid": "637044539841",
+    "title": "Цветочная коробка #23",
+    "description": "Размер XL",
+    "price": 0,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-23-637044539841.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-23",
+    "published": false
+  },
+  {
+    "uid": "186120769091",
+    "title": "Цветочная коробка #24",
+    "description": "Размер XL",
+    "price": 0,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-24-186120769091.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-24",
+    "published": false
+  },
+  {
+    "uid": "962567618791",
+    "title": "Цветочная коробка #25",
+    "description": "Размер",
+    "price": 0,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-25-962567618791.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-25",
+    "published": false
+  },
+  {
+    "uid": "938644862021",
+    "title": "Цветочная коробка #26",
+    "description": "Размер",
+    "price": 0,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-26-938644862021.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-26",
+    "published": false
+  },
+  {
+    "uid": "565140828141",
+    "title": "Цветочная коробка #27",
+    "description": "Размер",
+    "price": 0,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-27-565140828141.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-27",
+    "published": false
+  },
+  {
+    "uid": "420056652431",
+    "title": "Цветочная коробка #28",
+    "description": "Размер",
+    "price": 0,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-28-420056652431.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-28",
+    "published": false
+  },
+  {
+    "uid": "286367911141",
+    "title": "Цветочная коробка \"Поговорим о высоком!\"",
+    "description": "Размер S<br />Состав коробки: гортензия, нарцисс, тюльпан, эвкалипт, форзиция, эустома, роза одноголовая",
+    "price": 19050,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-pogovorim-o-vysokom-286367911141.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-pogovorim-o-vysokom",
+    "published": false
+  },
+  {
+    "uid": "360609006841",
+    "title": "Цветочная коробка \"Цветочная фантазия\"",
+    "description": "Размер M<br />Состав: амариллис, пионовидная роза, пионовидная кустовая роза, диантус, аллиум, гортензия, сухоцветы, эвкалипт, зелень",
+    "price": 20900,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-tsvetochnaya-fantaziya-360609006841.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-tsvetochnaya-fantaziya",
+    "published": false
+  },
+  {
+    "uid": "277085470021",
+    "title": "Цветочная коробка #31",
+    "description": "Размер",
+    "price": 0,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-31-277085470021.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-31",
+    "published": false
+  },
+  {
+    "uid": "960187047641",
+    "title": "Цветочная коробка #32",
+    "description": "Размер M<br />Состав коробки: пион, роза кустовая, роза одноголовая, эустома, тюльпан, хризантема, гвоздика, писташ, эвкалипт",
+    "price": 18300,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-32-960187047641.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-32",
+    "published": false
+  },
+  {
+    "uid": "627698757531",
+    "title": "Цветочная коробка #33",
+    "description": "Размер S<br />Состав коробки: роза кустовая, роза одноголовая, эустома, скиммия, питтоспорум, гвоздика",
+    "price": 13300,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-33-627698757531.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-33",
+    "published": false
+  },
+  {
+    "uid": "892649699191",
+    "title": "Цветочная коробка \"В самое сердце!\"",
+    "description": "Размер XL<br />Состав коробки: пион, пионовидная роза, роза кустовая, гортензия, аллиум, орхидея Ванда, эвкалипт",
+    "price": 25300,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-v-samoe-serdtse-892649699191.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-v-samoe-serdtse",
+    "published": false
+  },
+  {
+    "uid": "597535206861",
+    "title": "Цветочная коробка \"Роскошь бархата\"",
+    "description": "Размер S<br />Состав коробки: пион, пионовидная роза, кустовая роза, эвкалипт",
+    "price": 11500,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-roskosh-barhata-597535206861.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-roskosh-barhata",
+    "published": false
+  },
+  {
+    "uid": "431452480941",
+    "title": "Цветочная коробка \"Арлекин\"",
+    "description": "Размер S<br />Состав: пионовидная роза, тюльпан, диантус, нарцисс, мимоза, альстромерия, эвкалипт",
+    "price": 8300,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-arlekin-431452480941.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-arlekin",
+    "published": false
+  },
+  {
+    "uid": "759458397361",
+    "title": "Цветочная коробка \"Собрана в саду\"",
+    "description": "Размер XL<br />Состав: орхидея Ванда, гортензия, пионовидная роза, аллиум, ранункулюс, матиола, диантус, эвкалипт, вибурнум",
+    "price": 27500,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-sobrana-v-sadu-759458397361.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-sobrana-v-sadu",
+    "published": false
+  },
+  {
+    "uid": "148170578811",
+    "title": "Цветочная коробка \"Неизменная классика\"",
+    "description": "Размер S<br />Состав коробки: пион, ранункулюс, роза кустовая, роза одноголовая, астильба, альстромерия, папоротник, эвкалипт",
+    "price": 12000,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-neizmennaya-klassika-148170578811.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-neizmennaya-klassika",
+    "published": false
+  },
+  {
+    "uid": "872568440841",
+    "title": "Цветочная коробка \"Люблю!\"",
+    "description": "Размер XL<br />Состав коробки: сирень, пионовидная роза, диантус,ветки спиреи, хризантема, ранункулюс, эвкалипт",
+    "price": 28600,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-lyublyu-872568440841.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-lyublyu",
+    "published": false
+  },
+  {
+    "uid": "839064355191",
+    "title": "Цветочная коробка \"Весне дорогу!\"",
+    "description": "Размер L<br />Состав коробки: орхидея Дендробиум, пионовидная роза, гортензия, нарцисс, мимоза, эустома, эвкалипт",
+    "price": 19500,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-vesne-dorogu-839064355191.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-vesne-dorogu",
+    "published": false
+  },
+  {
+    "uid": "137346957851",
+    "title": "Цветочная коробка \"Мне можно\"",
+    "description": "Размер L<br />Состав коробки: орхидея Дендробиум, пионовидная роза, гортензия, ранункулюс, аллиум, эустома, эвкалипт",
+    "price": 27000,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-mne-mozhno-137346957851.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-mne-mozhno",
+    "published": false
+  },
+  {
+    "uid": "208157113581",
+    "title": "Цветочная коробка \"Солнечный зайчик\"",
+    "description": "Размер S<br />Состав коробки: тюльпан, ранункулюс, пион, мимоза, пионовидная роза, аллиум, форзиция, зелень",
+    "price": 12400,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-solnechnyi-zaichik-208157113581.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-solnechnyi-zaichik",
+    "published": false
+  },
+  {
+    "uid": "617240213251",
+    "title": "Цветочная коробка \"Цветы радости\"",
+    "description": "Размер L<br />Состав коробки: гортензия, ранункулюс, мимоза, аллиум, вишневые ветви, пионовидная роза, кустовая роза, вибурнум, эвкалипт.",
+    "price": 22600,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-tsvety-radosti-617240213251.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-tsvety-radosti",
+    "published": false
+  },
+  {
+    "uid": "118320350631",
+    "title": "Цветочная коробка \"Первое впечатление\"",
+    "description": "Размер: L<br />Состав коробки: сирень, ранункулюс, пионовидная роза, тюльпан, орхидея, дельфиниум, эустома. эвкалипт.",
+    "price": 25100,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-pervoe-vpechatlenie-118320350631.webp",
+      "/images/catalog/korobki/tsvetochnaya-korobka-pervoe-vpechatlenie-118320350631-1.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-pervoe-vpechatlenie",
+    "published": false
+  },
+  {
+    "uid": "540343729301",
+    "title": "Цветочная коробка \"Дела сердечные\"",
+    "description": "Размер: M<br />Состав коробки: гортензия, ранункулюс, пионовидная роза, озотамнус, орхидея эвкалипт.",
+    "price": 19300,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-dela-serdechnye-540343729301.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-dela-serdechnye",
+    "published": false
+  },
+  {
+    "uid": "101666691191",
+    "title": "Цветочная коробка \"Mon ami\"",
+    "description": "Размер: M<br />Состав коробки: гортензия, пион, пионовидная роза, эустома, диантус, эвкалипт.",
+    "price": 16000,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-mon-ami-101666691191.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-mon-ami",
+    "published": false
+  },
+  {
+    "uid": "628517938511",
+    "title": "Цветочная коробка \"То, что нужно\"",
+    "description": "Размер: M<br />Состав коробки: пионовидная роза, пион, эустома, кустовая пионовидная роза, диантус, эустома, маттиола, декоративная зелень",
+    "price": 21500,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-to-chto-nuzhno-628517938511.webp",
+      "/images/catalog/korobki/tsvetochnaya-korobka-to-chto-nuzhno-628517938511-1.webp",
+      "/images/catalog/korobki/tsvetochnaya-korobka-to-chto-nuzhno-628517938511-2.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-to-chto-nuzhno",
+    "published": false
+  },
+  {
+    "uid": "398184147561",
+    "title": "Цветочная коробка «Её улыбка»",
+    "description": "Размер S<br />Состав букета: ранункулюс, гиацинт, эвкалипт",
+    "price": 22000,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-ee-ulybka-398184147561.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-ee-ulybka",
+    "published": false
+  },
+  {
+    "uid": "302175252651",
+    "title": "Цветочная коробка «Восхищаюсь тобой»",
+    "description": "Размер L<br />В состав коробки входит: роза Nina, илекс, кустовая роза, гербера, вибурнум",
+    "price": 19800,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-voshischayus-toboi-302175252651.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-voshischayus-toboi",
+    "published": false
+  },
+  {
+    "uid": "749938818201",
+    "title": "Цветочная коробка \"Red\"",
+    "description": "Размер: S<br />Состав коробки: роза, кустовая роза, диантус, матиола, эвкалипт",
+    "price": 12100,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-red-749938818201.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-red",
+    "published": false
+  },
+  {
+    "uid": "701791199392",
+    "title": "Цветочная коробка \"Red\"",
+    "description": "Размер: L<br />Состав коробки: Розы Нина",
+    "price": 16500,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-red-701791199392.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-red",
+    "published": false
+  },
+  {
+    "uid": "110730428342",
+    "title": "Цветочная коробка \"Тополиный пух\"",
+    "description": "Размер: L<br />Состав коробки: Гелиантус, пион, эустома, амми, диантус, эустома, маттиола, буплеурум, декоративная зелень.",
+    "price": 27000,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-topolinyi-puh-110730428342.webp",
+      "/images/catalog/korobki/tsvetochnaya-korobka-topolinyi-puh-110730428342-1.webp",
+      "/images/catalog/korobki/tsvetochnaya-korobka-topolinyi-puh-110730428342-2.webp",
+      "/images/catalog/korobki/tsvetochnaya-korobka-topolinyi-puh-110730428342-3.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-topolinyi-puh",
+    "published": false
+  },
+  {
+    "uid": "471796870032",
+    "title": "Цветочная коробка \"Жемчужина\"",
+    "description": "Размер: L<br />Состав коробки: Пион, гербера, вибурнум, эустома, роза, эвкалипт",
+    "price": 24200,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-zhemchuzhina-471796870032.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-zhemchuzhina",
+    "published": false
+  },
+  {
+    "uid": "854740873442",
+    "title": "Цветочная коробка \"Нежность в каждом лепестке\"",
+    "description": "Размер: S<br />Состав коробки: Пион, роза, эустома, альстромерия, эвкалипт",
+    "price": 10500,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-nezhnost-v-kazhdom-lepestke-854740873442.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-nezhnost-v-kazhdom-lepestke",
+    "published": false
+  },
+  {
+    "uid": "506121353772",
+    "title": "Цветочная коробка \"Радость\"",
+    "description": "Размер: L<br />Состав коробки: Пион, роза, эустома, гортензия, альстромерия, эвкалипт",
+    "price": 24200,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-radost-506121353772.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-radost",
+    "published": false
+  },
+  {
+    "uid": "454816315352",
+    "title": "Цветочная коробка \"Яркие краски\"",
+    "description": "Размер: M<br />Состав коробки: Гортензия, роза, кустовая роза, гербера, антирринум, эвкалипт",
+    "price": 16500,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-yarkie-kraski-454816315352.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-yarkie-kraski",
+    "published": false
+  },
+  {
+    "uid": "419370019852",
+    "title": "Цветочная коробка \"Идеальное сочетание\"",
+    "description": "Размер: M<br />Состав коробки: Гортензия, роза, кустовая роза, эустома, эвкалипт",
+    "price": 16500,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-idealnoe-sochetanie-419370019852.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-idealnoe-sochetanie",
+    "published": false
+  },
+  {
+    "uid": "375796064702",
+    "title": "Цветочная коробка \"Розовая нежность\"",
+    "description": "<br />Состав коробки: Пион, роза, эустома, кустовая роза, эвкалипт",
+    "price": 12100,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-rozovaya-nezhnost-375796064702.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-rozovaya-nezhnost",
+    "published": false
+  },
+  {
+    "uid": "650166025272",
+    "title": "Цветочная коробка \"Персик\"",
+    "description": "<br />Состав коробки: Роза, эустома, кустовая роза, эвкалипт",
+    "price": 12100,
+    "images": [
+      "/images/catalog/korobki/tsvetochnaya-korobka-persik-650166025272.webp"
+    ],
+    "slug": "tsvetochnaya-korobka-persik",
+    "published": false
+  }
+]

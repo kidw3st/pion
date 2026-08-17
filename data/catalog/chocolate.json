@@ -1,1 +1,167 @@
-[]
+[
+  {
+    "uid": "690552623821",
+    "title": "Горький шоколад MG139",
+    "description": "Горький шоколад ручной работы. Йогурт из сублимированной голубики. Фисташки Бронте. Лиофилизированная ежевика.",
+    "price": 2100,
+    "images": [
+      "/images/catalog/chocolate/gorkii-shokolad-mg139-690552623821.webp"
+    ],
+    "slug": "gorkii-shokolad-mg139",
+    "published": false
+  },
+  {
+    "uid": "197124624951",
+    "title": "Молочный шоколад MG109",
+    "description": "Молочный шоколад ручной работы. Пьемонтский орех, фисташки Бронте, лиофилизированная клубника.",
+    "price": 2100,
+    "images": [
+      "/images/catalog/chocolate/molochnyi-shokolad-mg109-197124624951.webp"
+    ],
+    "slug": "molochnyi-shokolad-mg109",
+    "published": false
+  },
+  {
+    "uid": "999719421501",
+    "title": "Горький шоколад G101",
+    "description": "Горький шоколад ручной работы.Лиофилизированная клубника, лиофилизированная малина, лиофилизированная черная смородина.",
+    "price": 2100,
+    "images": [
+      "/images/catalog/chocolate/gorkii-shokolad-g101-999719421501.webp"
+    ],
+    "slug": "gorkii-shokolad-g101",
+    "published": false
+  },
+  {
+    "uid": "608110332241",
+    "title": "Молочный шоколад V108",
+    "description": "Молочный шоколад ручной работы. Засахаренные лепестки фиалки, кокос, хлопья из настоящего съедобного 23-х каратного золота",
+    "price": 2100,
+    "images": [
+      "/images/catalog/chocolate/molochnyi-shokolad-v108-608110332241.webp"
+    ],
+    "slug": "molochnyi-shokolad-v108",
+    "published": false
+  },
+  {
+    "uid": "708929936181",
+    "title": "Молочный шоколад F119",
+    "description": "Молочный шоколад ручной работы. Орех пекан, пастилки из шоколада с карамельным вкусом, ванильная морская соль из Таити",
+    "price": 2100,
+    "images": [
+      "/images/catalog/chocolate/molochnyi-shokolad-f119-708929936181.webp"
+    ],
+    "slug": "molochnyi-shokolad-f119",
+    "published": false
+  },
+  {
+    "uid": "327100870121",
+    "title": "Молочный шоколад MG110",
+    "description": "Молочный шоколад ручной работы. Орех пекан, фисташки Бронте, лиофилизированная красная смородина.",
+    "price": 2100,
+    "images": [
+      "/images/catalog/chocolate/molochnyi-shokolad-mg110-327100870121.webp"
+    ],
+    "slug": "molochnyi-shokolad-mg110",
+    "published": false
+  },
+  {
+    "uid": "612976845631",
+    "title": "Молочный шоколад LV102",
+    "description": "Молочный шоколад ручной работы. Брусника, сердечки из белого шоколада, лиофилизированная малина, лиофилизированная клубника",
+    "price": 2100,
+    "images": [
+      "/images/catalog/chocolate/molochnyi-shokolad-lv102-612976845631.webp"
+    ],
+    "slug": "molochnyi-shokolad-lv102",
+    "published": false
+  },
+  {
+    "uid": "483321673731",
+    "title": "Молочный шоколад G125",
+    "description": "Молочный шоколад ручной работы. Йогурт из сублимированной голубики, лиофилизированная клубника, лиофилизированная малина.",
+    "price": 2100,
+    "images": [
+      "/images/catalog/chocolate/molochnyi-shokolad-g125-483321673731.webp"
+    ],
+    "slug": "molochnyi-shokolad-g125",
+    "published": false
+  },
+  {
+    "uid": "148274209821",
+    "title": "Молочный шоколад F130",
+    "description": "Молочный шоколад ручной работы. Морская соль Maldon, пьемонтский орех.",
+    "price": 2100,
+    "images": [
+      "/images/catalog/chocolate/molochnyi-shokolad-f130-148274209821.webp"
+    ],
+    "slug": "molochnyi-shokolad-f130",
+    "published": false
+  },
+  {
+    "uid": "515865632081",
+    "title": "Молочный шоколад К106",
+    "description": "Молочный шоколад ручной работы.Миндаль с корицей и сахаром, ваниль Бурбон, дробленые зерна кофе \"Эфиопия Ирга\".",
+    "price": 2100,
+    "images": [
+      "/images/catalog/chocolate/molochnyi-shokolad-k106-515865632081.webp"
+    ],
+    "slug": "molochnyi-shokolad-k106",
+    "published": false
+  },
+  {
+    "uid": "803084667691",
+    "title": "Белый шоколад MG116",
+    "description": "Белый шоколад ручной работы. Орех пекан, фисташки Бронте, лиофилизированная вишня.",
+    "price": 2100,
+    "images": [
+      "/images/catalog/chocolate/belyi-shokolad-mg116-803084667691.webp"
+    ],
+    "slug": "belyi-shokolad-mg116",
+    "published": false
+  },
+  {
+    "uid": "480098095651",
+    "title": "Молочный шоколад MG111",
+    "description": "Молочный шоколад ручной работы. Орех пекан, лиофилизированная клубника, лиофилизированная малина.",
+    "price": 2100,
+    "images": [
+      "/images/catalog/chocolate/molochnyi-shokolad-mg111-480098095651.webp"
+    ],
+    "slug": "molochnyi-shokolad-mg111",
+    "published": false
+  },
+  {
+    "uid": "569169105851",
+    "title": "Молочный шоколад G104",
+    "description": "Молочный шоколад ручной работы. Лиофилизированная клубника, лиофилизированная малина, лиофилизированная черная смородина.",
+    "price": 2100,
+    "images": [
+      "/images/catalog/chocolate/molochnyi-shokolad-g104-569169105851.webp"
+    ],
+    "slug": "molochnyi-shokolad-g104",
+    "published": false
+  },
+  {
+    "uid": "121768210931",
+    "title": "Молочный шоколад M104",
+    "description": "Молочный шоколад ручной работы. Орех пекан, фисташки Бронте, миндаль из Сицилии.",
+    "price": 2100,
+    "images": [
+      "/images/catalog/chocolate/molochnyi-shokolad-m104-121768210931.webp"
+    ],
+    "slug": "molochnyi-shokolad-m104",
+    "published": false
+  },
+  {
+    "uid": "951648302731",
+    "title": "Белый шоколад В117",
+    "description": "Белый шоколад ручной работы. Засахаренная лимонная цедра, орех кешью, ваниль Бурбон.",
+    "price": 2100,
+    "images": [
+      "/images/catalog/chocolate/belyi-shokolad-v117-951648302731.webp"
+    ],
+    "slug": "belyi-shokolad-v117",
+    "published": false
+  }
+]

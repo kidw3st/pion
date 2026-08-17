@@ -1,1 +1,123 @@
-[]
+[
+  {
+    "uid": "649497770461",
+    "title": "Связка шаров",
+    "description": "Фонтан из шаров разного диаметра и цвета",
+    "price": 5500,
+    "images": [
+      "/images/catalog/balloons/svyazka-sharov-649497770461.webp"
+    ],
+    "slug": "svyazka-sharov",
+    "published": false
+  },
+  {
+    "uid": "200514891731",
+    "title": "Фонтан шаров",
+    "description": "Баблс, красное сердце большое, красное сердце стандартное",
+    "price": 4000,
+    "images": [
+      "/images/catalog/balloons/fontan-sharov-200514891731.webp"
+    ],
+    "slug": "fontan-sharov",
+    "published": false
+  },
+  {
+    "uid": "199184664321",
+    "title": "Шар фольгированный в форме сердца",
+    "description": "<br /><br />",
+    "price": 350,
+    "images": [
+      "/images/catalog/balloons/shar-folgirovannyi-v-forme-serdtsa-199184664321.webp"
+    ],
+    "slug": "shar-folgirovannyi-v-forme-serdtsa",
+    "published": false
+  },
+  {
+    "uid": "249083222362",
+    "title": "Фонтан из фольгированных сердец",
+    "description": "Шары 5 штук. Цвет может быть другим",
+    "price": 1700,
+    "images": [
+      "/images/catalog/balloons/fontan-iz-folgirovannyh-serdets-249083222362.webp"
+    ],
+    "slug": "fontan-iz-folgirovannyh-serdets",
+    "published": false
+  },
+  {
+    "uid": "895074878712",
+    "title": "Фонтан из латексных шаров белый розовый",
+    "description": "Количество: 7 штук.",
+    "price": 1200,
+    "images": [
+      "/images/catalog/balloons/fontan-iz-lateksnyh-sharov-belyi-rozovyi-895074878712.webp"
+    ],
+    "slug": "fontan-iz-lateksnyh-sharov-belyi-rozovyi",
+    "published": false
+  },
+  {
+    "uid": "476204973022",
+    "title": "Шар с конфетти",
+    "description": "",
+    "price": 200,
+    "images": [
+      "/images/catalog/balloons/shar-s-konfetti-476204973022.webp"
+    ],
+    "slug": "shar-s-konfetti",
+    "published": false
+  },
+  {
+    "uid": "644041435082",
+    "title": "Фонтан шаров крем брюле",
+    "description": "В составе: фольгированное сердце, шар хром, шар с конфетти",
+    "price": 3500,
+    "images": [
+      "/images/catalog/balloons/fontan-sharov-krem-bryule-644041435082.webp"
+    ],
+    "slug": "fontan-sharov-krem-bryule",
+    "published": false
+  },
+  {
+    "uid": "413396896812",
+    "title": "Шар цифра",
+    "description": "",
+    "price": 1200,
+    "images": [
+      "/images/catalog/balloons/shar-tsifra-413396896812.webp"
+    ],
+    "slug": "shar-tsifra",
+    "published": false
+  },
+  {
+    "uid": "692084966722",
+    "title": "Шар баблс с перьями",
+    "description": "Цвет перьев может быть другим",
+    "price": 1000,
+    "images": [
+      "/images/catalog/balloons/shar-babls-s-peryami-692084966722.webp"
+    ],
+    "slug": "shar-babls-s-peryami",
+    "published": false
+  },
+  {
+    "uid": "475514196632",
+    "title": "Фонтан из шаров нежный",
+    "description": "Шары в составе: фольгированное сердце, фольгированная звезда, шар латексный",
+    "price": 1750,
+    "images": [
+      "/images/catalog/balloons/fontan-iz-sharov-nezhnyi-475514196632.webp"
+    ],
+    "slug": "fontan-iz-sharov-nezhnyi",
+    "published": false
+  },
+  {
+    "uid": "684490789482",
+    "title": "Фонтан шаров бронза",
+    "description": "Состав фонтана: фольгированное сердце, шар латексный хром, шар латексный",
+    "price": 2300,
+    "images": [
+      "/images/catalog/balloons/fontan-sharov-bronza-684490789482.webp"
+    ],
+    "slug": "fontan-sharov-bronza",
+    "published": false
+  }
+]

@@ -4,8 +4,8 @@
     "title": "Цветочная подписка",
     "subtitle": "Пусть дома всегда будут свежие цветы!",
     "images": [
-      "/images/pages/flower-delivery/img-0.jpg",
-      "/images/pages/flower-delivery/img-1.jpg"
+      "/images/pages/flower-delivery/img-0.webp",
+      "/images/pages/flower-delivery/img-1.webp"
     ]
   },
   {
@@ -28,6 +28,6 @@
     "kind": "textImage",
     "title": "Остался последний шаг",
     "body": "Оставьте данные, и мы отправим вам итоговую стоимость цветочной подписки в течение часа\n\nТариф подписки\n\nНажимая на кнопку, вы даете согласие на обработку персональных данных и соглашаетесь c политикой конфиденциальности",
-    "image": "/images/pages/flower-delivery/img-3.jpg"
+    "image": "/images/pages/flower-delivery/img-3.webp"
   }
 ]

@@ -8,6 +8,7 @@
 import { mkdir, writeFile, readFile, readdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
+import { dedupeProducts } from './lib/dedupeProducts.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const PUB = path.join(ROOT, 'public');
@@ -79,7 +80,9 @@ await write(
 const categories = [];
 for (const file of catalogFiles) {
   const slug = file.replace(/\.json$/, '');
-  const products = await readJson(`data/catalog/${file}`);
+  // Mirrors ONLY_ACTIVE_IN_STORE in src/lib/content.ts, which is off: agents
+  // are given the same full range the pages show, switched-off items included.
+  const products = dedupeProducts(await readJson(`data/catalog/${file}`));
   const cat = meta.categories?.[slug] ?? null;
   categories.push({
     slug,

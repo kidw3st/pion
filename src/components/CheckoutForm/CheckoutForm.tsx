@@ -43,7 +43,7 @@ export function CheckoutForm() {
   if (submitted) {
     return (
       <div className={styles.thanks}>
-        <h2>Спасибо, мы с вами свяжемся!</h2>
+        <h1>Спасибо, мы с вами свяжемся!</h1>
         <p>Заказ принят. Наш флорист свяжется с вами для подтверждения деталей.</p>
       </div>
     );
@@ -51,7 +51,7 @@ export function CheckoutForm() {
 
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
-      <h2>Оформить заказ</h2>
+      <h1>Оформить заказ</h1>
 
       <ul className={styles.summary}>
         {items.map((item) => (

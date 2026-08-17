@@ -12,7 +12,7 @@ export function Footer() {
       <div className={styles.inner}>
         <div className={styles.brand}>
           <Link href="/" className={styles.logo} aria-label="Пион — на главную">
-            <Image src="/images/site/logo-footer.png" alt="Пион" width={938} height={490} />
+            <Image src="/images/site/logo-footer.webp" alt="Пион" width={938} height={490} />
           </Link>
           <p className={styles.legal}>{site.footer.legal}</p>
           <p className={styles.legal}>{site.footer.hours}</p>

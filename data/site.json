@@ -108,42 +108,42 @@
       "subtitle": "Каждую неделю мы показываем поставку свежих цветов",
       "buttonText": "Посмотреть витрину",
       "buttonHref": "instagram.com/pionperm",
-      "image": "/images/site/hero-0.jpg"
+      "image": "/images/site/hero-0.webp"
     },
     {
       "title": "УНИКАЛЬНЫЕ БУКЕТЫ",
       "subtitle": "ДЛЯ ОСОБЕННЫХ МОМЕНТОВ",
       "buttonText": "Выбрать",
       "buttonHref": "/valentinesday",
-      "image": "/images/site/hero-1.png"
+      "image": "/images/site/hero-1.webp"
     },
     {
       "title": "ЦВЕТЫ КОТОРЫЕ ВДОХНОВЛЯЮТ",
       "subtitle": "Букеты с доставкой",
       "buttonText": "Выбрать",
       "buttonHref": "/bukety",
-      "image": "/images/site/hero-2.jpg"
+      "image": "/images/site/hero-2.webp"
     },
     {
       "title": "АКЦИИ",
       "subtitle": "и специальные предложения",
       "buttonText": "Посмотреть",
       "buttonHref": "/stock",
-      "image": "/images/site/hero-3.jpg"
+      "image": "/images/site/hero-3.webp"
     },
     {
       "title": "Цветочная подписка\nот салона \"Пион\"",
       "subtitle": "Эстетическое удовольствие с доставкой на дом",
       "buttonText": "Подробности",
       "buttonHref": "/flower-delivery",
-      "image": "/images/site/hero-4.jpeg"
+      "image": "/images/site/hero-4.webp"
     },
     {
       "title": "-20% НА ДЕКОР",
       "subtitle": "Вазы, декор, искусственные цветы и композиции!",
       "buttonText": "Посмотреть коллекцию",
       "buttonHref": "/luchshee",
-      "image": "/images/site/hero-5.jpg"
+      "image": "/images/site/hero-5.webp"
     }
   ],
   "newProducts": [
@@ -151,19 +151,19 @@
       "title": "Пион",
       "subtitle": "Привозим пионы даже в октябре!",
       "price": 1600,
-      "image": "/images/site/new-пион.jpg"
+      "image": "/images/site/new-пион.webp"
     },
     {
       "title": "ChocoMe",
       "subtitle": "Элитный шоколад ручной работы",
       "price": 1900,
-      "image": "/images/site/new-chocome.jpg"
+      "image": "/images/site/new-chocome.webp"
     },
     {
       "title": "Новинка!",
       "subtitle": "Комнатные цветы под любой интерьер!",
       "price": 3000,
-      "image": "/images/site/new-новинка.jpeg"
+      "image": "/images/site/new-новинка.webp"
     }
   ],
   "features": [
@@ -192,7 +192,7 @@
     "title": "Соберите свой\nидеальный букет",
     "text": "Вы можете заказать букет, цветочную коробку, корзину, композицию по вашим параметрам и пожеланиям, заполнив форму ниже",
     "buttonText": "Заказать",
-    "image": "/images/site/bouquet-block.jpg"
+    "image": "/images/site/bouquet-block.webp"
   },
   "uds": {
     "title": "UDS",
@@ -200,9 +200,9 @@
     "buttonText": "Узнать подробнее",
     "buttonHref": "/uds",
     "images": [
-      "/images/site/uds-1.jpg",
-      "/images/site/uds-2.jpg",
-      "/images/site/uds-3.jpg"
+      "/images/site/uds-1.webp",
+      "/images/site/uds-2.webp",
+      "/images/site/uds-3.webp"
     ]
   },
   "vk": {
@@ -211,10 +211,10 @@
     "buttonText": "ПЕРЕЙТИ В ГРУППУ VK",
     "href": "https://vk.com/pionpermcveti",
     "images": [
-      "/images/site/vk-4.jpg",
-      "/images/site/vk-1.jpg",
-      "/images/site/vk-2.jpg",
-      "/images/site/vk-3.jpg"
+      "/images/site/vk-4.webp",
+      "/images/site/vk-1.webp",
+      "/images/site/vk-2.webp",
+      "/images/site/vk-3.webp"
     ],
     "badge": "/images/site/pion-badge.svg",
     "watermark": "PION"

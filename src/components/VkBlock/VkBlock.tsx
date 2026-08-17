@@ -19,9 +19,15 @@ export function VkBlock({ data }: { data: VkBlockData }) {
         {data.watermark && <span className={styles.watermark}>{data.watermark}</span>}
 
         <div className={styles.photos}>
-          {data.images.map((src) => (
+          {data.images.map((src, i) => (
             <div key={src} className={styles.shot}>
-              <Image src={src} alt="" fill sizes="215px" className={styles.image} />
+              <Image
+                src={src}
+                alt={`Букет из группы ВКонтакте салона «Пион» — фото ${i + 1}`}
+                fill
+                sizes="215px"
+                className={styles.image}
+              />
             </div>
           ))}
         </div>

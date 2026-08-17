@@ -5,6 +5,7 @@ import { CartDrawer } from '@/components/Cart/CartDrawer';
 import { Header } from '@/components/Header/Header';
 import { CartButton } from '@/components/Header/CartButton';
 import { WebMcpTools } from '@/components/AgentTools/WebMcpTools';
+import { ScrollTop } from '@/components/ScrollTop/ScrollTop';
 import { VkBlock } from '@/components/VkBlock/VkBlock';
 import { Footer } from '@/components/Footer/Footer';
 import { JsonLd } from '@/components/JsonLd/JsonLd';
@@ -12,9 +13,12 @@ import { getSite } from '@/lib/content';
 import { SITE_URL, localBusinessJsonLd } from '@/lib/seo';
 import './globals.css';
 
+// Montserrat is a variable font, so all of these weights arrive in one file per
+// subset (~56 KB for latin + cyrillic) — listing fewer would not save a byte.
+// The list is exactly what the stylesheets use; 800 was declared and never used.
 const montserrat = Montserrat({
   subsets: ['latin', 'cyrillic'],
-  weight: ['300', '400', '500', '600', '700', '800'],
+  weight: ['300', '400', '500', '600', '700'],
   variable: '--font-montserrat',
 });
 
@@ -28,7 +32,37 @@ export const metadata: Metadata = {
   },
   description:
     'Авторские букеты, композиции и подарки с доставкой по Перми. Салон «Пион», ул. Газеты Звезда, 27. Ежедневно с 10:00 до 22:00.',
+  // A static host sends no headers of ours, so the one security policy that a
+  // document can declare for itself is set here. HSTS, X-Content-Type-Options
+  // and cookie flags are response headers — they have to come from whatever
+  // serves the files.
+  referrer: 'strict-origin-when-cross-origin',
 };
+
+/**
+ * Content-Security-Policy, declared in the document because a static host
+ * sends no headers of ours. The site loads nothing from other origins — every
+ * script, style, font and image is exported alongside the pages — so anything
+ * an injected string might try to pull from outside is refused outright.
+ * 'unsafe-inline' stays only because Next's own bootstrap and the JSON-LD
+ * blocks are inline scripts; a static export has no nonces to pin them with.
+ * (frame-ancestors does not work from a meta tag — clickjacking protection
+ * has to come from the host's headers; GitHub Pages sends none.)
+ */
+const CSP = [
+  "default-src 'self'",
+  // Dev needs eval (react-refresh source maps); the production build must not.
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data:",
+  "font-src 'self'",
+  // Dev HMR talks over a websocket; production only fetches its own JSON.
+  `connect-src 'self'${process.env.NODE_ENV === 'development' ? ' ws:' : ''}`,
+  "object-src 'none'",
+  "frame-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+].join('; ');
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   // The VK band sits above the footer on every page of the live site, not just
@@ -37,6 +71,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="ru" className={montserrat.variable}>
+      <head>
+        <meta httpEquiv="Content-Security-Policy" content={CSP} />
+      </head>
       <body>
         <JsonLd data={localBusinessJsonLd()} />
         <CartProvider>
@@ -45,6 +82,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <VkBlock data={site.vk} />
           <Footer />
           <CartButton />
+          <ScrollTop />
           <CartDrawer />
           <WebMcpTools />
         </CartProvider>

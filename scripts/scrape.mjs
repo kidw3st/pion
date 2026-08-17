@@ -69,10 +69,72 @@ function slugify(title) {
 // not a fetch failure (which throws, rather than returning valid JSON with
 // total:0). Categories with genuinely zero products right now produce a
 // correct empty array; see the task report for the full list.
-export async function scrapeCategory(slug, categoryUrl = `${SITE}/${slug}`) {
-  const html = await (await fetchWithRetry(categoryUrl)).text();
-  const storepart = html.match(/storepart:'(\d+)'/)?.[1];
-  const recid = html.match(/recid:'(\d+)'/)?.[1];
+/**
+ * The site sits behind Variti, which serves a JavaScript challenge before the
+ * real page. A browser solves it on its own and then reloads into the content,
+ * which takes a few seconds; this waits that out.
+ *
+ * If it never clears, stop loudly. The challenge page carries no `storepart`,
+ * which is indistinguishable from "this category has no store block" — left
+ * unchecked, a blocked run would quietly write an empty catalogue over a full
+ * one.
+ */
+async function waitForChallenge(page, slug, timeoutMs = 60000) {
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    // A real Tilda page always carries `t-rec` records; the challenge has none
+    // and titles itself "..". Both reads can throw while the challenge is
+    // navigating, which is itself a sign it has not settled yet.
+    const settled = await page
+      .evaluate(() => document.querySelectorAll('.t-rec, [data-record-type]').length > 0)
+      .catch(() => false);
+    if (settled) return;
+    await page.waitForTimeout(2000);
+  }
+
+  throw new Error(
+    `${slug}: stuck on the anti-bot challenge (Variti), nothing was written. ` +
+      `It blocks by IP reputation, so run this from a home or mobile connection ` +
+      `rather than a data centre.`,
+  );
+}
+
+/**
+ * Store ids collected once from a trusted browser, if that has been done.
+ *
+ * Variti guards pionperm.ru but not Tilda's own hosts: the product API and the
+ * photo CDN answer us normally. The only thing behind the wall is the two ids
+ * embedded in each category page — so once they are recorded here, the whole
+ * catalogue can be pulled without ever loading a blocked page.
+ * scripts/collect-store-ids.js produces this file.
+ */
+async function readStoreIds() {
+  try {
+    return JSON.parse(await readFile(path.join(ROOT, 'data', 'store-ids.json'), 'utf-8'));
+  } catch {
+    return {};
+  }
+}
+
+export async function scrapeCategory(page, slug, categoryUrl = `${SITE}/${slug}`) {
+  const known = (await readStoreIds())[slug];
+  let storepart = known?.storepart ?? null;
+  let recid = known?.recid ?? null;
+
+  if (!storepart || !recid) {
+    // No recorded ids: read them off the page. This needs a browser, because
+    // the anti-bot challenge in front of the site only clears by running its
+    // JavaScript — and the challenge page has no `storepart`, which would
+    // otherwise read exactly like "this category has no store block".
+    await page.goto(categoryUrl, { waitUntil: 'domcontentloaded', timeout: 90000 });
+    await waitForChallenge(page, slug);
+
+    const html = await page.content();
+    storepart = html.match(/storepart:'(\d+)'/)?.[1] ?? null;
+    recid = html.match(/recid:'(\d+)'/)?.[1] ?? null;
+  }
+
   if (!storepart || !recid) return null;
 
   const rawProducts = [];
@@ -81,7 +143,19 @@ export async function scrapeCategory(slug, categoryUrl = `${SITE}/${slug}`) {
   const maxSlices = 200; // sanity cap so a pagination quirk can't loop forever
   for (let i = 0; i < maxSlices; i++) {
     const apiUrl = `https://store.tildacdn.com/api/getproductslist/?storepartuid=${storepart}&recid=${recid}&slice=${slice}`;
-    const json = await (await fetchWithRetry(apiUrl)).json();
+    // store.tildacdn.com is not behind the site's anti-bot wall, so this is a
+    // plain request — no browser needed once the ids are known.
+    const body = await (await fetchWithRetry(apiUrl)).text();
+    let json;
+    try {
+      json = JSON.parse(body);
+    } catch {
+      // The API answers a wrong id pair with plain text, not JSON.
+      throw new Error(
+        `${slug}: store API rejected storepart=${storepart} recid=${recid} — ` +
+          `"${body.trim().slice(0, 80)}". Re-run scripts/collect-store-ids.js to refresh data/store-ids.json.`,
+      );
+    }
     if (slice === 1) total = Number(json.total) || 0;
 
     const batch = Array.isArray(json.products) ? json.products : [];
@@ -550,8 +624,9 @@ async function main() {
   // Chromium-based browser instead via Playwright's `channel` option.
   // Configurable via env var (Task 3 review feedback: don't hardcode one
   // browser) — defaults to Microsoft Edge, which is what's available here.
-  // Still needed for scrapePage()/scrapeHome(), which need a real rendered
-  // DOM; scrapeCategory() no longer touches the browser at all.
+  // Every part of the scrape goes through the browser now: the anti-bot
+  // challenge in front of the site can only be cleared by executing its
+  // JavaScript, so a bare `fetch` never reaches the real HTML.
   const browserChannel = process.env.SCRAPE_BROWSER_CHANNEL || 'msedge';
   const browser = await chromium.launch({ channel: browserChannel });
   const page = await browser.newPage();
@@ -573,7 +648,7 @@ async function main() {
   await mkdir(path.join(ROOT, 'data', 'catalog'), { recursive: true });
   await mkdir(path.join(ROOT, 'data', 'pages'), { recursive: true });
   for (const slug of onlyHome || onlyPages ? [] : CATEGORY_SLUGS) {
-    const products = await scrapeCategory(slug);
+    const products = await scrapeCategory(page, slug);
     if (products === null) {
       // Defensive fallback: shouldn't trigger given the static
       // reclassification above, but if a category ever loses its store

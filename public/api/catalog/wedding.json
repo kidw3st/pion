@@ -2,5 +2,62 @@
   "slug": "wedding",
   "title": "Открываем свадебный сезон 2025",
   "url": "https://kidw3st.github.io/pion/wedding/",
-  "products": []
+  "products": [
+    {
+      "id": "641261517482",
+      "title": "Нежность",
+      "composition": "Состав букета: калла, эустома, роза кустовая",
+      "priceRub": 13200,
+      "image": "https://kidw3st.github.io/pion/images/catalog/wedding/nezhnost-641261517482.webp"
+    },
+    {
+      "id": "792885604252",
+      "title": "Пинововая нежность",
+      "composition": "Состав букета: пион, эвкалипт",
+      "priceRub": 19800,
+      "image": "https://kidw3st.github.io/pion/images/catalog/wedding/pinovovaya-nezhnost-792885604252.webp"
+    },
+    {
+      "id": "648976560422",
+      "title": "Счастье",
+      "composition": "Состав букета: ранункулюс, латирус, роз",
+      "priceRub": 23100,
+      "image": "https://kidw3st.github.io/pion/images/catalog/wedding/schaste-648976560422.webp"
+    },
+    {
+      "id": "679671800672",
+      "title": "Суфле",
+      "composition": "Состав букета: роза, орхидея, пион, кустовая роз",
+      "priceRub": 14300,
+      "image": "https://kidw3st.github.io/pion/images/catalog/wedding/sufle-679671800672.webp"
+    },
+    {
+      "id": "258642626132",
+      "title": "Белое облако",
+      "composition": "Состав букета: диантус",
+      "priceRub": 9900,
+      "image": "https://kidw3st.github.io/pion/images/catalog/wedding/beloe-oblako-258642626132.webp"
+    },
+    {
+      "id": "936837767852",
+      "title": "Воздух",
+      "composition": "Состав букета: эустома, статица, эвкалип",
+      "priceRub": 11000,
+      "image": "https://kidw3st.github.io/pion/images/catalog/wedding/vozduh-936837767852.webp"
+    },
+    {
+      "id": "578956028252",
+      "title": "Нежная роза",
+      "composition": "Состав букета: розы",
+      "priceRub": 13200,
+      "image": "https://kidw3st.github.io/pion/images/catalog/wedding/nezhnaya-roza-578956028252.webp"
+    },
+    {
+      "id": "623332930892",
+      "title": "Зефирка",
+      "composition": "Состав букета: пион, роза кустовая, диантус, эвкалипт",
+      "priceRub": 9900,
+      "image": "https://kidw3st.github.io/pion/images/catalog/wedding/zefirka-623332930892.webp"
+    }
+  ]
 }

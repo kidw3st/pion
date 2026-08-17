@@ -4,8 +4,8 @@
     "title": "Салон цветов и подарков \"ПИОН\"",
     "subtitle": "",
     "images": [
-      "/images/pages/about/img-0.JPEG",
-      "/images/pages/about/img-1.JPEG"
+      "/images/pages/about/img-0.webp",
+      "/images/pages/about/img-1.webp"
     ]
   },
   {
@@ -37,6 +37,6 @@
   {
     "kind": "quote",
     "text": "МЫ ТЩАТЕЛЬНО ОТБИРАЕМ ЛУЧШИЕ СЕЗОННЫЕ СВЕЖИЕ ЦВЕТЫ, А ЗАТЕМ СОЗДАЕМ АВТОРСКИЕ БУКЕТЫ И КОМПОЗИЦИИ С УНИКАЛЬНЫМ ПОЧЕРКОМ КОМАНДЫ \"ПИОН\"",
-    "image": "/images/pages/about/img-6.jpg"
+    "image": "/images/pages/about/img-6.webp"
   }
 ]

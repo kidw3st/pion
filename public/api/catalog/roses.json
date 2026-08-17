@@ -4,25 +4,158 @@
   "url": "https://kidw3st.github.io/pion/roses/",
   "products": [
     {
-      "id": "774353662692",
-      "title": "Роза кустовая",
-      "composition": "",
-      "priceRub": 900,
-      "image": "https://kidw3st.github.io/pion/images/catalog/roses/роза-кустовая-774353662692.jpg"
+      "id": "277503849741",
+      "title": "Роза Кантри Блю",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 600,
+      "image": "https://kidw3st.github.io/pion/images/catalog/roses/roza-kantri-blyu-277503849741.webp"
     },
     {
-      "id": "461465734632",
-      "title": "Кустовая роза",
+      "id": "613796236101",
+      "title": "Роза Nina",
+      "composition": "Заказ от 7 шт, цена указана за одну штуку",
+      "priceRub": 450,
+      "image": "https://kidw3st.github.io/pion/images/catalog/roses/roza-nina-613796236101.webp"
+    },
+    {
+      "id": "606151794791",
+      "title": "Роза Pink Mondial",
+      "composition": "Заказ от 7 шт, цена указана за одну штуку",
+      "priceRub": 450,
+      "image": "https://kidw3st.github.io/pion/images/catalog/roses/roza-pink-mondial-606151794791.webp"
+    },
+    {
+      "id": "464266209691",
+      "title": "Роза кустовая Mansfield Park",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 900,
+      "image": "https://kidw3st.github.io/pion/images/catalog/roses/roza-kustovaya-mansfield-park-464266209691.webp"
+    },
+    {
+      "id": "571604678581",
+      "title": "Роза Maria Tereza",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 600,
+      "image": "https://kidw3st.github.io/pion/images/catalog/roses/roza-maria-tereza-571604678581.webp"
+    },
+    {
+      "id": "198293932071",
+      "title": "Роза Квинс Кроун",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 600,
+      "image": "https://kidw3st.github.io/pion/images/catalog/roses/roza-kvins-kroun-198293932071.webp"
+    },
+    {
+      "id": "974074915411",
+      "title": "Роза Toffi",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 600,
+      "image": "https://kidw3st.github.io/pion/images/catalog/roses/roza-toffi-974074915411.webp"
+    },
+    {
+      "id": "663246094811",
+      "title": "Роза кустовая Bombastic",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 900,
+      "image": "https://kidw3st.github.io/pion/images/catalog/roses/roza-kustovaya-bombastic-663246094811.webp"
+    },
+    {
+      "id": "482161619101",
+      "title": "Роза кустовая Lady Bombastic",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 900,
+      "image": "https://kidw3st.github.io/pion/images/catalog/roses/roza-kustovaya-lady-bombastic-482161619101.webp"
+    },
+    {
+      "id": "582029484571",
+      "title": "Роза кустовая Peony Bubbles",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 900,
+      "image": "https://kidw3st.github.io/pion/images/catalog/roses/roza-kustovaya-peony-bubbles-582029484571.webp"
+    },
+    {
+      "id": "536183665101",
+      "title": "Роза Pink Expression",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 600,
+      "image": "https://kidw3st.github.io/pion/images/catalog/roses/roza-pink-expression-536183665101.webp"
+    },
+    {
+      "id": "212475637361",
+      "title": "Роза кустовая Juliet",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 900,
+      "image": "https://kidw3st.github.io/pion/images/catalog/roses/roza-kustovaya-juliet-212475637361.webp"
+    },
+    {
+      "id": "399375310671",
+      "title": "Кустовая роза MIX",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 900,
+      "image": "https://kidw3st.github.io/pion/images/catalog/roses/kustovaya-roza-mix-399375310671.webp"
+    },
+    {
+      "id": "669669824441",
+      "title": "Роза кустовая Мисти Баблс",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 900,
+      "image": "https://kidw3st.github.io/pion/images/catalog/roses/roza-kustovaya-misti-babls-669669824441.webp"
+    },
+    {
+      "id": "637361091641",
+      "title": "Роза Playa Blanka",
+      "composition": "Заказ от 7 шт, цена указана за одну штуку",
+      "priceRub": 450,
+      "image": "https://kidw3st.github.io/pion/images/catalog/roses/roza-playa-blanka-637361091641.webp"
+    },
+    {
+      "id": "697371823941",
+      "title": "Роза Kahala",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 540,
+      "image": "https://kidw3st.github.io/pion/images/catalog/roses/roza-kahala-697371823941.webp"
+    },
+    {
+      "id": "904538333661",
+      "title": "Роза Pink O’Hara",
+      "composition": "Заказ от 7 шт",
+      "priceRub": 600,
+      "image": "https://kidw3st.github.io/pion/images/catalog/roses/roza-pink-o-hara-904538333661.webp"
+    },
+    {
+      "id": "734221899891",
+      "title": "Роза Mondial",
+      "composition": "Заказ от 7 шт, цена указана за одну штуку",
+      "priceRub": 450,
+      "image": "https://kidw3st.github.io/pion/images/catalog/roses/roza-mondial-734221899891.webp"
+    },
+    {
+      "id": "444094662771",
+      "title": "Роза Explorer",
+      "composition": "",
+      "priceRub": 550,
+      "image": "https://kidw3st.github.io/pion/images/catalog/roses/roza-explorer-444094662771.webp"
+    },
+    {
+      "id": "539222824281",
+      "title": "Кустовая Роза",
       "composition": "",
       "priceRub": 900,
-      "image": "https://kidw3st.github.io/pion/images/catalog/roses/кустовая-роза-461465734632.jpg"
+      "image": "https://kidw3st.github.io/pion/images/catalog/roses/kustovaya-roza-539222824281.webp"
     },
     {
       "id": "445957348222",
       "title": "Роза пионовидная",
       "composition": "",
       "priceRub": 540,
-      "image": "https://kidw3st.github.io/pion/images/catalog/roses/роза-пионовидная-445957348222.jpg"
+      "image": "https://kidw3st.github.io/pion/images/catalog/roses/roza-pionovidnaya-445957348222.webp"
+    },
+    {
+      "id": "774353662692",
+      "title": "Роза кустовая",
+      "composition": "",
+      "priceRub": 900,
+      "image": "https://kidw3st.github.io/pion/images/catalog/roses/roza-kustovaya-774353662692.webp"
     }
   ]
 }

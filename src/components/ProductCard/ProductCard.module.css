@@ -1,9 +1,13 @@
 /* Live store card: square photo with a round NEW badge in the top-right
    corner, then title, composition, price, and an outlined add-to-cart button
    (the accent colour is the border, not a fill). */
+/* Same alignment rule as the catalogue grid: the card fills its cell so the
+   price and the button sit on one line across the row, whatever the title and
+   the subtitle run to. */
 .card {
   display: flex;
   flex-direction: column;
+  height: 100%;
 }
 
 .imageWrap {
@@ -45,6 +49,10 @@
 }
 
 .description {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
   margin: 8px 0 0;
   font-size: 13px;
   font-weight: 300;
@@ -54,7 +62,8 @@
 }
 
 .price {
-  margin-top: 14px;
+  margin-top: auto;
+  padding-top: 14px;
   font-size: 16px;
   font-weight: 500;
   color: var(--color-text-dark);

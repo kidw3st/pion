@@ -1,43 +1,611 @@
 [
   {
-    "uid": "487459075762",
-    "title": "Гербера",
+    "uid": "490424581951",
+    "title": "Роза Нина",
     "description": "",
+    "price": 450,
+    "images": [
+      "/images/catalog/mixflower/roza-nina-490424581951.webp"
+    ],
+    "slug": "roza-nina",
+    "published": true
+  },
+  {
+    "uid": "894243806821",
+    "title": "Сирень",
+    "description": "Заказ от 7 шт",
+    "price": 1200,
+    "images": [
+      "/images/catalog/mixflower/siren-894243806821.webp",
+      "/images/catalog/mixflower/siren-894243806821-1.webp"
+    ],
+    "slug": "siren",
+    "published": false
+  },
+  {
+    "uid": "195452445801",
+    "title": "Тюльпан",
+    "description": "Заказ от 7 шт",
+    "price": 350,
+    "images": [
+      "/images/catalog/mixflower/tyulpan-195452445801.webp",
+      "/images/catalog/mixflower/tyulpan-195452445801-1.webp",
+      "/images/catalog/mixflower/tyulpan-195452445801-2.webp",
+      "/images/catalog/mixflower/tyulpan-195452445801-3.webp"
+    ],
+    "slug": "tyulpan",
+    "published": false
+  },
+  {
+    "uid": "364803190591",
+    "title": "Гортензия Колумбия MIX",
+    "description": "Заказ от 7 шт, цена указана за одну штуку",
+    "price": 900,
+    "images": [
+      "/images/catalog/mixflower/gortenziya-kolumbiya-mix-364803190591.webp",
+      "/images/catalog/mixflower/gortenziya-kolumbiya-mix-364803190591-1.webp",
+      "/images/catalog/mixflower/gortenziya-kolumbiya-mix-364803190591-2.webp"
+    ],
+    "slug": "gortenziya-kolumbiya-mix",
+    "published": false
+  },
+  {
+    "uid": "956632315421",
+    "title": "Аллиум",
+    "description": "Заказ от 7 шт",
+    "price": 400,
+    "images": [
+      "/images/catalog/mixflower/allium-956632315421.webp",
+      "/images/catalog/mixflower/allium-956632315421-1.webp",
+      "/images/catalog/mixflower/allium-956632315421-2.webp"
+    ],
+    "slug": "allium",
+    "published": false
+  },
+  {
+    "uid": "276006239201",
+    "title": "Ранункулюс MIX",
+    "description": "Заказ от 7 шт",
+    "price": 950,
+    "images": [
+      "/images/catalog/mixflower/ranunkulyus-mix-276006239201.webp",
+      "/images/catalog/mixflower/ranunkulyus-mix-276006239201-1.webp"
+    ],
+    "slug": "ranunkulyus-mix",
+    "published": false
+  },
+  {
+    "uid": "916918429861",
+    "title": "Гиацинт MIX",
+    "description": "Заказ от 7 шт",
     "price": 500,
     "images": [
-      "/images/catalog/mixflower/гербера-487459075762.jpg"
+      "/images/catalog/mixflower/giatsint-mix-916918429861.webp",
+      "/images/catalog/mixflower/giatsint-mix-916918429861-1.webp"
     ],
-    "slug": "гербера"
+    "slug": "giatsint-mix",
+    "published": false
   },
   {
-    "uid": "231413216562",
-    "title": "Эустома",
+    "uid": "666799408531",
+    "title": "Альстромерия",
+    "description": "Заказ от 7 шт",
+    "price": 420,
+    "images": [
+      "/images/catalog/mixflower/alstromeriya-666799408531.webp",
+      "/images/catalog/mixflower/alstromeriya-666799408531-1.webp"
+    ],
+    "slug": "alstromeriya",
+    "published": false
+  },
+  {
+    "uid": "611985316231",
+    "title": "Вибурнум",
+    "description": "Заказ от 7 шт",
+    "price": 800,
+    "images": [
+      "/images/catalog/mixflower/viburnum-611985316231.webp"
+    ],
+    "slug": "viburnum",
+    "published": false
+  },
+  {
+    "uid": "140304984741",
+    "title": "Джениста MIX",
+    "description": "Заказ от 7 шт",
+    "price": 400,
+    "images": [
+      "/images/catalog/mixflower/dzhenista-mix-140304984741.webp",
+      "/images/catalog/mixflower/dzhenista-mix-140304984741-1.webp"
+    ],
+    "slug": "dzhenista-mix",
+    "published": false
+  },
+  {
+    "uid": "577759915871",
+    "title": "Тюльпан",
+    "description": "Заказ от 7 шт",
+    "price": 350,
+    "images": [
+      "/images/catalog/mixflower/tyulpan-577759915871.webp",
+      "/images/catalog/mixflower/tyulpan-577759915871-1.webp",
+      "/images/catalog/mixflower/tyulpan-577759915871-2.webp"
+    ],
+    "slug": "tyulpan",
+    "published": false
+  },
+  {
+    "uid": "102292212231",
+    "title": "Роза Секрет Гарден",
+    "description": "Заказ от 7 шт",
+    "price": 350,
+    "images": [
+      "/images/catalog/mixflower/roza-sekret-garden-102292212231.webp",
+      "/images/catalog/mixflower/roza-sekret-garden-102292212231-1.webp"
+    ],
+    "slug": "roza-sekret-garden",
+    "published": false
+  },
+  {
+    "uid": "724635346401",
+    "title": "Мимоза",
+    "description": "Заказ от 7 шт",
+    "price": 550,
+    "images": [
+      "/images/catalog/mixflower/mimoza-724635346401.webp"
+    ],
+    "slug": "mimoza",
+    "published": false
+  },
+  {
+    "uid": "763137776721",
+    "title": "Протея",
+    "description": "Заказ от 7 шт",
+    "price": 2500,
+    "images": [
+      "/images/catalog/mixflower/proteya-763137776721.webp"
+    ],
+    "slug": "proteya",
+    "published": false
+  },
+  {
+    "uid": "676418867981",
+    "title": "Роза кустовая Сильвер Баблс",
+    "description": "Заказ от 7 шт",
+    "price": 650,
+    "images": [
+      "/images/catalog/mixflower/roza-kustovaya-silver-babls-676418867981.webp"
+    ],
+    "slug": "roza-kustovaya-silver-babls",
+    "published": false
+  },
+  {
+    "uid": "548338745881",
+    "title": "Гортензия Голландия MIX",
+    "description": "Заказ от 7 шт",
+    "price": 1300,
+    "images": [
+      "/images/catalog/mixflower/gortenziya-gollandiya-mix-548338745881.webp",
+      "/images/catalog/mixflower/gortenziya-gollandiya-mix-548338745881-1.webp",
+      "/images/catalog/mixflower/gortenziya-gollandiya-mix-548338745881-2.webp",
+      "/images/catalog/mixflower/gortenziya-gollandiya-mix-548338745881-3.webp"
+    ],
+    "slug": "gortenziya-gollandiya-mix",
+    "published": false
+  },
+  {
+    "uid": "667229669431",
+    "title": "Гермини MIX",
+    "description": "Заказ от 7 шт",
+    "price": 420,
+    "images": [
+      "/images/catalog/mixflower/germini-mix-667229669431.webp"
+    ],
+    "slug": "germini-mix",
+    "published": false
+  },
+  {
+    "uid": "985519603071",
+    "title": "Эвкалипт",
+    "description": "Заказ от 7 шт",
+    "price": 750,
+    "images": [
+      "/images/catalog/mixflower/evkalipt-985519603071.webp"
+    ],
+    "slug": "evkalipt",
+    "published": false
+  },
+  {
+    "uid": "932078410111",
+    "title": "Дельфиниум",
+    "description": "Заказ от 7 шт",
+    "price": 1020,
+    "images": [
+      "/images/catalog/mixflower/delfinium-932078410111.webp",
+      "/images/catalog/mixflower/delfinium-932078410111-1.webp"
+    ],
+    "slug": "delfinium",
+    "published": false
+  },
+  {
+    "uid": "557198101071",
+    "title": "Нарцисс кустовой",
+    "description": "Заказ от 7 шт",
+    "price": 420,
+    "images": [
+      "/images/catalog/mixflower/nartsiss-kustovoi-557198101071.webp"
+    ],
+    "slug": "nartsiss-kustovoi",
+    "published": false
+  },
+  {
+    "uid": "177149626601",
+    "title": "Гвоздика MIX",
+    "description": "Заказ от 7 шт",
+    "price": 250,
+    "images": [
+      "/images/catalog/mixflower/gvozdika-mix-177149626601.webp",
+      "/images/catalog/mixflower/gvozdika-mix-177149626601-1.webp",
+      "/images/catalog/mixflower/gvozdika-mix-177149626601-2.webp",
+      "/images/catalog/mixflower/gvozdika-mix-177149626601-3.webp"
+    ],
+    "slug": "gvozdika-mix",
+    "published": false
+  },
+  {
+    "uid": "223796389271",
+    "title": "Антуриум mix",
+    "description": "Заказ от 7 шт",
+    "price": 950,
+    "images": [
+      "/images/catalog/mixflower/anturium-mix-223796389271.webp",
+      "/images/catalog/mixflower/anturium-mix-223796389271-1.webp",
+      "/images/catalog/mixflower/anturium-mix-223796389271-2.webp",
+      "/images/catalog/mixflower/anturium-mix-223796389271-3.webp"
+    ],
+    "slug": "anturium-mix",
+    "published": false
+  },
+  {
+    "uid": "539294423891",
+    "title": "Глориоза",
+    "description": "Заказ от 7 шт",
+    "price": 150,
+    "images": [
+      "/images/catalog/mixflower/glorioza-539294423891.webp"
+    ],
+    "slug": "glorioza",
+    "published": false
+  },
+  {
+    "uid": "485668447091",
+    "title": "Алхемилла",
+    "description": "Заказ от 7 шт",
+    "price": 200,
+    "images": [
+      "/images/catalog/mixflower/alhemilla-485668447091.webp"
+    ],
+    "slug": "alhemilla",
+    "published": false
+  },
+  {
+    "uid": "512027080371",
+    "title": "Ирис Касабланка",
+    "description": "Заказ от 7 шт",
+    "price": 150,
+    "images": [
+      "/images/catalog/mixflower/iris-kasablanka-512027080371.webp"
+    ],
+    "slug": "iris-kasablanka",
+    "published": false
+  },
+  {
+    "uid": "653344337181",
+    "title": "Гипсофилла",
+    "description": "Заказ от 7 шт",
+    "price": 300,
+    "images": [
+      "/images/catalog/mixflower/gipsofilla-653344337181.webp",
+      "/images/catalog/mixflower/gipsofilla-653344337181-1.webp"
+    ],
+    "slug": "gipsofilla",
+    "published": false
+  },
+  {
+    "uid": "444265252171",
+    "title": "Эустома Lavender",
+    "description": "Заказ от 7 шт",
+    "price": 400,
+    "images": [
+      "/images/catalog/mixflower/eustoma-lavender-444265252171.webp"
+    ],
+    "slug": "eustoma-lavender",
+    "published": false
+  },
+  {
+    "uid": "499397938551",
+    "title": "Астильба",
+    "description": "Заказ от 7 шт",
+    "price": 450,
+    "images": [
+      "/images/catalog/mixflower/astilba-499397938551.webp",
+      "/images/catalog/mixflower/astilba-499397938551-1.webp"
+    ],
+    "slug": "astilba",
+    "published": false
+  },
+  {
+    "uid": "846337017091",
+    "title": "Боувардия",
+    "description": "Заказ от 7 шт",
+    "price": 250,
+    "images": [
+      "/images/catalog/mixflower/bouvardiya-846337017091.webp"
+    ],
+    "slug": "bouvardiya",
+    "published": false
+  },
+  {
+    "uid": "625074087821",
+    "title": "Нарине",
+    "description": "Заказ от 7 шт",
+    "price": 650,
+    "images": [
+      "/images/catalog/mixflower/narine-625074087821.webp",
+      "/images/catalog/mixflower/narine-625074087821-1.webp",
+      "/images/catalog/mixflower/narine-625074087821-2.webp"
+    ],
+    "slug": "narine",
+    "published": false
+  },
+  {
+    "uid": "561281711911",
+    "title": "Подсолнух",
+    "description": "Заказ от 7 шт",
+    "price": 900,
+    "images": [
+      "/images/catalog/mixflower/podsolnuh-561281711911.webp",
+      "/images/catalog/mixflower/podsolnuh-561281711911-1.webp"
+    ],
+    "slug": "podsolnuh",
+    "published": false
+  },
+  {
+    "uid": "673092166961",
+    "title": "Хризантема Vienna",
+    "description": "Заказ от 7 шт",
+    "price": 550,
+    "images": [
+      "/images/catalog/mixflower/hrizantema-vienna-673092166961.webp"
+    ],
+    "slug": "hrizantema-vienna",
+    "published": false
+  },
+  {
+    "uid": "907748429951",
+    "title": "Хризантема Моmoko",
+    "description": "Заказ от 7 шт",
+    "price": 450,
+    "images": [
+      "/images/catalog/mixflower/hrizantema-momoko-907748429951.webp"
+    ],
+    "slug": "hrizantema-momoko",
+    "published": false
+  },
+  {
+    "uid": "498592816191",
+    "title": "Маттиола",
+    "description": "Заказ от 7 шт",
+    "price": 550,
+    "images": [
+      "/images/catalog/mixflower/mattiola-498592816191.webp"
+    ],
+    "slug": "mattiola",
+    "published": false
+  },
+  {
+    "uid": "187779513401",
+    "title": "Хризантема",
     "description": "",
+    "price": 350,
+    "images": [
+      "/images/catalog/mixflower/hrizantema-187779513401.webp",
+      "/images/catalog/mixflower/hrizantema-187779513401-1.webp"
+    ],
+    "slug": "hrizantema",
+    "published": false
+  },
+  {
+    "uid": "295114847061",
+    "title": "Эустома Алиса белая",
+    "description": "Заказ от 7 шт",
     "price": 960,
     "images": [
-      "/images/catalog/mixflower/эустома-231413216562.jpg"
+      "/images/catalog/mixflower/eustoma-alisa-belaya-295114847061.webp",
+      "/images/catalog/mixflower/eustoma-alisa-belaya-295114847061-1.webp"
     ],
-    "slug": "эустома"
+    "slug": "eustoma-alisa-belaya",
+    "published": false
   },
   {
-    "uid": "190677993032",
+    "uid": "669488191731",
+    "title": "Хризантема Магнум",
+    "description": "Заказ от 7 шт",
+    "price": 900,
+    "images": [
+      "/images/catalog/mixflower/hrizantema-magnum-669488191731.webp"
+    ],
+    "slug": "hrizantema-magnum",
+    "published": false
+  },
+  {
+    "uid": "352283636141",
+    "title": "Илекс",
+    "description": "",
+    "price": 1320,
+    "images": [
+      "/images/catalog/mixflower/ileks-352283636141.webp",
+      "/images/catalog/mixflower/ileks-352283636141-1.webp"
+    ],
+    "slug": "ileks",
+    "published": false
+  },
+  {
+    "uid": "475484396231",
+    "title": "Роза Shimmer",
+    "description": "",
+    "price": 400,
+    "images": [
+      "/images/catalog/mixflower/roza-shimmer-475484396231.webp"
+    ],
+    "slug": "roza-shimmer",
+    "published": false
+  },
+  {
+    "uid": "925685908381",
+    "title": "Пион",
+    "description": "",
+    "price": 1600,
+    "images": [
+      "/images/catalog/mixflower/pion-925685908381.webp",
+      "/images/catalog/mixflower/pion-925685908381-1.webp"
+    ],
+    "slug": "pion",
+    "published": false
+  },
+  {
+    "uid": "798714203111",
+    "title": "Гербера игольчатая",
+    "description": "",
+    "price": 550,
+    "images": [
+      "/images/catalog/mixflower/gerbera-igolchataya-798714203111.webp",
+      "/images/catalog/mixflower/gerbera-igolchataya-798714203111-1.webp"
+    ],
+    "slug": "gerbera-igolchataya",
+    "published": false
+  },
+  {
+    "uid": "434592161671",
     "title": "Маттиола",
     "description": "",
     "price": 550,
     "images": [
-      "/images/catalog/mixflower/маттиола-190677993032.jpg"
+      "/images/catalog/mixflower/mattiola-434592161671.webp"
     ],
-    "slug": "маттиола"
+    "slug": "mattiola",
+    "published": false
   },
   {
-    "uid": "336402911061",
-    "title": "Ранункулюс",
+    "uid": "104577294571",
+    "title": "Оксипеталум",
     "description": "",
-    "price": 950,
+    "price": 500,
     "images": [
-      "/images/catalog/mixflower/ранункулюс-336402911061.jpg"
+      "/images/catalog/mixflower/oksipetalum-104577294571.webp"
     ],
-    "slug": "ранункулюс"
+    "slug": "oksipetalum",
+    "published": false
+  },
+  {
+    "uid": "557665406351",
+    "title": "Дельфиниум",
+    "description": "",
+    "price": 1020,
+    "images": [
+      "/images/catalog/mixflower/delfinium-557665406351.webp"
+    ],
+    "slug": "delfinium",
+    "published": false
+  },
+  {
+    "uid": "423565317081",
+    "title": "Амарилис",
+    "description": "",
+    "price": 1740,
+    "images": [
+      "/images/catalog/mixflower/amarilis-423565317081.webp"
+    ],
+    "slug": "amarilis",
+    "published": false
+  },
+  {
+    "uid": "359100245611",
+    "title": "Эвкалипт",
+    "description": "",
+    "price": 750,
+    "images": [
+      "/images/catalog/mixflower/evkalipt-359100245611.webp"
+    ],
+    "slug": "evkalipt",
+    "published": false
+  },
+  {
+    "uid": "157837438681",
+    "title": "Хризантема Vienna",
+    "description": "",
+    "price": 850,
+    "images": [
+      "/images/catalog/mixflower/hrizantema-vienna-157837438681.webp"
+    ],
+    "slug": "hrizantema-vienna",
+    "published": false
+  },
+  {
+    "uid": "201003417171",
+    "title": "Тюльпан пионовидный",
+    "description": "Заказ от 7 шт",
+    "price": 350,
+    "images": [
+      "/images/catalog/mixflower/tyulpan-pionovidnyi-201003417171.webp",
+      "/images/catalog/mixflower/tyulpan-pionovidnyi-201003417171-1.webp"
+    ],
+    "slug": "tyulpan-pionovidnyi",
+    "published": true
+  },
+  {
+    "uid": "836924985071",
+    "title": "Тюльпан пионовидный",
+    "description": "Заказ от 7 шт",
+    "price": 350,
+    "images": [
+      "/images/catalog/mixflower/tyulpan-pionovidnyi-836924985071.webp"
+    ],
+    "slug": "tyulpan-pionovidnyi",
+    "published": false
+  },
+  {
+    "uid": "792462516821",
+    "title": "Пион",
+    "description": "",
+    "price": 1100,
+    "images": [
+      "/images/catalog/mixflower/pion-792462516821.webp"
+    ],
+    "slug": "pion",
+    "published": false
+  },
+  {
+    "uid": "668917215961",
+    "title": "Пион",
+    "description": "",
+    "price": 1600,
+    "images": [
+      "/images/catalog/mixflower/pion-668917215961.webp"
+    ],
+    "slug": "pion",
+    "published": false
+  },
+  {
+    "uid": "832796018501",
+    "title": "Copy: Нарцисс",
+    "description": "Заказ от 7 шт",
+    "price": 350,
+    "images": [
+      "/images/catalog/mixflower/copy-nartsiss-832796018501.webp"
+    ],
+    "slug": "copy-nartsiss",
+    "published": true
   },
   {
     "uid": "606038973211",
@@ -45,8 +613,141 @@
     "description": "",
     "price": 500,
     "images": [
-      "/images/catalog/mixflower/гербера-606038973211.jpg"
+      "/images/catalog/mixflower/gerbera-606038973211.webp",
+      "/images/catalog/mixflower/gerbera-606038973211-1.webp"
     ],
-    "slug": "гербера"
+    "slug": "gerbera",
+    "published": true
+  },
+  {
+    "uid": "545190724971",
+    "title": "Аллиум",
+    "description": "",
+    "price": 400,
+    "images": [
+      "/images/catalog/mixflower/allium-545190724971.webp",
+      "/images/catalog/mixflower/allium-545190724971-1.webp"
+    ],
+    "slug": "allium",
+    "published": false
+  },
+  {
+    "uid": "336402911061",
+    "title": "Ранункулюс",
+    "description": "",
+    "price": 950,
+    "images": [
+      "/images/catalog/mixflower/ranunkulyus-336402911061.webp"
+    ],
+    "slug": "ranunkulyus",
+    "published": true
+  },
+  {
+    "uid": "190677993032",
+    "title": "Маттиола",
+    "description": "",
+    "price": 550,
+    "images": [
+      "/images/catalog/mixflower/mattiola-190677993032.webp",
+      "/images/catalog/mixflower/mattiola-190677993032-1.webp"
+    ],
+    "slug": "mattiola",
+    "published": true
+  },
+  {
+    "uid": "559155724352",
+    "title": "Ромашка",
+    "description": "",
+    "price": 400,
+    "images": [
+      "/images/catalog/mixflower/romashka-559155724352.webp"
+    ],
+    "slug": "romashka",
+    "published": true
+  },
+  {
+    "uid": "257576989622",
+    "title": "Антуриум",
+    "description": "",
+    "price": 950,
+    "images": [
+      "/images/catalog/mixflower/anturium-257576989622.webp",
+      "/images/catalog/mixflower/anturium-257576989622-1.webp",
+      "/images/catalog/mixflower/anturium-257576989622-2.webp"
+    ],
+    "slug": "anturium",
+    "published": true
+  },
+  {
+    "uid": "825544601092",
+    "title": "Подсолнух",
+    "description": "",
+    "price": 900,
+    "images": [
+      "/images/catalog/mixflower/podsolnuh-825544601092.webp"
+    ],
+    "slug": "podsolnuh",
+    "published": true
+  },
+  {
+    "uid": "962075323572",
+    "title": "Пион",
+    "description": "",
+    "price": 1600,
+    "images": [
+      "/images/catalog/mixflower/pion-962075323572.webp",
+      "/images/catalog/mixflower/pion-962075323572-1.webp"
+    ],
+    "slug": "pion",
+    "published": true
+  },
+  {
+    "uid": "231413216562",
+    "title": "Эустома",
+    "description": "",
+    "price": 960,
+    "images": [
+      "/images/catalog/mixflower/eustoma-231413216562.webp"
+    ],
+    "slug": "eustoma",
+    "published": true
+  },
+  {
+    "uid": "724468857912",
+    "title": "Василек",
+    "description": "",
+    "price": 250,
+    "images": [
+      "/images/catalog/mixflower/vasilek-724468857912.webp"
+    ],
+    "slug": "vasilek",
+    "published": false
+  },
+  {
+    "uid": "487459075762",
+    "title": "Гербера",
+    "description": "",
+    "price": 500,
+    "images": [
+      "/images/catalog/mixflower/gerbera-487459075762.webp",
+      "/images/catalog/mixflower/gerbera-487459075762-1.webp",
+      "/images/catalog/mixflower/gerbera-487459075762-2.webp",
+      "/images/catalog/mixflower/gerbera-487459075762-3.webp"
+    ],
+    "slug": "gerbera",
+    "published": true
+  },
+  {
+    "uid": "263874364132",
+    "title": "Гортензия",
+    "description": "",
+    "price": 1400,
+    "images": [
+      "/images/catalog/mixflower/gortenziya-263874364132.webp",
+      "/images/catalog/mixflower/gortenziya-263874364132-1.webp",
+      "/images/catalog/mixflower/gortenziya-263874364132-2.webp"
+    ],
+    "slug": "gortenziya",
+    "published": true
   }
 ]
