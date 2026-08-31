@@ -7,6 +7,7 @@ import { CartButton } from '@/components/Header/CartButton';
 import { WebMcpTools } from '@/components/AgentTools/WebMcpTools';
 import { ScrollTop } from '@/components/ScrollTop/ScrollTop';
 import { MessengerFab } from '@/components/MessengerFab/MessengerFab';
+import { CookieNotice } from '@/components/CookieNotice/CookieNotice';
 import { VkBlock } from '@/components/VkBlock/VkBlock';
 import { Footer } from '@/components/Footer/Footer';
 import { JsonLd } from '@/components/JsonLd/JsonLd';
@@ -107,6 +108,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <CartButton />
           <ScrollTop />
           <MessengerFab />
+          <CookieNotice />
           <CartDrawer />
           <WebMcpTools />
         </CartProvider>
