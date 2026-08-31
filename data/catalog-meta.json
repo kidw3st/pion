@@ -168,6 +168,26 @@
       "heading": null,
       "headingSub": null,
       "hasNotFound": false
+    },
+    "new-year-2025": {
+      "title": "Новогодняя коллекция 2025",
+      "sub": "Игрушки, композиции для дома и украшенные елки\nВстречаем Новый год красиво!",
+      "covers": [
+        "/images/pages/new-year-2025/img-0.webp"
+      ],
+      "heading": null,
+      "headingSub": null,
+      "hasNotFound": false
+    },
+    "valentinesday": {
+      "title": "Букеты и подарочные боксы",
+      "sub": "",
+      "covers": [
+        "/images/pages/valentinesday/img-0.webp"
+      ],
+      "heading": null,
+      "headingSub": null,
+      "hasNotFound": false
     }
   }
 }

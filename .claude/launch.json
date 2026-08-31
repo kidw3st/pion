@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 3000
+    },
+    {
+      "name": "redesign",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:/Users/Максим/Documents/Pion-redesign", "run", "dev", "--", "-p", "3001"],
+      "port": 3001
     }
   ]
 }

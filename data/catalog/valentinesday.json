@@ -1,0 +1,145 @@
+[
+  {
+    "uid": "165556224242",
+    "title": "Страсть",
+    "description": "",
+    "price": 7200,
+    "images": [
+      "/images/catalog/valentinesday/strast-165556224242.webp"
+    ],
+    "slug": "strast",
+    "published": false
+  },
+  {
+    "uid": "117312854382",
+    "title": "Нежность",
+    "description": "",
+    "price": 6000,
+    "images": [
+      "/images/catalog/valentinesday/nezhnost-117312854382.webp"
+    ],
+    "slug": "nezhnost",
+    "published": false
+  },
+  {
+    "uid": "477172180682",
+    "title": "Cказочные ароматы",
+    "description": "",
+    "price": 7440,
+    "images": [
+      "/images/catalog/valentinesday/ckazochnye-aromaty-477172180682.webp"
+    ],
+    "slug": "ckazochnye-aromaty",
+    "published": false
+  },
+  {
+    "uid": "573432421632",
+    "title": "Аромат весны",
+    "description": "",
+    "price": 5200,
+    "images": [
+      "/images/catalog/valentinesday/aromat-vesny-573432421632.webp"
+    ],
+    "slug": "aromat-vesny",
+    "published": false
+  },
+  {
+    "uid": "741266404572",
+    "title": "Красочный сезон",
+    "description": "",
+    "price": 6000,
+    "images": [
+      "/images/catalog/valentinesday/krasochnyi-sezon-741266404572.webp"
+    ],
+    "slug": "krasochnyi-sezon",
+    "published": false
+  },
+  {
+    "uid": "265805044972",
+    "title": "Нежное утро",
+    "description": "",
+    "price": 5150,
+    "images": [
+      "/images/catalog/valentinesday/nezhnoe-utro-265805044972.webp"
+    ],
+    "slug": "nezhnoe-utro",
+    "published": false
+  },
+  {
+    "uid": "628873665672",
+    "title": "Весна",
+    "description": "",
+    "price": 14100,
+    "images": [
+      "/images/catalog/valentinesday/vesna-628873665672.webp"
+    ],
+    "slug": "vesna",
+    "published": false
+  },
+  {
+    "uid": "642436913562",
+    "title": "Нежный персик",
+    "description": "",
+    "price": 15500,
+    "images": [
+      "/images/catalog/valentinesday/nezhnyi-persik-642436913562.webp"
+    ],
+    "slug": "nezhnyi-persik",
+    "published": false
+  },
+  {
+    "uid": "296156984482",
+    "title": "До умопомрачения",
+    "description": "",
+    "price": 59100,
+    "images": [
+      "/images/catalog/valentinesday/do-umopomracheniya-296156984482.webp"
+    ],
+    "slug": "do-umopomracheniya",
+    "published": false
+  },
+  {
+    "uid": "360056950442",
+    "title": "Страстный вечер",
+    "description": "",
+    "price": 12650,
+    "images": [
+      "/images/catalog/valentinesday/strastnyi-vecher-360056950442.webp"
+    ],
+    "slug": "strastnyi-vecher",
+    "published": false
+  },
+  {
+    "uid": "188476479442",
+    "title": "Обояние",
+    "description": "",
+    "price": 4800,
+    "images": [
+      "/images/catalog/valentinesday/oboyanie-188476479442.webp"
+    ],
+    "slug": "oboyanie",
+    "published": false
+  },
+  {
+    "uid": "579987077692",
+    "title": "Pudra",
+    "description": "",
+    "price": 7350,
+    "images": [
+      "/images/catalog/valentinesday/pudra-579987077692.webp"
+    ],
+    "slug": "pudra",
+    "published": false
+  },
+  {
+    "uid": "776882009672",
+    "title": "Любовь",
+    "description": "",
+    "price": 6800,
+    "images": [
+      "/images/catalog/valentinesday/lyubov-776882009672.webp"
+    ],
+    "slug": "lyubov",
+    "published": false
+  }
+]

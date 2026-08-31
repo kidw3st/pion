@@ -8,14 +8,18 @@ import catalogMetaJson from '../../data/catalog-meta.json';
 // block (no `storepart`/`recid`/`t_store_init` anywhere in their HTML) — they
 // are plain content pages, so they're scraped/served via the PAGE_SLUGS path
 // instead.
+// `valentinesday` and `new-year-2025` began life as scraped content pages:
+// the first pass captured only their covers. On the live site both are store
+// pages, so since 2026-08-17 they are categories fed from the Tilda export.
 export const CATEGORY_SLUGS = [
   'bukety', 'korziny', 'korobki', 'wedding', 'balloons',
   'chocolate', 'luchshee', 'flame', 'pions', 'roses', 'mixflower',
+  'valentinesday', 'new-year-2025',
 ] as const;
 
 export const PAGE_SLUGS = [
   'about', 'delivery-and-payment', 'flower-delivery', 'contacts', 'uds',
-  'stock', 'policy', 'valentinesday', 'new-year-2025', 'doza_endorfina',
+  'stock', 'policy', 'doza_endorfina',
   'flowers', 'indoorflowers',
 ] as const;
 
@@ -34,6 +38,8 @@ export const CATEGORY_LABELS: Record<CategorySlug, string> = {
   pions: 'Пионы',
   roses: 'Розы',
   mixflower: 'Микс из цветов',
+  valentinesday: 'Букеты и боксы к 14 февраля',
+  'new-year-2025': 'Новогодняя коллекция',
 };
 
 export function getSite(): SiteData {

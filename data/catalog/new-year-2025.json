@@ -1,0 +1,902 @@
+[
+  {
+    "uid": "193791829991",
+    "title": "Елочные игрушки #1",
+    "description": "",
+    "price": 455,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-1-193791829991.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-1-193791829991-1.webp"
+    ],
+    "slug": "elochnye-igrushki-1",
+    "published": false
+  },
+  {
+    "uid": "856746542921",
+    "title": "Елочные игрушки #6",
+    "description": "",
+    "price": 455,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-6-856746542921.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-6-856746542921-1.webp"
+    ],
+    "slug": "elochnye-igrushki-6",
+    "published": false
+  },
+  {
+    "uid": "964883800881",
+    "title": "Новогодняя лошадка",
+    "description": "",
+    "price": 770,
+    "images": [
+      "/images/catalog/new-year-2025/novogodnyaya-loshadka-964883800881.webp"
+    ],
+    "slug": "novogodnyaya-loshadka",
+    "published": false
+  },
+  {
+    "uid": "393737341381",
+    "title": "Новогодний венок #1",
+    "description": "Добавьте в ваш дом волшебство Нового года",
+    "price": 4900,
+    "images": [
+      "/images/catalog/new-year-2025/novogodnii-venok-1-393737341381.webp"
+    ],
+    "slug": "novogodnii-venok-1",
+    "published": false
+  },
+  {
+    "uid": "543148259951",
+    "title": "Новогодний венок #2",
+    "description": "Пушистый, как облачко, новогодний венок станет стильным украшением вашего дома",
+    "price": 5250,
+    "images": [
+      "/images/catalog/new-year-2025/novogodnii-venok-2-543148259951.webp"
+    ],
+    "slug": "novogodnii-venok-2",
+    "published": false
+  },
+  {
+    "uid": "704956908621",
+    "title": "Новогодний венок #3",
+    "description": "Добавьте немного экзотики в декор вашего дома с помощью этого венка",
+    "price": 4900,
+    "images": [
+      "/images/catalog/new-year-2025/novogodnii-venok-3-704956908621.webp"
+    ],
+    "slug": "novogodnii-venok-3",
+    "published": false
+  },
+  {
+    "uid": "316444036061",
+    "title": "Елочные игрушки #3",
+    "description": "",
+    "price": 560,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-3-316444036061.webp"
+    ],
+    "slug": "elochnye-igrushki-3",
+    "published": false
+  },
+  {
+    "uid": "191999928581",
+    "title": "Новогодняя композиция #1",
+    "description": "",
+    "price": 16800,
+    "images": [
+      "/images/catalog/new-year-2025/novogodnyaya-kompozitsiya-1-191999928581.webp"
+    ],
+    "slug": "novogodnyaya-kompozitsiya-1",
+    "published": false
+  },
+  {
+    "uid": "338048607161",
+    "title": "Новогодняя композиция #2",
+    "description": "",
+    "price": 16100,
+    "images": [
+      "/images/catalog/new-year-2025/novogodnyaya-kompozitsiya-2-338048607161.webp"
+    ],
+    "slug": "novogodnyaya-kompozitsiya-2",
+    "published": false
+  },
+  {
+    "uid": "261465227581",
+    "title": "Новогодняя композиция #3",
+    "description": "",
+    "price": 10500,
+    "images": [
+      "/images/catalog/new-year-2025/novogodnyaya-kompozitsiya-3-261465227581.webp"
+    ],
+    "slug": "novogodnyaya-kompozitsiya-3",
+    "published": false
+  },
+  {
+    "uid": "810314665521",
+    "title": "Новогодний домик #1",
+    "description": "",
+    "price": 4900,
+    "images": [
+      "/images/catalog/new-year-2025/novogodnii-domik-1-810314665521.webp"
+    ],
+    "slug": "novogodnii-domik-1",
+    "published": false
+  },
+  {
+    "uid": "416534182961",
+    "title": "Новогодний домик #2",
+    "description": "",
+    "price": 4900,
+    "images": [
+      "/images/catalog/new-year-2025/novogodnii-domik-2-416534182961.webp"
+    ],
+    "slug": "novogodnii-domik-2",
+    "published": false
+  },
+  {
+    "uid": "869431641411",
+    "title": "Новогодний бычок",
+    "description": "",
+    "price": 4900,
+    "images": [
+      "/images/catalog/new-year-2025/novogodnii-bychok-869431641411.webp"
+    ],
+    "slug": "novogodnii-bychok",
+    "published": false
+  },
+  {
+    "uid": "337436806501",
+    "title": "Елочные игрушки #4",
+    "description": "",
+    "price": 560,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-4-337436806501.webp"
+    ],
+    "slug": "elochnye-igrushki-4",
+    "published": false
+  },
+  {
+    "uid": "461446900091",
+    "title": "Новогодняя композиция #4",
+    "description": "",
+    "price": 10500,
+    "images": [
+      "/images/catalog/new-year-2025/novogodnyaya-kompozitsiya-4-461446900091.webp"
+    ],
+    "slug": "novogodnyaya-kompozitsiya-4",
+    "published": false
+  },
+  {
+    "uid": "398145358261",
+    "title": "Новогодняя композиция #5",
+    "description": "",
+    "price": 11900,
+    "images": [
+      "/images/catalog/new-year-2025/novogodnyaya-kompozitsiya-5-398145358261.webp"
+    ],
+    "slug": "novogodnyaya-kompozitsiya-5",
+    "published": false
+  },
+  {
+    "uid": "659451095191",
+    "title": "Новогодняя композиция #6",
+    "description": "",
+    "price": 12600,
+    "images": [
+      "/images/catalog/new-year-2025/novogodnyaya-kompozitsiya-6-659451095191.webp"
+    ],
+    "slug": "novogodnyaya-kompozitsiya-6",
+    "published": false
+  },
+  {
+    "uid": "952341612501",
+    "title": "Новогодняя елка",
+    "description": "",
+    "price": 64400,
+    "images": [
+      "/images/catalog/new-year-2025/novogodnyaya-elka-952341612501.webp"
+    ],
+    "slug": "novogodnyaya-elka",
+    "published": false
+  },
+  {
+    "uid": "274595009651",
+    "title": "Новогодняя композиция #2",
+    "description": "",
+    "price": 10010,
+    "images": [
+      "/images/catalog/new-year-2025/novogodnyaya-kompozitsiya-2-274595009651.webp",
+      "/images/catalog/new-year-2025/novogodnyaya-kompozitsiya-2-274595009651-1.webp"
+    ],
+    "slug": "novogodnyaya-kompozitsiya-2",
+    "published": false
+  },
+  {
+    "uid": "618935287341",
+    "title": "Новогодняя композиция #3",
+    "description": "",
+    "price": 6580,
+    "images": [
+      "/images/catalog/new-year-2025/novogodnyaya-kompozitsiya-3-618935287341.webp",
+      "/images/catalog/new-year-2025/novogodnyaya-kompozitsiya-3-618935287341-1.webp"
+    ],
+    "slug": "novogodnyaya-kompozitsiya-3",
+    "published": false
+  },
+  {
+    "uid": "235499362851",
+    "title": "Новогодняя композиция #4",
+    "description": "",
+    "price": 17500,
+    "images": [
+      "/images/catalog/new-year-2025/novogodnyaya-kompozitsiya-4-235499362851.webp",
+      "/images/catalog/new-year-2025/novogodnyaya-kompozitsiya-4-235499362851-1.webp"
+    ],
+    "slug": "novogodnyaya-kompozitsiya-4",
+    "published": false
+  },
+  {
+    "uid": "306631118471",
+    "title": "Дед Мороз #1",
+    "description": "",
+    "price": 7000,
+    "images": [
+      "/images/catalog/new-year-2025/ded-moroz-1-306631118471.webp",
+      "/images/catalog/new-year-2025/ded-moroz-1-306631118471-1.webp"
+    ],
+    "slug": "ded-moroz-1",
+    "published": false
+  },
+  {
+    "uid": "715130000671",
+    "title": "Дед Мороз #2",
+    "description": "",
+    "price": 4480,
+    "images": [
+      "/images/catalog/new-year-2025/ded-moroz-2-715130000671.webp",
+      "/images/catalog/new-year-2025/ded-moroz-2-715130000671-1.webp"
+    ],
+    "slug": "ded-moroz-2",
+    "published": false
+  },
+  {
+    "uid": "146746651331",
+    "title": "Дем Мороз #3",
+    "description": "",
+    "price": 4480,
+    "images": [
+      "/images/catalog/new-year-2025/dem-moroz-3-146746651331.webp",
+      "/images/catalog/new-year-2025/dem-moroz-3-146746651331-1.webp"
+    ],
+    "slug": "dem-moroz-3",
+    "published": false
+  },
+  {
+    "uid": "161441573181",
+    "title": "Сова белая",
+    "description": "",
+    "price": 4620,
+    "images": [
+      "/images/catalog/new-year-2025/sova-belaya-161441573181.webp",
+      "/images/catalog/new-year-2025/sova-belaya-161441573181-1.webp"
+    ],
+    "slug": "sova-belaya",
+    "published": false
+  },
+  {
+    "uid": "542248638641",
+    "title": "Дед Мороз #4",
+    "description": "",
+    "price": 3920,
+    "images": [
+      "/images/catalog/new-year-2025/ded-moroz-4-542248638641.webp",
+      "/images/catalog/new-year-2025/ded-moroz-4-542248638641-1.webp"
+    ],
+    "slug": "ded-moroz-4",
+    "published": false
+  },
+  {
+    "uid": "358760929141",
+    "title": "Дед Мороз #5",
+    "description": "",
+    "price": 7700,
+    "images": [
+      "/images/catalog/new-year-2025/ded-moroz-5-358760929141.webp"
+    ],
+    "slug": "ded-moroz-5",
+    "published": false
+  },
+  {
+    "uid": "970245733641",
+    "title": "Фигурка медведь мальчик",
+    "description": "",
+    "price": 3150,
+    "images": [
+      "/images/catalog/new-year-2025/figurka-medved-malchik-970245733641.webp",
+      "/images/catalog/new-year-2025/figurka-medved-malchik-970245733641-1.webp",
+      "/images/catalog/new-year-2025/figurka-medved-malchik-970245733641-2.webp"
+    ],
+    "slug": "figurka-medved-malchik",
+    "published": false
+  },
+  {
+    "uid": "456116990121",
+    "title": "Фигурка медведь девочка",
+    "description": "",
+    "price": 3150,
+    "images": [
+      "/images/catalog/new-year-2025/figurka-medved-devochka-456116990121.webp",
+      "/images/catalog/new-year-2025/figurka-medved-devochka-456116990121-1.webp",
+      "/images/catalog/new-year-2025/figurka-medved-devochka-456116990121-2.webp"
+    ],
+    "slug": "figurka-medved-devochka",
+    "published": false
+  },
+  {
+    "uid": "168923543981",
+    "title": "Сувенир мальчик с фонарем",
+    "description": "",
+    "price": 8470,
+    "images": [
+      "/images/catalog/new-year-2025/suvenir-malchik-s-fonarem-168923543981.webp",
+      "/images/catalog/new-year-2025/suvenir-malchik-s-fonarem-168923543981-1.webp"
+    ],
+    "slug": "suvenir-malchik-s-fonarem",
+    "published": false
+  },
+  {
+    "uid": "871571037681",
+    "title": "Сувенир девочка с фонарем",
+    "description": "",
+    "price": 7700,
+    "images": [
+      "/images/catalog/new-year-2025/suvenir-devochka-s-fonarem-871571037681.webp",
+      "/images/catalog/new-year-2025/suvenir-devochka-s-fonarem-871571037681-1.webp",
+      "/images/catalog/new-year-2025/suvenir-devochka-s-fonarem-871571037681-2.webp"
+    ],
+    "slug": "suvenir-devochka-s-fonarem",
+    "published": false
+  },
+  {
+    "uid": "304723426061",
+    "title": "Сувенир гном",
+    "description": "",
+    "price": 3290,
+    "images": [
+      "/images/catalog/new-year-2025/suvenir-gnom-304723426061.webp",
+      "/images/catalog/new-year-2025/suvenir-gnom-304723426061-1.webp"
+    ],
+    "slug": "suvenir-gnom",
+    "published": false
+  },
+  {
+    "uid": "221850208671",
+    "title": "Снеговик с птицей и зимним домиком",
+    "description": "",
+    "price": 3080,
+    "images": [
+      "/images/catalog/new-year-2025/snegovik-s-ptitsei-i-zimnim-domikom-221850208671.webp",
+      "/images/catalog/new-year-2025/snegovik-s-ptitsei-i-zimnim-domikom-221850208671-1.webp",
+      "/images/catalog/new-year-2025/snegovik-s-ptitsei-i-zimnim-domikom-221850208671-2.webp",
+      "/images/catalog/new-year-2025/snegovik-s-ptitsei-i-zimnim-domikom-221850208671-3.webp"
+    ],
+    "slug": "snegovik-s-ptitsei-i-zimnim-domikom",
+    "published": false
+  },
+  {
+    "uid": "605404329601",
+    "title": "Сувенир девочка с мишкой",
+    "description": "",
+    "price": 3990,
+    "images": [
+      "/images/catalog/new-year-2025/suvenir-devochka-s-mishkoi-605404329601.webp",
+      "/images/catalog/new-year-2025/suvenir-devochka-s-mishkoi-605404329601-1.webp",
+      "/images/catalog/new-year-2025/suvenir-devochka-s-mishkoi-605404329601-2.webp"
+    ],
+    "slug": "suvenir-devochka-s-mishkoi",
+    "published": false
+  },
+  {
+    "uid": "635347886771",
+    "title": "Дед мороз #6",
+    "description": "",
+    "price": 5670,
+    "images": [
+      "/images/catalog/new-year-2025/ded-moroz-6-635347886771.webp",
+      "/images/catalog/new-year-2025/ded-moroz-6-635347886771-1.webp"
+    ],
+    "slug": "ded-moroz-6",
+    "published": false
+  },
+  {
+    "uid": "367717666371",
+    "title": "Дед Мороз #7",
+    "description": "",
+    "price": 3850,
+    "images": [
+      "/images/catalog/new-year-2025/ded-moroz-7-367717666371.webp",
+      "/images/catalog/new-year-2025/ded-moroz-7-367717666371-1.webp"
+    ],
+    "slug": "ded-moroz-7",
+    "published": false
+  },
+  {
+    "uid": "631409206711",
+    "title": "Елочные игрушки #35",
+    "description": "",
+    "price": 420,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-35-631409206711.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-35-631409206711-1.webp"
+    ],
+    "slug": "elochnye-igrushki-35",
+    "published": false
+  },
+  {
+    "uid": "800086023181",
+    "title": "Eлочные игрушки #36",
+    "description": "",
+    "price": 805,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-36-800086023181.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-36-800086023181-1.webp"
+    ],
+    "slug": "elochnye-igrushki-36",
+    "published": false
+  },
+  {
+    "uid": "276051222191",
+    "title": "Елочные игрушки #37",
+    "description": "",
+    "price": 630,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-37-276051222191.webp"
+    ],
+    "slug": "elochnye-igrushki-37",
+    "published": false
+  },
+  {
+    "uid": "144139996191",
+    "title": "Елочные игрушки #38",
+    "description": "",
+    "price": 1302,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-38-144139996191.webp"
+    ],
+    "slug": "elochnye-igrushki-38",
+    "published": false
+  },
+  {
+    "uid": "837805819021",
+    "title": "Елочные игрушки #39",
+    "description": "",
+    "price": 546,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-39-837805819021.webp"
+    ],
+    "slug": "elochnye-igrushki-39",
+    "published": false
+  },
+  {
+    "uid": "344310076281",
+    "title": "Елочные игрушки #40",
+    "description": "",
+    "price": 1400,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-40-344310076281.webp"
+    ],
+    "slug": "elochnye-igrushki-40",
+    "published": false
+  },
+  {
+    "uid": "639215808641",
+    "title": "Елочные игрушки #41",
+    "description": "",
+    "price": 1302,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-41-639215808641.webp"
+    ],
+    "slug": "elochnye-igrushki-41",
+    "published": false
+  },
+  {
+    "uid": "558706452811",
+    "title": "Елочные игрушки #12",
+    "description": "",
+    "price": 455,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-12-558706452811.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-12-558706452811-1.webp"
+    ],
+    "slug": "elochnye-igrushki-12",
+    "published": false
+  },
+  {
+    "uid": "529354451261",
+    "title": "Елочные игрушки #2",
+    "description": "",
+    "price": 455,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-2-529354451261.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-2-529354451261-1.webp"
+    ],
+    "slug": "elochnye-igrushki-2",
+    "published": false
+  },
+  {
+    "uid": "462146008161",
+    "title": "Елочные игрушки #3",
+    "description": "бежевый",
+    "price": 455,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-3-462146008161.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-3-462146008161-1.webp"
+    ],
+    "slug": "elochnye-igrushki-3",
+    "published": false
+  },
+  {
+    "uid": "138072210941",
+    "title": "Елочные игрушки #4",
+    "description": "",
+    "price": 630,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-4-138072210941.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-4-138072210941-1.webp"
+    ],
+    "slug": "elochnye-igrushki-4",
+    "published": false
+  },
+  {
+    "uid": "860057243091",
+    "title": "Елочные игрушки #5",
+    "description": "",
+    "price": 630,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-5-860057243091.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-5-860057243091-1.webp"
+    ],
+    "slug": "elochnye-igrushki-5",
+    "published": false
+  },
+  {
+    "uid": "243382098121",
+    "title": "Елочные игрушки #42",
+    "description": "",
+    "price": 350,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-42-243382098121.webp"
+    ],
+    "slug": "elochnye-igrushki-42",
+    "published": false
+  },
+  {
+    "uid": "234378531391",
+    "title": "Елочные игрушки #7",
+    "description": "",
+    "price": 455,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-7-234378531391.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-7-234378531391-1.webp"
+    ],
+    "slug": "elochnye-igrushki-7",
+    "published": false
+  },
+  {
+    "uid": "958660814251",
+    "title": "Елочные игрушки #8",
+    "description": "",
+    "price": 455,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-8-958660814251.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-8-958660814251-1.webp"
+    ],
+    "slug": "elochnye-igrushki-8",
+    "published": false
+  },
+  {
+    "uid": "213806189501",
+    "title": "Елочные игрушки #9",
+    "description": "",
+    "price": 455,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-9-213806189501.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-9-213806189501-1.webp"
+    ],
+    "slug": "elochnye-igrushki-9",
+    "published": false
+  },
+  {
+    "uid": "844806551661",
+    "title": "Елочные игрушки #10",
+    "description": "",
+    "price": 650,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-10-844806551661.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-10-844806551661-1.webp"
+    ],
+    "slug": "elochnye-igrushki-10",
+    "published": false
+  },
+  {
+    "uid": "980600899721",
+    "title": "Елочные игрушки #11",
+    "description": "",
+    "price": 385,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-11-980600899721.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-11-980600899721-1.webp"
+    ],
+    "slug": "elochnye-igrushki-11",
+    "published": false
+  },
+  {
+    "uid": "746124661281",
+    "title": "Елочные игрушки #12",
+    "description": "",
+    "price": 455,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-12-746124661281.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-12-746124661281-1.webp"
+    ],
+    "slug": "elochnye-igrushki-12",
+    "published": false
+  },
+  {
+    "uid": "693114394421",
+    "title": "Елочные игрушки #13",
+    "description": "",
+    "price": 455,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-13-693114394421.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-13-693114394421-1.webp"
+    ],
+    "slug": "elochnye-igrushki-13",
+    "published": false
+  },
+  {
+    "uid": "927583816121",
+    "title": "Елочные игрушки #14",
+    "description": "",
+    "price": 805,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-14-927583816121.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-14-927583816121-1.webp"
+    ],
+    "slug": "elochnye-igrushki-14",
+    "published": false
+  },
+  {
+    "uid": "756572538031",
+    "title": "Елочные игрушки #15",
+    "description": "",
+    "price": 455,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-15-756572538031.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-15-756572538031-1.webp"
+    ],
+    "slug": "elochnye-igrushki-15",
+    "published": false
+  },
+  {
+    "uid": "292071607111",
+    "title": "Елочные игрушки #16",
+    "description": "",
+    "price": 455,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-16-292071607111.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-16-292071607111-1.webp"
+    ],
+    "slug": "elochnye-igrushki-16",
+    "published": false
+  },
+  {
+    "uid": "687125122341",
+    "title": "Елочные игрушки #17",
+    "description": "",
+    "price": 455,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-17-687125122341.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-17-687125122341-1.webp"
+    ],
+    "slug": "elochnye-igrushki-17",
+    "published": false
+  },
+  {
+    "uid": "989704379971",
+    "title": "Елочные игрушки #18",
+    "description": "",
+    "price": 650,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-18-989704379971.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-18-989704379971-1.webp"
+    ],
+    "slug": "elochnye-igrushki-18",
+    "published": false
+  },
+  {
+    "uid": "941243737031",
+    "title": "Елочные игрушки #19",
+    "description": "",
+    "price": 650,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-19-941243737031.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-19-941243737031-1.webp"
+    ],
+    "slug": "elochnye-igrushki-19",
+    "published": false
+  },
+  {
+    "uid": "612749082241",
+    "title": "Елочные игрушки #20",
+    "description": "",
+    "price": 560,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-20-612749082241.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-20-612749082241-1.webp"
+    ],
+    "slug": "elochnye-igrushki-20",
+    "published": false
+  },
+  {
+    "uid": "818658342591",
+    "title": "Елочные игрушки #21",
+    "description": "",
+    "price": 650,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-21-818658342591.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-21-818658342591-1.webp"
+    ],
+    "slug": "elochnye-igrushki-21",
+    "published": false
+  },
+  {
+    "uid": "590549590041",
+    "title": "Елочные игрушки #22",
+    "description": "",
+    "price": 650,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-22-590549590041.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-22-590549590041-1.webp"
+    ],
+    "slug": "elochnye-igrushki-22",
+    "published": false
+  },
+  {
+    "uid": "377601558271",
+    "title": "Елочные игрушки #23",
+    "description": "",
+    "price": 650,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-23-377601558271.webp"
+    ],
+    "slug": "elochnye-igrushki-23",
+    "published": false
+  },
+  {
+    "uid": "145598562341",
+    "title": "Елочные игрушки #24",
+    "description": "",
+    "price": 650,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-24-145598562341.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-24-145598562341-1.webp"
+    ],
+    "slug": "elochnye-igrushki-24",
+    "published": false
+  },
+  {
+    "uid": "252838749881",
+    "title": "Елочные игрушки #25",
+    "description": "",
+    "price": 385,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-25-252838749881.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-25-252838749881-1.webp"
+    ],
+    "slug": "elochnye-igrushki-25",
+    "published": false
+  },
+  {
+    "uid": "768875383591",
+    "title": "Елочные игрушки #26",
+    "description": "",
+    "price": 385,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-26-768875383591.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-26-768875383591-1.webp"
+    ],
+    "slug": "elochnye-igrushki-26",
+    "published": false
+  },
+  {
+    "uid": "903803146341",
+    "title": "Елочные игрушки #27",
+    "description": "",
+    "price": 560,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-27-903803146341.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-27-903803146341-1.webp"
+    ],
+    "slug": "elochnye-igrushki-27",
+    "published": false
+  },
+  {
+    "uid": "222295912851",
+    "title": "Елочные игрушки #28",
+    "description": "",
+    "price": 805,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-28-222295912851.webp"
+    ],
+    "slug": "elochnye-igrushki-28",
+    "published": false
+  },
+  {
+    "uid": "238806285831",
+    "title": "Елочные игрушки #29",
+    "description": "",
+    "price": 455,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-29-238806285831.webp",
+      "/images/catalog/new-year-2025/elochnye-igrushki-29-238806285831-1.webp"
+    ],
+    "slug": "elochnye-igrushki-29",
+    "published": false
+  },
+  {
+    "uid": "609795339671",
+    "title": "Елочные игрушки #30",
+    "description": "",
+    "price": 385,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-30-609795339671.webp"
+    ],
+    "slug": "elochnye-igrushki-30",
+    "published": false
+  },
+  {
+    "uid": "888502709691",
+    "title": "Елочные игрушки #31",
+    "description": "",
+    "price": 385,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-31-888502709691.webp"
+    ],
+    "slug": "elochnye-igrushki-31",
+    "published": false
+  },
+  {
+    "uid": "469842333751",
+    "title": "Елочные игрушки #32",
+    "description": "",
+    "price": 1575,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-32-469842333751.webp"
+    ],
+    "slug": "elochnye-igrushki-32",
+    "published": false
+  },
+  {
+    "uid": "555228096911",
+    "title": "Елочные игрушки #33",
+    "description": "",
+    "price": 1575,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-33-555228096911.webp"
+    ],
+    "slug": "elochnye-igrushki-33",
+    "published": false
+  },
+  {
+    "uid": "919460428251",
+    "title": "Елочные игрушки #34",
+    "description": "",
+    "price": 1575,
+    "images": [
+      "/images/catalog/new-year-2025/elochnye-igrushki-34-919460428251.webp"
+    ],
+    "slug": "elochnye-igrushki-34",
+    "published": false
+  }
+]

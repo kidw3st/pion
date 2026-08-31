@@ -1,0 +1,98 @@
+{
+  "slug": "valentinesday",
+  "title": "Букеты и подарочные боксы",
+  "url": "https://kidw3st.github.io/pion/valentinesday/",
+  "products": [
+    {
+      "id": "165556224242",
+      "title": "Страсть",
+      "composition": "",
+      "priceRub": 7200,
+      "image": "https://kidw3st.github.io/pion/images/catalog/valentinesday/strast-165556224242.webp"
+    },
+    {
+      "id": "117312854382",
+      "title": "Нежность",
+      "composition": "",
+      "priceRub": 6000,
+      "image": "https://kidw3st.github.io/pion/images/catalog/valentinesday/nezhnost-117312854382.webp"
+    },
+    {
+      "id": "477172180682",
+      "title": "Cказочные ароматы",
+      "composition": "",
+      "priceRub": 7440,
+      "image": "https://kidw3st.github.io/pion/images/catalog/valentinesday/ckazochnye-aromaty-477172180682.webp"
+    },
+    {
+      "id": "573432421632",
+      "title": "Аромат весны",
+      "composition": "",
+      "priceRub": 5200,
+      "image": "https://kidw3st.github.io/pion/images/catalog/valentinesday/aromat-vesny-573432421632.webp"
+    },
+    {
+      "id": "741266404572",
+      "title": "Красочный сезон",
+      "composition": "",
+      "priceRub": 6000,
+      "image": "https://kidw3st.github.io/pion/images/catalog/valentinesday/krasochnyi-sezon-741266404572.webp"
+    },
+    {
+      "id": "265805044972",
+      "title": "Нежное утро",
+      "composition": "",
+      "priceRub": 5150,
+      "image": "https://kidw3st.github.io/pion/images/catalog/valentinesday/nezhnoe-utro-265805044972.webp"
+    },
+    {
+      "id": "628873665672",
+      "title": "Весна",
+      "composition": "",
+      "priceRub": 14100,
+      "image": "https://kidw3st.github.io/pion/images/catalog/valentinesday/vesna-628873665672.webp"
+    },
+    {
+      "id": "642436913562",
+      "title": "Нежный персик",
+      "composition": "",
+      "priceRub": 15500,
+      "image": "https://kidw3st.github.io/pion/images/catalog/valentinesday/nezhnyi-persik-642436913562.webp"
+    },
+    {
+      "id": "296156984482",
+      "title": "До умопомрачения",
+      "composition": "",
+      "priceRub": 59100,
+      "image": "https://kidw3st.github.io/pion/images/catalog/valentinesday/do-umopomracheniya-296156984482.webp"
+    },
+    {
+      "id": "360056950442",
+      "title": "Страстный вечер",
+      "composition": "",
+      "priceRub": 12650,
+      "image": "https://kidw3st.github.io/pion/images/catalog/valentinesday/strastnyi-vecher-360056950442.webp"
+    },
+    {
+      "id": "188476479442",
+      "title": "Обояние",
+      "composition": "",
+      "priceRub": 4800,
+      "image": "https://kidw3st.github.io/pion/images/catalog/valentinesday/oboyanie-188476479442.webp"
+    },
+    {
+      "id": "579987077692",
+      "title": "Pudra",
+      "composition": "",
+      "priceRub": 7350,
+      "image": "https://kidw3st.github.io/pion/images/catalog/valentinesday/pudra-579987077692.webp"
+    },
+    {
+      "id": "776882009672",
+      "title": "Любовь",
+      "composition": "",
+      "priceRub": 6800,
+      "image": "https://kidw3st.github.io/pion/images/catalog/valentinesday/lyubov-776882009672.webp"
+    }
+  ]
+}

@@ -94,11 +94,16 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
   // cannot push them past the length a search result shows.
   if ((CATEGORY_SLUGS as readonly string[]).includes(slug)) {
     const label = CATEGORY_LABELS[slug as keyof typeof CATEGORY_LABELS] ?? slug;
-    const title = `${label} с доставкой в Перми | Салон «Пион»`;
+    // Seasonal sections carry hand-written titles in PAGE_SEO (they used to be
+    // content pages); the template covers the rest.
+    const custom = PAGE_SEO[slug];
+    const title = custom?.title ?? `${label} с доставкой в Перми | Салон «Пион»`;
     return {
       ...buildMetadata({
         title,
-        description: `${label} от салона «Пион» в Перми. Авторские композиции из свежих цветов, фото букета перед доставкой, самовывоз со скидкой 5%.`,
+        description:
+          custom?.description ??
+          `${label} от салона «Пион» в Перми. Авторские композиции из свежих цветов, фото букета перед доставкой, самовывоз со скидкой 5%.`,
         path: `/${slug}/`,
       }),
       title: { absolute: title },

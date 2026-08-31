@@ -68,6 +68,12 @@
       "productCount": 50
     },
     {
+      "slug": "new-year-2025",
+      "title": "Новогодняя коллекция 2025",
+      "url": "https://kidw3st.github.io/pion/new-year-2025/",
+      "productCount": 71
+    },
+    {
       "slug": "pions",
       "title": "pions",
       "url": "https://kidw3st.github.io/pion/pions/",
@@ -78,6 +84,12 @@
       "title": "roses",
       "url": "https://kidw3st.github.io/pion/roses/",
       "productCount": 22
+    },
+    {
+      "slug": "valentinesday",
+      "title": "Букеты и подарочные боксы",
+      "url": "https://kidw3st.github.io/pion/valentinesday/",
+      "productCount": 13
     },
     {
       "slug": "wedding",
