@@ -1,0 +1,78 @@
+.wrap {
+  position: fixed;
+  left: 24px;
+  bottom: 24px;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.fab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-header);
+  color: var(--color-black);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+}
+
+.fab:hover {
+  transform: scale(1.05);
+}
+
+.closeGlyph {
+  font-size: 28px;
+  line-height: 1;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+  transition: transform 0.2s ease-in-out;
+}
+
+.item:hover {
+  transform: scale(1.07);
+}
+
+/* Фирменные цвета самих мессенджеров, как на живом сайте. */
+.whatsapp {
+  background: #2aa81a;
+}
+
+.telegram {
+  background: #229ed9;
+}
+
+@media (max-width: 600px) {
+  .wrap {
+    left: 16px;
+    bottom: 16px;
+  }
+
+  .fab {
+    width: 50px;
+    height: 50px;
+  }
+}

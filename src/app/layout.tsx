@@ -6,6 +6,7 @@ import { Header } from '@/components/Header/Header';
 import { CartButton } from '@/components/Header/CartButton';
 import { WebMcpTools } from '@/components/AgentTools/WebMcpTools';
 import { ScrollTop } from '@/components/ScrollTop/ScrollTop';
+import { MessengerFab } from '@/components/MessengerFab/MessengerFab';
 import { VkBlock } from '@/components/VkBlock/VkBlock';
 import { Footer } from '@/components/Footer/Footer';
 import { JsonLd } from '@/components/JsonLd/JsonLd';
@@ -49,20 +50,33 @@ export const metadata: Metadata = {
  * (frame-ancestors does not work from a meta tag — clickjacking protection
  * has to come from the host's headers; GitHub Pages sends none.)
  */
+// mc.yandex.ru везде ниже — Яндекс.Метрика: тот же счётчик, что стоит на
+// текущем pionperm.ru, чтобы статистика не оборвалась при переезде.
 const CSP = [
   "default-src 'self'",
   // Dev needs eval (react-refresh source maps); the production build must not.
-  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}`,
+  `script-src 'self' 'unsafe-inline' https://mc.yandex.ru${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data:",
+  "img-src 'self' data: https://mc.yandex.ru",
   "font-src 'self'",
   // Dev HMR talks over a websocket; production only fetches its own JSON.
-  `connect-src 'self'${process.env.NODE_ENV === 'development' ? ' ws:' : ''}`,
+  `connect-src 'self' https://mc.yandex.ru${process.env.NODE_ENV === 'development' ? ' ws:' : ''}`,
   "object-src 'none'",
   "frame-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
 ].join('; ');
+
+const METRIKA_ID = 93951387;
+
+/** Официальный сниппет Метрики; вебвизор и карта кликов — как на счётчике Tilda-версии. */
+const METRIKA_SNIPPET = `
+(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
+m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],
+k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
+(window,document,"script","https://mc.yandex.ru/metrika/tag.js","ym");
+ym(${METRIKA_ID},"init",{clickmap:true,trackLinks:true,accurateTrackBounce:true,webvisor:true});
+`;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   // The VK band sits above the footer on every page of the live site, not just
@@ -75,6 +89,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta httpEquiv="Content-Security-Policy" content={CSP} />
       </head>
       <body>
+        <script dangerouslySetInnerHTML={{ __html: METRIKA_SNIPPET }} />
+        <noscript>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`https://mc.yandex.ru/watch/${METRIKA_ID}`}
+            style={{ position: 'absolute', left: '-9999px' }}
+            alt=""
+          />
+        </noscript>
         <JsonLd data={localBusinessJsonLd()} />
         <CartProvider>
           <Header />
@@ -83,6 +106,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Footer />
           <CartButton />
           <ScrollTop />
+          <MessengerFab />
           <CartDrawer />
           <WebMcpTools />
         </CartProvider>

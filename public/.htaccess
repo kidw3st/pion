@@ -1,0 +1,27 @@
+# Апач хостинга: наши страницы — статический экспорт Next.js.
+
+# Несуществующий адрес получает нашу страницу 404, а не серверную заглушку.
+ErrorDocument 404 /404.html
+
+# Фото и статика неизменяемы (имена файлов версионированы) — кэшируем надолго.
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/webp "access plus 30 days"
+  ExpiresByType image/svg+xml "access plus 30 days"
+  ExpiresByType image/x-icon "access plus 30 days"
+  ExpiresByType font/woff2 "access plus 365 days"
+  ExpiresByType text/css "access plus 7 days"
+  ExpiresByType application/javascript "access plus 7 days"
+</IfModule>
+
+# Сжатие текстовых ответов.
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json image/svg+xml
+</IfModule>
+
+# Заголовки безопасности, которые нельзя задать из статической страницы.
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>

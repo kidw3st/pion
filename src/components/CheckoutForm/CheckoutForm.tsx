@@ -165,6 +165,16 @@ export function CheckoutForm() {
       {errors.paymentMethod && <span className={styles.error}>{errors.paymentMethod}</span>}
 
       <button type="submit" className={styles.submitBtn}>Оформить заказ</button>
+
+      {/* 152-ФЗ: форма собирает имя, телефон и адрес — согласие обязательно. */}
+      <p className={styles.consent}>
+        Нажимая «Оформить заказ», вы даёте согласие на обработку персональных данных и
+        соглашаетесь с{' '}
+        <a href="/policy" className={styles.consentLink}>
+          политикой конфиденциальности
+        </a>
+        .
+      </p>
     </form>
   );
 }
