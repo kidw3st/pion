@@ -97,7 +97,13 @@ try {
     foreach (($resp['data'] ?? []) as $b) {
         $id = (string)($b['id'] ?? '');
         $attr = $b['attributes'] ?? [];
+        // saleAmount — цена для покупателя, её и показываем. У букетов без
+        // состава она бывает нулевой, тогда берём сумму букета, чтобы
+        // карточка не пропадала молча.
         $price = (int)round((float)($attr['saleAmount'] ?? 0));
+        if ($price <= 0) {
+            $price = (int)round((float)($attr['trueSaleAmount'] ?? $attr['amount'] ?? 0));
+        }
         $title = trim((string)($attr['title'] ?? ''));
         if ($id === '' || $price <= 0 || $title === '') {
             continue; // без цены или названия на витрине сайта делать нечего
