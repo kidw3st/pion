@@ -42,3 +42,6 @@ next-env.d.ts
 # layout comparison screenshots
 tmp/
 server-pay/config.php
+
+# Витрина приходит из CRM на сервере и не должна попадать в сборку
+public/api/showcase.json

@@ -7,6 +7,7 @@ import { ProductCard } from '@/components/ProductCard/ProductCard';
 import { Features } from '@/components/Features/Features';
 import { BouquetBlock } from '@/components/BouquetBlock/BouquetBlock';
 import { UdsBlock } from '@/components/UdsBlock/UdsBlock';
+import { ShowcaseSection } from '@/components/Showcase/ShowcaseSection';
 import styles from './page.module.css';
 
 // The homepage keeps the site-wide default title (no "| Пион, Пермь" suffix on
@@ -43,6 +44,10 @@ export default async function HomePage() {
       <h1 className="srOnly">Доставка цветов и букетов в Перми — салон «Пион»</h1>
 
       <HeroSlider slides={site.heroSlides} />
+
+      {/* Живая витрина из CRM: появляется, только когда на витрине есть
+          букеты, поэтому стоит выше постоянных «Новинок». */}
+      <ShowcaseSection variant="home" limit={6} />
 
       <section className={styles.newSection}>
         <h2 className={styles.newHeading}>Новинки</h2>

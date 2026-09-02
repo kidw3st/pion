@@ -20,6 +20,19 @@ function catalog_index(): array
         return $index;
     }
     $index = EXTRA_ITEMS;
+
+    // Витрина из CRM: её кладёт sync-showcase.php. Файла может не быть —
+    // тогда в корзине просто нет витринных букетов.
+    $showcase = json_decode((string)@file_get_contents(__DIR__ . '/../api/showcase.json'), true);
+    foreach (($showcase['products'] ?? []) as $p) {
+        if (!empty($p['uid']) && isset($p['price'])) {
+            $index[(string)$p['uid']] = [
+                'title' => (string)($p['title'] ?? $p['uid']),
+                'price' => (int)$p['price'],
+            ];
+        }
+    }
+
     foreach (glob(__DIR__ . '/../api/catalog/*.json') ?: [] as $file) {
         $data = json_decode((string)file_get_contents($file), true);
         foreach (($data['products'] ?? []) as $p) {
