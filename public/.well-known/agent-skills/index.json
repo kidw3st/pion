@@ -6,8 +6,8 @@
       "name": "pion-catalog",
       "type": "skill",
       "description": "Каталог, цены и контакты салона цветов «Пион» в машиночитаемом виде",
-      "url": "https://kidw3st.github.io/pion/.well-known/agent-skills/pion-catalog/SKILL.md",
-      "sha256": "f96b4214e877191ba38ceeea00ec14d20e1df06d40770847ac57fdcebb63a436"
+      "url": "https://pionperm.ru/.well-known/agent-skills/pion-catalog/SKILL.md",
+      "sha256": "dcd66d6f633acb03e4149ec72a5a2a3f03a01abbbf015c10742793274742f35f"
     }
   ]
 }

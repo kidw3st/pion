@@ -1,0 +1,13 @@
+# Логи и конфиг недоступны снаружи; работают только PHP-точки входа.
+<FilesMatch "\.(log|json|example\.php)$">
+  Require all denied
+</FilesMatch>
+<Files "config.php">
+  Require all denied
+</Files>
+<Files "lib.php">
+  Require all denied
+</Files>
+<Files "posiflora.php">
+  Require all denied
+</Files>

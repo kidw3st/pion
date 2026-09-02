@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useCart } from '@/components/Cart/CartContext';
 import { getSite } from '@/lib/content';
 import { validateCheckout, type CheckoutValues } from './validateCheckout';
@@ -22,6 +22,21 @@ export function CheckoutForm() {
   const [values, setValues] = useState<CheckoutValues>(initialValues);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [serverError, setServerError] = useState('');
+  // Возврат с платёжной страницы банка: /checkout/?payment=success|fail
+  const [paymentResult, setPaymentResult] = useState<'success' | 'fail' | null>(null);
+
+  useEffect(() => {
+    const param = new URLSearchParams(window.location.search).get('payment');
+    if (param === 'success') {
+      setPaymentResult('success');
+      clear();
+    } else if (param === 'fail') {
+      setPaymentResult('fail');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const chosenOption = DELIVERY.options.find((o) => o.id === values.deliveryOption) ?? null;
   const totals = orderTotals(total, chosenOption);
@@ -30,21 +45,67 @@ export function CheckoutForm() {
     setValues((v) => ({ ...v, [key]: value }));
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const result = validateCheckout(values);
     setErrors(result.errors);
-    if (result.valid) {
+    if (!result.valid || sending) return;
+
+    setSending(true);
+    setServerError('');
+    try {
+      const res = await fetch('/pay/init.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          items: items.map((i) => ({ uid: i.uid, quantity: i.quantity })),
+          delivery: values.deliveryOption,
+          payment: values.paymentMethod,
+          customer: {
+            name: values.name,
+            phone: values.phone,
+            email: values.email,
+            address: values.address,
+          },
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        setServerError(data.error ?? 'Не получилось отправить заказ — позвоните нам: +7 342 258 45 45');
+        return;
+      }
+
+      if (data.paymentUrl) {
+        // Корзина сохраняется до подтверждения оплаты: с неудачной оплаты
+        // человек возвращается к заполненной корзине, а не к пустой.
+        window.location.assign(data.paymentUrl);
+        return;
+      }
+
       setSubmitted(true);
       clear();
+    } catch {
+      setServerError('Не получилось отправить заказ — позвоните нам: +7 342 258 45 45');
+    } finally {
+      setSending(false);
     }
+  }
+
+  if (paymentResult === 'success') {
+    return (
+      <div className={styles.thanks}>
+        <h1>Оплата прошла, спасибо!</h1>
+        <p>Заказ оплачен и передан флористам. Мы свяжемся с вами для уточнения деталей доставки.</p>
+      </div>
+    );
   }
 
   if (submitted) {
     return (
       <div className={styles.thanks}>
-        <h1>Спасибо, мы с вами свяжемся!</h1>
-        <p>Заказ принят. Наш флорист свяжется с вами для подтверждения деталей.</p>
+        <h1>Спасибо, заказ принят!</h1>
+        <p>Наш флорист свяжется с вами для подтверждения деталей.</p>
       </div>
     );
   }
@@ -149,7 +210,7 @@ export function CheckoutForm() {
             checked={values.paymentMethod === 'card'}
             onChange={() => update('paymentMethod', 'card')}
           />
-          Онлайн оплата картой
+          Картой онлайн — безопасная оплата через Т-Банк
         </label>
         <label className={styles.radioLabel}>
           <input
@@ -159,12 +220,21 @@ export function CheckoutForm() {
             checked={values.paymentMethod === 'cash'}
             onChange={() => update('paymentMethod', 'cash')}
           />
-          Наличными при самовывозе
+          Наличными или картой при получении
         </label>
       </fieldset>
       {errors.paymentMethod && <span className={styles.error}>{errors.paymentMethod}</span>}
 
-      <button type="submit" className={styles.submitBtn}>Оформить заказ</button>
+      {paymentResult === 'fail' && (
+        <p className={styles.error}>
+          Оплата не прошла. Попробуйте ещё раз или позвоните нам: +7 342 258 45 45.
+        </p>
+      )}
+      {serverError && <p className={styles.error}>{serverError}</p>}
+
+      <button type="submit" className={styles.submitBtn} disabled={sending}>
+        {sending ? 'Отправляем…' : 'Оформить заказ'}
+      </button>
 
       {/* 152-ФЗ: форма собирает имя, телефон и адрес — согласие обязательно. */}
       <p className={styles.consent}>

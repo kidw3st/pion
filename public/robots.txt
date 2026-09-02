@@ -5,4 +5,4 @@ User-agent: *
 Content-Signal: ai-train=no, search=yes, ai-input=yes
 Allow: /
 
-Sitemap: https://kidw3st.github.io/pion/sitemap.xml
+Sitemap: https://pionperm.ru/sitemap.xml
