@@ -242,26 +242,43 @@ function notify_telegram(string $text): string
         return 'telegram: не настроен';
     }
 
-    $ch = curl_init('https://api.telegram.org/bot' . TELEGRAM_TOKEN . '/sendMessage');
-    curl_setopt_array($ch, [
-        CURLOPT_POST => true,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_TIMEOUT => 10,
-        CURLOPT_POSTFIELDS => http_build_query([
-            'chat_id' => TELEGRAM_CHAT_ID,
-            'text' => mb_substr($text, 0, 4000),
-            'parse_mode' => 'HTML',
-            'disable_web_page_preview' => 'true',
-        ]),
-    ]);
-    $raw = curl_exec($ch);
-    $code = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
-    curl_close($ch);
+    // Получателей может быть несколько (флорист, управляющая) — перечисляются
+    // через запятую. Сбой у одного не мешает остальным получить заказ.
+    $ok = 0;
+    $errors = [];
+    foreach (explode(',', TELEGRAM_CHAT_ID) as $chatId) {
+        $chatId = trim($chatId);
+        if ($chatId === '') {
+            continue;
+        }
 
-    if ($code === 200 && is_string($raw) && str_contains($raw, '"ok":true')) {
-        return 'telegram: доставлено';
+        $ch = curl_init('https://api.telegram.org/bot' . TELEGRAM_TOKEN . '/sendMessage');
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 10,
+            CURLOPT_POSTFIELDS => http_build_query([
+                'chat_id' => $chatId,
+                'text' => mb_substr($text, 0, 4000),
+                'parse_mode' => 'HTML',
+                'disable_web_page_preview' => 'true',
+            ]),
+        ]);
+        $raw = curl_exec($ch);
+        $code = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        curl_close($ch);
+
+        if ($code === 200 && is_string($raw) && str_contains($raw, '"ok":true')) {
+            $ok++;
+        } else {
+            $errors[] = $chatId . ': ' . $code . ' ' . mb_substr((string)$raw, 0, 80);
+        }
     }
-    return 'telegram: ОШИБКА ' . $code . ' ' . mb_substr((string)$raw, 0, 120);
+
+    if ($errors === []) {
+        return 'telegram: доставлено (' . $ok . ')';
+    }
+    return 'telegram: доставлено ' . $ok . ', ОШИБКИ — ' . implode('; ', $errors);
 }
 
 /**
