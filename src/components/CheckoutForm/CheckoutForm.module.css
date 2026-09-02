@@ -15,8 +15,17 @@
 }
 
 .form input {
-  padding: 10px;
+  padding: 11px 10px;
   border: 1px solid var(--color-border);
+  /* Ровно 16px: при меньшем размере Safari на iPhone увеличивает страницу,
+     как только человек коснётся поля, и вёрстка «прыгает». */
+  font-family: inherit;
+  font-size: 16px;
+}
+
+.form input:focus-visible {
+  outline: 2px solid var(--color-text-dark);
+  outline-offset: 1px;
 }
 
 .form fieldset {

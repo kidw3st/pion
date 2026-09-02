@@ -4,7 +4,8 @@
 .cartBtn {
   position: fixed;
   right: 24px;
-  bottom: 96px;
+  /* Поднимаемся над полосой про cookie, пока она на экране. */
+  bottom: calc(96px + var(--cookie-bar-h, 0px));
   z-index: 90;
   display: flex;
   align-items: center;

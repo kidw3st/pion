@@ -1,7 +1,8 @@
 .wrap {
   position: fixed;
   left: 24px;
-  bottom: 24px;
+  /* Поднимаемся над полосой про cookie, пока она на экране. */
+  bottom: calc(24px + var(--cookie-bar-h, 0px));
   z-index: 90;
   display: flex;
   flex-direction: column;
@@ -68,7 +69,7 @@
 @media (max-width: 600px) {
   .wrap {
     left: 16px;
-    bottom: 16px;
+    bottom: calc(16px + var(--cookie-bar-h, 0px));
   }
 
   .fab {

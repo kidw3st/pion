@@ -97,29 +97,32 @@
     gap: 32px;
   }
 
+  /* Ниже 900px коллаж живёт в долях от своей ширины: на узких экранах
+     фиксированные пиксели выносили правое фото за край страницы. */
   .collage {
     width: 100%;
     max-width: 420px;
-    height: 340px;
+    height: auto;
+    aspect-ratio: 420 / 340;
   }
 
   .shotOne {
-    width: 240px;
-    height: 240px;
+    width: 57%;
+    height: 71%;
   }
 
   .shotTwo {
-    top: 100px;
-    left: 200px;
-    width: 170px;
-    height: 120px;
+    top: 29%;
+    left: 48%;
+    width: 40%;
+    height: 35%;
   }
 
   .shotThree {
-    top: 190px;
-    left: 100px;
-    width: 180px;
-    height: 130px;
+    top: 56%;
+    left: 24%;
+    width: 43%;
+    height: 38%;
   }
 
   .title {

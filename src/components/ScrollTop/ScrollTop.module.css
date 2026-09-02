@@ -3,7 +3,8 @@
 .button {
   position: fixed;
   right: 24px;
-  bottom: 24px;
+  /* Поднимаемся над полосой про cookie, пока она на экране. */
+  bottom: calc(24px + var(--cookie-bar-h, 0px));
   z-index: 90;
   display: flex;
   align-items: center;
@@ -53,7 +54,7 @@
 @media (max-width: 600px) {
   .button {
     right: 16px;
-    bottom: 16px;
+    bottom: calc(16px + var(--cookie-bar-h, 0px));
     width: 48px;
     height: 48px;
   }

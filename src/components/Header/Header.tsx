@@ -2,6 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { getSite } from '@/lib/content';
 import { VkIcon, TelegramIcon, WhatsappIcon } from './SocialIcons';
+import { MobileNav } from './MobileNav';
 import styles from './Header.module.css';
 
 // Icon per social network, matched on the link target rather than the label
@@ -53,6 +54,9 @@ export function Header() {
           СДЕЛАТЬ ЗАКАЗ
         </Link>
       </div>
+
+      {/* На телефонах строка выше скрыта, а вместо неё — звонок и бургер. */}
+      <MobileNav nav={site.nav} phone={site.phone} address={site.address} social={site.social} />
     </header>
   );
 }

@@ -63,7 +63,9 @@ const CSP = [
   // Dev HMR talks over a websocket; production only fetches its own JSON.
   `connect-src 'self' https://mc.yandex.ru${process.env.NODE_ENV === 'development' ? ' ws:' : ''}`,
   "object-src 'none'",
-  "frame-src 'none'",
+  // Метрика поднимает служебный iframe; без него счётчик ругается на каждой
+  // странице и часть данных не уходит. Чужие фреймы по-прежнему запрещены.
+  'frame-src https://mc.yandex.ru',
   "base-uri 'self'",
   "form-action 'self'",
 ].join('; ');

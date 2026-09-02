@@ -24,6 +24,26 @@ export function CookieNotice() {
     }
   }, []);
 
+  // Пока полоса на экране, плавающие кнопки поднимаются на её высоту: иначе
+  // на узких экранах мессенджер накрывает последнюю строку текста.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (!visible) {
+      root.style.removeProperty('--cookie-bar-h');
+      return;
+    }
+    const bar = document.querySelector<HTMLElement>(`.${styles.banner}`);
+    if (!bar) return;
+    const apply = () => root.style.setProperty('--cookie-bar-h', `${bar.offsetHeight}px`);
+    apply();
+    const ro = new ResizeObserver(apply);
+    ro.observe(bar);
+    return () => {
+      ro.disconnect();
+      root.style.removeProperty('--cookie-bar-h');
+    };
+  }, [visible]);
+
   const accept = () => {
     try {
       localStorage.setItem(STORAGE_KEY, String(Date.now()));
