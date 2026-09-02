@@ -170,18 +170,67 @@ function tbank_receipt(array $order, string $email, string $phone): array
     return $receipt;
 }
 
-/** Письмо салону; заодно пишет строку в защищённый лог. */
+/**
+ * Сообщение в Telegram — основной канал: приходит мгновенно и не зависит от
+ * почтовой доставки. Возвращает пометку для лога.
+ */
+function notify_telegram(string $text): string
+{
+    // Конфиг на сервере может быть старее этого файла — проверяем обе константы.
+    if (!defined('TELEGRAM_TOKEN') || !defined('TELEGRAM_CHAT_ID')
+        || TELEGRAM_TOKEN === '' || TELEGRAM_CHAT_ID === '') {
+        return 'telegram: не настроен';
+    }
+
+    $ch = curl_init('https://api.telegram.org/bot' . TELEGRAM_TOKEN . '/sendMessage');
+    curl_setopt_array($ch, [
+        CURLOPT_POST => true,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 10,
+        CURLOPT_POSTFIELDS => http_build_query([
+            'chat_id' => TELEGRAM_CHAT_ID,
+            'text' => mb_substr($text, 0, 4000),
+            'disable_web_page_preview' => 'true',
+        ]),
+    ]);
+    $raw = curl_exec($ch);
+    $code = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    curl_close($ch);
+
+    if ($code === 200 && is_string($raw) && str_contains($raw, '"ok":true')) {
+        return 'telegram: доставлено';
+    }
+    return 'telegram: ОШИБКА ' . $code . ' ' . mb_substr((string)$raw, 0, 120);
+}
+
+/**
+ * Уведомление салону о заказе.
+ *
+ * Три независимых канала, чтобы заказ не потерялся:
+ *   1) Telegram — мгновенно, основной;
+ *   2) письмо — дублирует, если почта настроена;
+ *   3) orders.log — остаётся на сервере в любом случае.
+ * Результат каждого канала пишется в лог, поэтому молчаливых сбоев больше нет.
+ */
 function notify_salon(string $subject, string $body): void
 {
+    $tg = notify_telegram($subject . "\n\n" . $body);
+
+    // Обратный адрес должен быть на нашем домене, иначе письмо не пройдёт
+    // проверку у получателя. Reply-To ведёт на живой ящик салона.
+    $headers = 'From: "Сайт Пион" <robot@pionperm.ru>' . "\r\n"
+        . 'Reply-To: ' . SALON_EMAIL . "\r\n"
+        . "Content-Type: text/plain; charset=UTF-8\r\n"
+        . "X-Mailer: pionperm-site\r\n";
+    $sent = @mail(SALON_EMAIL, '=?UTF-8?B?' . base64_encode($subject) . '?=', $body, $headers, '-f robot@pionperm.ru');
+    $mailNote = 'почта: ' . ($sent ? 'принята сервером' : 'ОТКАЗ (mail() вернул false)');
+
     @file_put_contents(
         __DIR__ . '/orders.log',
-        date('Y-m-d H:i:s') . ' | ' . str_replace("\n", ' ~ ', $subject . ' | ' . $body) . "\n",
+        date('Y-m-d H:i:s') . ' | ' . $mailNote . ' | ' . $tg . ' | '
+        . str_replace("\n", ' ~ ', $subject . ' | ' . $body) . "\n",
         FILE_APPEND | LOCK_EX,
     );
-
-    $headers = "From: robot@pionperm.ru\r\n" .
-        "Content-Type: text/plain; charset=UTF-8\r\n";
-    @mail(SALON_EMAIL, '=?UTF-8?B?' . base64_encode($subject) . '?=', $body, $headers);
 }
 
 /** Тело письма о заказе. */

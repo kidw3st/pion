@@ -15,6 +15,12 @@ const TBANK_API = 'https://securepay.tinkoff.ru/v2/';
 // Куда слать письма о заказах.
 const SALON_EMAIL = 'pion-perm59@yandex.ru';
 
+// Telegram — основной канал уведомлений о заказах: доходит мгновенно и не
+// зависит от почтовой доставки. Токен даёт @BotFather, chat_id — это id
+// группы или личного чата, куда бот пишет. Пусто — канал просто пропускается.
+const TELEGRAM_TOKEN = '';
+const TELEGRAM_CHAT_ID = '';
+
 // Публичный адрес сайта — для ссылок возврата с оплаты.
 const SITE_ORIGIN = 'https://pionperm.ru';
 
