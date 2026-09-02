@@ -60,10 +60,18 @@ $orderId = 'pion-' . date('ymd-His') . '-' . substr(bin2hex(random_bytes(3)), 0,
 
 if ($payment === 'cash') {
     $paymentLine = 'наличными или картой при получении';
-    $crmNote = posiflora_push_order($order, $customer, $paymentLine);
+    $crm = posiflora_push_order($order, $customer, $paymentLine);
     notify_salon(
         'Заказ с сайта (оплата при получении) — ' . $order['total'] . ' руб.',
-        order_mail_body($order, $customer, $paymentLine) . $crmNote . "\nНомер: " . $orderId,
+        order_mail_body($order, $customer, $paymentLine) . $crm['note'] . "\nНомер: " . $orderId,
+        order_telegram_text(
+            '🌸 Новый заказ с сайта',
+            $order,
+            $customer,
+            $paymentLine,
+            $orderId,
+            $crm['id'],
+        ),
     );
     respond(200, ['ok' => true]);
 }
@@ -100,16 +108,31 @@ if (($resp['Success'] ?? false) !== true || empty($resp['PaymentURL'])) {
         'Заказ ' . $orderId . ' на ' . $order['total'] . " руб. не ушёл в оплату.\n"
         . 'Ответ банка: ' . mb_substr((string)$raw, 0, 500) . "\n\n"
         . order_mail_body($order, $customer, 'картой (не создался платёж)'),
+        order_telegram_text(
+            '⚠️ Заказ есть, но оплата не создалась — перезвоните клиенту',
+            $order,
+            $customer,
+            'картой онлайн (платёж не создался)',
+            $orderId,
+        ),
     );
     respond(502, ['error' => 'Платёжная система недоступна, позвоните нам: +7 342 258 45 45']);
 }
 
-// Заказ фиксируем сразу (письмо + CRM), оплату подтвердит notify.php.
-$paymentLine = 'картой онлайн — платёж создан, ждёт оплаты (' . $orderId . ')';
-$crmNote = posiflora_push_order($order, $customer, $paymentLine);
+// Заказ фиксируем сразу (уведомление + CRM), оплату подтвердит notify.php.
+$paymentLine = 'картой онлайн — ждём оплату';
+$crm = posiflora_push_order($order, $customer, $paymentLine);
 notify_salon(
     'Заказ с сайта (ожидает оплату картой) — ' . $order['total'] . ' руб.',
-    order_mail_body($order, $customer, $paymentLine) . $crmNote . "\nНомер: " . $orderId,
+    order_mail_body($order, $customer, $paymentLine) . $crm['note'] . "\nНомер: " . $orderId,
+    order_telegram_text(
+        '🕐 Заказ с сайта — ждёт оплаты картой',
+        $order,
+        $customer,
+        $paymentLine,
+        $orderId,
+        $crm['id'],
+    ),
 );
 
 respond(200, ['paymentUrl' => $resp['PaymentURL']]);

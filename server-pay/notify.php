@@ -36,12 +36,19 @@ if ($status === 'CONFIRMED') {
         'ОПЛАЧЕН заказ ' . $orderId . ' — ' . $amount . ' руб.',
         'Т-Банк подтвердил оплату заказа ' . $orderId . ' на сумму ' . $amount . " руб.\n"
         . 'Можно собирать букет.',
+        "<b>✅ Заказ оплачен — можно собирать</b>\n\n"
+        . 'Сумма: <b>' . rub((int)round($amount)) . "</b>\n"
+        . '<i>Заказ ' . tg_escape($orderId) . '</i>',
     );
 } elseif (in_array($status, ['REJECTED', 'DEADLINE_EXPIRED'], true)) {
     notify_salon(
         'Не прошла оплата заказа ' . $orderId,
         'Статус платежа: ' . $status . '. Сумма: ' . $amount . " руб.\n"
         . 'Если клиент не перезвонит — заказ можно не собирать.',
+        "<b>❌ Оплата не прошла</b>\n\n"
+        . 'Сумма: ' . rub((int)round($amount)) . "\n"
+        . "Если клиент не перезвонит — собирать не нужно.\n"
+        . '<i>Заказ ' . tg_escape($orderId) . '</i>',
     );
 }
 

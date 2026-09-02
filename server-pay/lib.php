@@ -170,6 +170,66 @@ function tbank_receipt(array $order, string $email, string $phone): array
     return $receipt;
 }
 
+/** Сумма как её читают люди: 6 061 ₽. */
+function rub(int $amount): string
+{
+    return number_format($amount, 0, ',', ' ') . ' ₽';
+}
+
+/** Экранирование для разметки Telegram: имя и адрес пишет посторонний. */
+function tg_escape(string $s): string
+{
+    return htmlspecialchars($s, ENT_NOQUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+
+/**
+ * Сообщение о заказе для флориста: сверху — что собирать, снизу — кому
+ * отдать. Читается с телефона одним взглядом, без прокрутки.
+ */
+function order_telegram_text(
+    string $headline,
+    array $order,
+    array $customer,
+    string $paymentLine,
+    string $orderId,
+    ?string $crmId = null,
+): string {
+    $lines = ['<b>' . tg_escape($headline) . '</b>', ''];
+
+    foreach ($order['items'] as $item) {
+        $lines[] = '• ' . tg_escape($item['title'])
+            . ($item['quantity'] > 1 ? ' × ' . $item['quantity'] : '')
+            . ' — ' . rub($item['amount']);
+    }
+
+    $lines[] = '';
+    $lines[] = tg_escape($order['deliveryLabel'])
+        . ($order['delivery'] > 0 ? ' — ' . rub($order['delivery']) : '');
+    if ($order['discount'] > 0) {
+        $lines[] = 'Скидка за самовывоз: −' . rub($order['discount']);
+    }
+    $lines[] = '<b>Итого: ' . rub($order['total']) . '</b>';
+    $lines[] = 'Оплата: ' . tg_escape($paymentLine);
+
+    $lines[] = '';
+    $lines[] = '👤 <b>' . tg_escape($customer['name']) . '</b>';
+    $lines[] = '📞 ' . tg_escape($customer['phone']);
+    if ($customer['address'] !== '') {
+        $lines[] = '📍 ' . tg_escape($customer['address']);
+    }
+    if ($customer['email'] !== '') {
+        $lines[] = '✉️ ' . tg_escape($customer['email']);
+    }
+
+    $lines[] = '';
+    $lines[] = '<i>Заказ ' . tg_escape($orderId) . '</i>';
+    if ($crmId !== null && $crmId !== '') {
+        $lines[] = str_replace('/api/v1/', '', POSIFLORA_BASE) . '/admin/orders/' . $crmId;
+    }
+
+    return implode("\n", $lines);
+}
+
 /**
  * Сообщение в Telegram — основной канал: приходит мгновенно и не зависит от
  * почтовой доставки. Возвращает пометку для лога.
@@ -190,6 +250,7 @@ function notify_telegram(string $text): string
         CURLOPT_POSTFIELDS => http_build_query([
             'chat_id' => TELEGRAM_CHAT_ID,
             'text' => mb_substr($text, 0, 4000),
+            'parse_mode' => 'HTML',
             'disable_web_page_preview' => 'true',
         ]),
     ]);
@@ -212,9 +273,11 @@ function notify_telegram(string $text): string
  *   3) orders.log — остаётся на сервере в любом случае.
  * Результат каждого канала пишется в лог, поэтому молчаливых сбоев больше нет.
  */
-function notify_salon(string $subject, string $body): void
+function notify_salon(string $subject, string $body, ?string $telegramText = null): void
 {
-    $tg = notify_telegram($subject . "\n\n" . $body);
+    // В Telegram уходит вёрстанный текст (его читает флорист с телефона),
+    // в почту — та же информация простым текстом.
+    $tg = notify_telegram($telegramText ?? ($subject . "\n\n" . $body));
 
     // SALON_EMAIL может содержать несколько адресов через запятую: пока не
     // известно, какой ящик салон читает на самом деле, письмо уходит на все.

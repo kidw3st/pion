@@ -52,15 +52,17 @@ function posiflora_token(): ?string
 }
 
 /**
- * Отправляет заказ в CRM. Возвращает пометку для лога; никогда не бросает
- * исключение наружу — CRM не должна ронять приём заказа.
+ * Отправляет заказ в CRM.
+ *
+ * Возвращает ['note' => пометка для лога, 'id' => id заказа в CRM или null].
+ * Никогда не бросает исключение наружу — CRM не должна ронять приём заказа.
  */
-function posiflora_push_order(array $order, array $customer, string $paymentLine): string
+function posiflora_push_order(array $order, array $customer, string $paymentLine): array
 {
     try {
         $token = posiflora_token();
         if ($token === null) {
-            return 'CRM: пропущено (интеграция не настроена)';
+            return ['note' => 'CRM: пропущено (интеграция не настроена)', 'id' => null];
         }
 
         $lines = [];
@@ -102,9 +104,9 @@ function posiflora_push_order(array $order, array $customer, string $paymentLine
             ],
         ], $token);
 
-        $id = $resp['data']['id'] ?? '?';
-        return 'CRM: заказ создан (' . $id . ')';
+        $id = $resp['data']['id'] ?? null;
+        return ['note' => 'CRM: заказ создан (' . ($id ?? '?') . ')', 'id' => $id];
     } catch (Throwable $e) {
-        return 'CRM: не удалось (' . $e->getMessage() . ')';
+        return ['note' => 'CRM: не удалось (' . $e->getMessage() . ')', 'id' => null];
     }
 }
