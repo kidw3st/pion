@@ -23,6 +23,10 @@ const SITE_ORIGIN = 'https://pionperm.ru';
 const POSIFLORA_BASE = 'https://floweranddecorshoppion.posiflora.com/api/v1/';
 const POSIFLORA_USER = '';
 const POSIFLORA_PASSWORD = '';
+// id магазина и источника «Сайт» из справочников Posiflora
+// (GET /api/v1/stores и /api/v1/order-sources).
+const POSIFLORA_STORE_ID = '';
+const POSIFLORA_SOURCE_ID = '';
 
 // Товары главной страницы («Новинки»), которых нет в JSON-каталоге.
 // Цены — из data/site.json, uid — как их кладёт в корзину фронт.

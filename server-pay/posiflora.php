@@ -82,6 +82,10 @@ function posiflora_push_order(array $order, array $customer, string $paymentLine
                 'type' => 'orders',
                 'attributes' => [
                     'date' => date('Y-m-d'),
+                    // docNo обязателен и не длиннее 12 символов: st + месяц-день-часы-минуты-секунды.
+                    'docNo' => 'st' . date('mdHis'),
+                    // dueTime обязателен (ISO 8601); по умолчанию собрать «через 3 часа».
+                    'dueTime' => date('c', time() + 3 * 3600),
                     'status' => 'new',
                     'delivery' => $isDelivery,
                     'deliveryCity' => $isDelivery ? 'Пермь' : '',
@@ -90,6 +94,10 @@ function posiflora_push_order(array $order, array $customer, string $paymentLine
                     'deliveryPhoneNumber' => preg_replace('/\D/', '', $customer['phone']),
                     'description' => $description,
                     'budget' => $order['total'],
+                ],
+                'relationships' => [
+                    'store' => ['data' => ['type' => 'stores', 'id' => POSIFLORA_STORE_ID]],
+                    'source' => ['data' => ['type' => 'order-sources', 'id' => POSIFLORA_SOURCE_ID]],
                 ],
             ],
         ], $token);
