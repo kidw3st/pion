@@ -3,6 +3,44 @@
 # Несуществующий адрес получает нашу страницу 404, а не серверную заглушку.
 ErrorDocument 404 /404.html
 
+# Список файлов в папке наружу не отдаём: иначе каталог с фотографиями
+# можно скачать целиком, просто открыв /images/catalog/bukety/.
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # --- Защита от парсеров -------------------------------------------------
+  # Платёжные точки исключены из всех правил ниже: туда стучится банк и наш
+  # же сервер, и их «агенты» выглядят как роботы.
+  #
+  # Блокируем сборщиков баз и SEO-краулеров, которые выкачивают каталог
+  # целиком и создают нагрузку, но покупателей не приводят. Поисковики
+  # (Яндекс, Google, Bing, Mail.ru) и ИИ-боты (GPTBot, ClaudeBot,
+  # PerplexityBot, YandexGPT) в список НЕ входят — они нам нужны.
+  RewriteCond %{REQUEST_URI} !^/pay/ [NC]
+  RewriteCond %{HTTP_USER_AGENT} (ahrefsbot|semrushbot|mj12bot|dotbot|blexbot|dataforseo|serpstat|megaindex|zoominfo|barkrowler|seekport|linkfluence|magpie-crawler|netestate|sitebulb|screaming\ frog|sistrix|spbot|seokicks|backlink|domcop|webmeup|riddler|purebot) [NC]
+  RewriteRule .* - [F,L]
+
+  # Инструменты массового скачивания сайтов и «голые» скрипты.
+  RewriteCond %{REQUEST_URI} !^/pay/ [NC]
+  RewriteCond %{HTTP_USER_AGENT} (httrack|webcopier|webzip|teleport|offline\ explorer|sitesnagger|website\ extractor|wget|libwww|lwp-trivial|larbin|xenu|scrapy|node-fetch|go-http-client|python-urllib|python-requests|okhttp|java/|jakarta|apache-httpclient) [NC]
+  RewriteRule .* - [F,L]
+
+  # Запрос совсем без User-Agent — почти всегда самописный парсер.
+  RewriteCond %{REQUEST_URI} !^/pay/ [NC]
+  RewriteCond %{HTTP_USER_AGENT} ^$
+  RewriteRule .* - [F,L]
+
+  # --- Чужие сайты не показывают наши фотографии со своих страниц ---------
+  # Пустой Referer разрешён (прямое открытие картинки, часть браузеров),
+  # как и переходы из поиска и мессенджеров — иначе пропадут превью.
+  RewriteCond %{HTTP_REFERER} !^$
+  RewriteCond %{HTTP_REFERER} !^https?://([a-z0-9-]+\.)?pionperm\.ru [NC]
+  RewriteCond %{HTTP_REFERER} !(google|yandex|bing|duckduckgo|mail\.ru|vk\.com|t\.me|telegram|whatsapp|instagram|facebook) [NC]
+  RewriteRule \.(jpe?g|png|webp|gif|svg)$ - [F,NC,L]
+</IfModule>
+
 # Фото и статика неизменяемы (имена файлов версионированы) — кэшируем надолго.
 <IfModule mod_expires.c>
   ExpiresActive On

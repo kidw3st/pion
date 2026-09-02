@@ -11,3 +11,12 @@
 <Files "posiflora.php">
   Require all denied
 </Files>
+<Files "sync-showcase.php">
+  Require all denied
+</Files>
+
+# Счётчики частоты обращений — служебные файлы, наружу не отдаём.
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^rate/ - [F,L]
+</IfModule>

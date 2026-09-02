@@ -24,6 +24,12 @@ if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     respond(405, ['error' => 'Только POST']);
 }
 
+// Живому покупателю пяти заказов за десять минут хватает с запасом; всё, что
+// сверх, — это перебор или спам формой.
+if (!rate_limit('order', 5, 600)) {
+    respond(429, ['error' => 'Слишком много заказов подряд. Позвоните нам: +7 342 258 45 45']);
+}
+
 $input = json_decode((string)file_get_contents('php://input'), true);
 if (!is_array($input)) {
     respond(400, ['error' => 'Некорректный запрос']);

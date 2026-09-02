@@ -5,4 +5,50 @@ User-agent: *
 Content-Signal: ai-train=no, search=yes, ai-input=yes
 Allow: /
 
+# Служебные адреса индексировать незачем.
+Disallow: /pay/
+Disallow: /checkout/
+
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: BLEXBot
+Disallow: /
+
+User-agent: DataForSeoBot
+Disallow: /
+
+User-agent: serpstatbot
+Disallow: /
+
+User-agent: MegaIndex
+Disallow: /
+
+User-agent: ZoominfoBot
+Disallow: /
+
+User-agent: Barkrowler
+Disallow: /
+
+User-agent: SeekportBot
+Disallow: /
+
+# Поисковикам — просьба не бомбить сервер.
+User-agent: Yandex
+Crawl-delay: 1
+Allow: /
+
+User-agent: Bingbot
+Crawl-delay: 1
+Allow: /
+
 Sitemap: https://pionperm.ru/sitemap.xml

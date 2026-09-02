@@ -72,6 +72,12 @@ function price_order(array $cartItems, string $deliveryId): array
         throw new InvalidArgumentException('Неизвестный способ доставки');
     }
 
+    // Корзина салона — это несколько букетов, а не тысяча позиций: ограничение
+    // отсекает раздутые запросы, на которых сервер считал бы цены впустую.
+    if (count($cartItems) > 50) {
+        throw new InvalidArgumentException('Слишком много позиций в заказе');
+    }
+
     $items = [];
     $goods = 0;
     foreach ($cartItems as $row) {
@@ -195,6 +201,51 @@ function order_mail_body(array $order, array $customer, string $paymentLine): st
         . 'Email: ' . $customer['email'] . "\n"
         . 'Адрес: ' . ($customer['address'] !== '' ? $customer['address'] : '—') . "\n"
         . 'Оплата: ' . $paymentLine . "\n";
+}
+
+/**
+ * Ограничение частоты обращений с одного адреса: защита от спама заказами
+ * и от перебора. Возвращает false, когда лимит исчерпан.
+ *
+ * Счётчик — простой файл со списком времён обращений; на объёмах салона
+ * этого достаточно, а базы данных здесь нет.
+ */
+function rate_limit(string $bucket, int $limit, int $window): bool
+{
+    $dir = __DIR__ . '/rate';
+    if (!is_dir($dir) && !@mkdir($dir, 0700, true) && !is_dir($dir)) {
+        return true; // не смогли завести счётчик — не мешаем покупателю
+    }
+
+    // Раз в сотню обращений подчищаем файлы, которые давно никому не нужны.
+    if (random_int(1, 100) === 1) {
+        foreach (glob($dir . '/*.txt') ?: [] as $old) {
+            if (filemtime($old) < time() - 86400) {
+                @unlink($old);
+            }
+        }
+    }
+
+    $ip = (string)($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+    $file = $dir . '/' . $bucket . '-' . substr(hash('sha256', $ip), 0, 24) . '.txt';
+    $now = time();
+
+    $hits = [];
+    if (is_file($file)) {
+        foreach (explode(',', (string)@file_get_contents($file)) as $t) {
+            $t = (int)$t;
+            if ($t > $now - $window) {
+                $hits[] = $t;
+            }
+        }
+    }
+    if (count($hits) >= $limit) {
+        return false;
+    }
+
+    $hits[] = $now;
+    @file_put_contents($file, implode(',', $hits), LOCK_EX);
+    return true;
 }
 
 /** Единый JSON-ответ. */

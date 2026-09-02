@@ -30,6 +30,15 @@ const catalogFiles = (await readdir(path.join(ROOT, 'data/catalog'))).filter((f)
 // Content Signals (contentsignals.org) declare how this content may be used.
 // ai-train=no keeps the shop's photography out of training corpora; search and
 // ai-input stay yes so the shop can still be found and answered about.
+// Сборщики ссылочных баз и SEO-краулеры: выкачивают каталог, создают нагрузку
+// и не приводят ни одного покупателя. Тех, кто проигнорирует robots.txt,
+// останавливают правила в public/.htaccess. Поисковики и ИИ-ассистенты сюда
+// намеренно не попадают — через них нас находят.
+const BLOCKED_CRAWLERS = [
+  'AhrefsBot', 'SemrushBot', 'MJ12bot', 'DotBot', 'BLEXBot', 'DataForSeoBot',
+  'serpstatbot', 'MegaIndex', 'ZoominfoBot', 'Barkrowler', 'SeekportBot',
+];
+
 await write(
   'robots.txt',
   [
@@ -38,6 +47,20 @@ await write(
     '',
     'User-agent: *',
     'Content-Signal: ai-train=no, search=yes, ai-input=yes',
+    'Allow: /',
+    '',
+    '# Служебные адреса индексировать незачем.',
+    'Disallow: /pay/',
+    'Disallow: /checkout/',
+    '',
+    ...BLOCKED_CRAWLERS.flatMap((bot) => [`User-agent: ${bot}`, 'Disallow: /', '']),
+    '# Поисковикам — просьба не бомбить сервер.',
+    'User-agent: Yandex',
+    'Crawl-delay: 1',
+    'Allow: /',
+    '',
+    'User-agent: Bingbot',
+    'Crawl-delay: 1',
     'Allow: /',
     '',
     `Sitemap: ${SITE_URL}/sitemap.xml`,
