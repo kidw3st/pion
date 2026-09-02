@@ -216,10 +216,15 @@ function notify_salon(string $subject, string $body): void
 {
     $tg = notify_telegram($subject . "\n\n" . $body);
 
+    // SALON_EMAIL может содержать несколько адресов через запятую: пока не
+    // известно, какой ящик салон читает на самом деле, письмо уходит на все.
+    // В Reply-To ставим первый, чтобы ответ клиенту шёл в один адрес.
+    $replyTo = trim(explode(',', SALON_EMAIL)[0]);
+
     // Обратный адрес должен быть на нашем домене, иначе письмо не пройдёт
     // проверку у получателя. Reply-To ведёт на живой ящик салона.
     $headers = 'From: "Сайт Пион" <robot@pionperm.ru>' . "\r\n"
-        . 'Reply-To: ' . SALON_EMAIL . "\r\n"
+        . 'Reply-To: ' . $replyTo . "\r\n"
         . "Content-Type: text/plain; charset=UTF-8\r\n"
         . "X-Mailer: pionperm-site\r\n";
     $sent = @mail(SALON_EMAIL, '=?UTF-8?B?' . base64_encode($subject) . '?=', $body, $headers, '-f robot@pionperm.ru');

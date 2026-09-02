@@ -12,8 +12,9 @@ const TBANK_TERMINAL = 'PUT_TERMINAL_ID_HERE';
 const TBANK_PASSWORD = 'PUT_TERMINAL_PASSWORD_HERE';
 const TBANK_API = 'https://securepay.tinkoff.ru/v2/';
 
-// Куда слать письма о заказах.
-const SALON_EMAIL = 'pion-perm59@yandex.ru';
+// Куда слать письма о заказах. Можно перечислить несколько адресов через
+// запятую — письмо уйдёт на все (первый попадёт в Reply-To).
+const SALON_EMAIL = 'pion-perm59@yandex.ru, pionperm@gmail.com';
 
 // Telegram — основной канал уведомлений о заказах: доходит мгновенно и не
 // зависит от почтовой доставки. Токен даёт @BotFather, chat_id — это id
