@@ -25,7 +25,7 @@ export function VkBlock({ data }: { data: VkBlockData }) {
                 src={src}
                 alt={`Букет из группы ВКонтакте салона «Пион» — фото ${i + 1}`}
                 fill
-                sizes="215px"
+                sizes="(max-width: 620px) 45vw, (max-width: 1240px) 23vw, 215px"
                 className={styles.image}
               />
             </div>

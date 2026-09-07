@@ -60,7 +60,7 @@ export function PageSections({ sections }: { sections: PageSection[] }) {
                 {section.tiles.map((tile) => (
                   <Link key={tile.href} href={tile.href} className={styles.tile}>
                     {tile.image && (
-                      <Image src={tile.image} alt="" fill sizes="33vw" className={styles.cover} />
+                      <Image src={tile.image} alt="" fill sizes="33vw" className={styles.photo} />
                     )}
                     <span className={styles.tileShade} />
                     <span className={styles.tileLabel}>{tile.label}</span>
@@ -106,7 +106,7 @@ export function PageSections({ sections }: { sections: PageSection[] }) {
                       alt={section.title || 'Салон цветов «Пион» в Перми'}
                       fill
                       sizes="560px"
-                      className={styles.cover}
+                      className={styles.photo}
                     />
                   </div>
                 </div>
@@ -126,7 +126,7 @@ export function PageSections({ sections }: { sections: PageSection[] }) {
                             alt={item.title}
                             fill
                             sizes="260px"
-                            className={styles.cover}
+                            className={styles.photo}
                           />
                         </div>
                       )}

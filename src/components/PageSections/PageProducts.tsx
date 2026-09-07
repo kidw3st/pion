@@ -35,7 +35,7 @@ export function PageProducts({
           <div key={item.title} className={styles.product}>
             {item.image && (
               <div className={styles.productPhoto}>
-                <Image src={item.image} alt={item.title} fill sizes="360px" className={styles.cover} />
+                <Image src={item.image} alt={item.title} fill sizes="360px" className={styles.photo} />
               </div>
             )}
             <h3 className={styles.productTitle}>{item.title}</h3>

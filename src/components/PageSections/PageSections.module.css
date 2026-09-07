@@ -148,7 +148,11 @@
   background: var(--color-bg-light);
 }
 
-.cover {
+/* Картинки внутри блоков. Раньше на них вешали .cover — то же имя, что у
+   обложки страницы, — и они наследовали её height: calc(100vh - 90px) с
+   min-height: 480px. На телефоне фото раздувалось до 480px в контейнере
+   350px и наезжало на следующий блок. */
+.photo {
   object-fit: cover;
 }
 
@@ -441,11 +445,11 @@
   overflow: hidden;
 }
 
-.tile .cover {
+.tile .photo {
   transition: transform 0.4s ease-in-out;
 }
 
-.tile:hover .cover {
+.tile:hover .photo {
   transform: scale(1.04);
 }
 

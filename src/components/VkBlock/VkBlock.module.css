@@ -147,10 +147,20 @@
     display: none;
   }
 
+  /* Сетка вместо переноса строки: при flex-wrap четвёртое фото срывалось
+     вниз и ряд разваливался на 3 + 1. Колонок всегда либо четыре, либо две —
+     промежуточных «кривых» состояний не бывает. */
   .photos {
     margin-top: 32px;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
     gap: 12px;
+  }
+
+  .shot {
+    width: auto;
+    height: auto;
+    aspect-ratio: 1 / 1;
   }
 
   .link {
@@ -158,9 +168,10 @@
   }
 }
 
-@media (max-width: 560px) {
-  .shot {
-    width: 140px;
-    height: 140px;
+/* Ниже этой ширины четыре колонки становятся слишком узкими — переходим
+   на квадрат 2 x 2, он выглядит цельно и фото крупнее. */
+@media (max-width: 620px) {
+  .photos {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
