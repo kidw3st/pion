@@ -18,8 +18,19 @@ export function Header() {
   const site = getSite();
   return (
     <header className={styles.header}>
+      {/* Подпись «салон цветов и подарков» занимает в макете логотипа 17 px из
+          261 — на телефоне это три пикселя, прочитать её невозможно. Поэтому на
+          узких экранах картинка обрезается до знака (см. logoCrop), а подпись
+          набирается настоящим текстом рядом. На десктопе логотип как в оригинале. */}
       <Link href="/" className={styles.logo} aria-label="Пион — на главную">
-        <Image src="/images/site/logo.webp" alt="Пион" width={938} height={490} priority />
+        <span className={styles.logoCrop}>
+          <Image src="/images/site/logo.webp" alt="Пион" width={500} height={261} priority />
+        </span>
+        <span className={styles.logoTagline} aria-hidden="true">
+          Салон цветов
+          <br />
+          и подарков
+        </span>
       </Link>
 
       <nav className={styles.nav}>

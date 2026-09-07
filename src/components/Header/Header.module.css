@@ -22,6 +22,14 @@
   display: block;
 }
 
+.logoCrop {
+  display: block;
+}
+
+.logoTagline {
+  display: none;
+}
+
 .logo img {
   display: block;
   height: 80px;
@@ -178,7 +186,53 @@
     display: none;
   }
 
+  /* Логотип раскладывается в горизонтальный замок: слева знак, справа
+     подпись. Она набрана текстом, потому что в картинке нечитаема, и заодно
+     заполняет полосу, которая раньше выглядела пустой. */
+  .logo {
+    --mark-width: 92px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: auto;
+  }
+
+  /* Окно по высоте знака: у картинки сверху 38 px из 261 занимает подпись,
+     её и прячем отрицательным сдвигом. */
+  .logoCrop {
+    width: var(--mark-width);
+    height: calc(var(--mark-width) * 223 / 500);
+    overflow: hidden;
+  }
+
   .logo img {
-    height: 52px;
+    width: var(--mark-width);
+    height: calc(var(--mark-width) * 261 / 500);
+    margin-top: calc(var(--mark-width) * -38 / 500);
+  }
+
+  .logoTagline {
+    display: block;
+    color: var(--color-text-dark);
+    font-size: 10px;
+    font-weight: 400;
+    line-height: 1.4;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+}
+
+/* Самые узкие телефоны (320 px и Galaxy Fold): замок ужимается, чтобы шапка
+   не разъезжалась. */
+@media (max-width: 360px) {
+  .logo {
+    --mark-width: 80px;
+    gap: 8px;
+  }
+
+  .logoTagline {
+    font-size: 9px;
+    letter-spacing: 0.1em;
   }
 }
