@@ -1,112 +1,112 @@
 {
   "slug": "chocolate",
   "title": "ШОКОЛАД СhocoME",
-  "url": "https://kidw3st.github.io/pion/chocolate/",
+  "url": "https://pionperm.ru/chocolate/",
   "products": [
     {
       "id": "690552623821",
       "title": "Горький шоколад MG139",
       "composition": "Горький шоколад ручной работы. Йогурт из сублимированной голубики. Фисташки Бронте. Лиофилизированная ежевика.",
       "priceRub": 2100,
-      "image": "https://kidw3st.github.io/pion/images/catalog/chocolate/gorkii-shokolad-mg139-690552623821.webp"
+      "image": "https://pionperm.ru/images/catalog/chocolate/gorkii-shokolad-mg139-690552623821.webp"
     },
     {
       "id": "197124624951",
       "title": "Молочный шоколад MG109",
       "composition": "Молочный шоколад ручной работы. Пьемонтский орех, фисташки Бронте, лиофилизированная клубника.",
       "priceRub": 2100,
-      "image": "https://kidw3st.github.io/pion/images/catalog/chocolate/molochnyi-shokolad-mg109-197124624951.webp"
+      "image": "https://pionperm.ru/images/catalog/chocolate/molochnyi-shokolad-mg109-197124624951.webp"
     },
     {
       "id": "999719421501",
       "title": "Горький шоколад G101",
       "composition": "Горький шоколад ручной работы.Лиофилизированная клубника, лиофилизированная малина, лиофилизированная черная смородина.",
       "priceRub": 2100,
-      "image": "https://kidw3st.github.io/pion/images/catalog/chocolate/gorkii-shokolad-g101-999719421501.webp"
+      "image": "https://pionperm.ru/images/catalog/chocolate/gorkii-shokolad-g101-999719421501.webp"
     },
     {
       "id": "608110332241",
       "title": "Молочный шоколад V108",
       "composition": "Молочный шоколад ручной работы. Засахаренные лепестки фиалки, кокос, хлопья из настоящего съедобного 23-х каратного золота",
       "priceRub": 2100,
-      "image": "https://kidw3st.github.io/pion/images/catalog/chocolate/molochnyi-shokolad-v108-608110332241.webp"
+      "image": "https://pionperm.ru/images/catalog/chocolate/molochnyi-shokolad-v108-608110332241.webp"
     },
     {
       "id": "708929936181",
       "title": "Молочный шоколад F119",
       "composition": "Молочный шоколад ручной работы. Орех пекан, пастилки из шоколада с карамельным вкусом, ванильная морская соль из Таити",
       "priceRub": 2100,
-      "image": "https://kidw3st.github.io/pion/images/catalog/chocolate/molochnyi-shokolad-f119-708929936181.webp"
+      "image": "https://pionperm.ru/images/catalog/chocolate/molochnyi-shokolad-f119-708929936181.webp"
     },
     {
       "id": "327100870121",
       "title": "Молочный шоколад MG110",
       "composition": "Молочный шоколад ручной работы. Орех пекан, фисташки Бронте, лиофилизированная красная смородина.",
       "priceRub": 2100,
-      "image": "https://kidw3st.github.io/pion/images/catalog/chocolate/molochnyi-shokolad-mg110-327100870121.webp"
+      "image": "https://pionperm.ru/images/catalog/chocolate/molochnyi-shokolad-mg110-327100870121.webp"
     },
     {
       "id": "612976845631",
       "title": "Молочный шоколад LV102",
       "composition": "Молочный шоколад ручной работы. Брусника, сердечки из белого шоколада, лиофилизированная малина, лиофилизированная клубника",
       "priceRub": 2100,
-      "image": "https://kidw3st.github.io/pion/images/catalog/chocolate/molochnyi-shokolad-lv102-612976845631.webp"
+      "image": "https://pionperm.ru/images/catalog/chocolate/molochnyi-shokolad-lv102-612976845631.webp"
     },
     {
       "id": "483321673731",
       "title": "Молочный шоколад G125",
       "composition": "Молочный шоколад ручной работы. Йогурт из сублимированной голубики, лиофилизированная клубника, лиофилизированная малина.",
       "priceRub": 2100,
-      "image": "https://kidw3st.github.io/pion/images/catalog/chocolate/molochnyi-shokolad-g125-483321673731.webp"
+      "image": "https://pionperm.ru/images/catalog/chocolate/molochnyi-shokolad-g125-483321673731.webp"
     },
     {
       "id": "148274209821",
       "title": "Молочный шоколад F130",
       "composition": "Молочный шоколад ручной работы. Морская соль Maldon, пьемонтский орех.",
       "priceRub": 2100,
-      "image": "https://kidw3st.github.io/pion/images/catalog/chocolate/molochnyi-shokolad-f130-148274209821.webp"
+      "image": "https://pionperm.ru/images/catalog/chocolate/molochnyi-shokolad-f130-148274209821.webp"
     },
     {
       "id": "515865632081",
       "title": "Молочный шоколад К106",
       "composition": "Молочный шоколад ручной работы.Миндаль с корицей и сахаром, ваниль Бурбон, дробленые зерна кофе \"Эфиопия Ирга\".",
       "priceRub": 2100,
-      "image": "https://kidw3st.github.io/pion/images/catalog/chocolate/molochnyi-shokolad-k106-515865632081.webp"
+      "image": "https://pionperm.ru/images/catalog/chocolate/molochnyi-shokolad-k106-515865632081.webp"
     },
     {
       "id": "803084667691",
       "title": "Белый шоколад MG116",
       "composition": "Белый шоколад ручной работы. Орех пекан, фисташки Бронте, лиофилизированная вишня.",
       "priceRub": 2100,
-      "image": "https://kidw3st.github.io/pion/images/catalog/chocolate/belyi-shokolad-mg116-803084667691.webp"
+      "image": "https://pionperm.ru/images/catalog/chocolate/belyi-shokolad-mg116-803084667691.webp"
     },
     {
       "id": "480098095651",
       "title": "Молочный шоколад MG111",
       "composition": "Молочный шоколад ручной работы. Орех пекан, лиофилизированная клубника, лиофилизированная малина.",
       "priceRub": 2100,
-      "image": "https://kidw3st.github.io/pion/images/catalog/chocolate/molochnyi-shokolad-mg111-480098095651.webp"
+      "image": "https://pionperm.ru/images/catalog/chocolate/molochnyi-shokolad-mg111-480098095651.webp"
     },
     {
       "id": "569169105851",
       "title": "Молочный шоколад G104",
       "composition": "Молочный шоколад ручной работы. Лиофилизированная клубника, лиофилизированная малина, лиофилизированная черная смородина.",
       "priceRub": 2100,
-      "image": "https://kidw3st.github.io/pion/images/catalog/chocolate/molochnyi-shokolad-g104-569169105851.webp"
+      "image": "https://pionperm.ru/images/catalog/chocolate/molochnyi-shokolad-g104-569169105851.webp"
     },
     {
       "id": "121768210931",
       "title": "Молочный шоколад M104",
       "composition": "Молочный шоколад ручной работы. Орех пекан, фисташки Бронте, миндаль из Сицилии.",
       "priceRub": 2100,
-      "image": "https://kidw3st.github.io/pion/images/catalog/chocolate/molochnyi-shokolad-m104-121768210931.webp"
+      "image": "https://pionperm.ru/images/catalog/chocolate/molochnyi-shokolad-m104-121768210931.webp"
     },
     {
       "id": "951648302731",
       "title": "Белый шоколад В117",
       "composition": "Белый шоколад ручной работы. Засахаренная лимонная цедра, орех кешью, ваниль Бурбон.",
       "priceRub": 2100,
-      "image": "https://kidw3st.github.io/pion/images/catalog/chocolate/belyi-shokolad-v117-951648302731.webp"
+      "image": "https://pionperm.ru/images/catalog/chocolate/belyi-shokolad-v117-951648302731.webp"
     }
   ]
 }

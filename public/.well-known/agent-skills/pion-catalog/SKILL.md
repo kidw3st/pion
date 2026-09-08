@@ -9,8 +9,8 @@ description: Look up flower-shop products, prices and contact details for Сал
 
 ## Точки входа
 
-- `https://kidw3st.github.io/pion/api/index.json` — контакты, режим работы, список категорий с количеством товаров.
-- `https://kidw3st.github.io/pion/api/catalog/<slug>.json` — товары категории: название, состав, цена в рублях, фото.
+- `https://pionperm.ru/api/index.json` — контакты, режим работы, список категорий с количеством товаров.
+- `https://pionperm.ru/api/catalog/<slug>.json` — товары категории: название, состав, цена в рублях, фото.
 
 ## Что важно знать
 

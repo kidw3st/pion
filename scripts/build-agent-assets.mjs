@@ -64,6 +64,9 @@ await write(
     'Allow: /',
     '',
     `Sitemap: ${SITE_URL}/sitemap.xml`,
+    // Блог живёт на WordPress в папке /blog и ведёт собственную карту —
+    // в наш sitemap.xml его страницы не попадают.
+    `Sitemap: ${SITE_URL}/blog/wp-sitemap.xml`,
     '',
   ].join('\n'),
 );

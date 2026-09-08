@@ -5,23 +5,23 @@
 Заказы через сайт оформляются как заявка — оплата и доставка согласуются по телефону.
 
 ## Разделы каталога
-- [Цветы](https://kidw3st.github.io/pion/flowers/)
-- [Букеты](https://kidw3st.github.io/pion/bukety/)
-- [Корзины цветов](https://kidw3st.github.io/pion/korziny/)
-- [Коробки с цветами](https://kidw3st.github.io/pion/korobki/)
-- [Комплимент](https://kidw3st.github.io/pion/valentinesday/)
-- [Свадебные букеты](https://kidw3st.github.io/pion/wedding/)
-- [Комнатные растения](https://kidw3st.github.io/pion/indoorflowers/)
-- [Шоколад](https://kidw3st.github.io/pion/chocolate/)
-- [Лучшее для дома](https://kidw3st.github.io/pion/luchshee/)
-- [Воздушные шары](https://kidw3st.github.io/pion/balloons/)
-- [Продукция Flame](https://kidw3st.github.io/pion/flame/)
+- [Цветы](https://pionperm.ru/flowers/)
+- [Букеты](https://pionperm.ru/bukety/)
+- [Корзины цветов](https://pionperm.ru/korziny/)
+- [Коробки с цветами](https://pionperm.ru/korobki/)
+- [Комплимент](https://pionperm.ru/valentinesday/)
+- [Свадебные букеты](https://pionperm.ru/wedding/)
+- [Комнатные растения](https://pionperm.ru/indoorflowers/)
+- [Шоколад](https://pionperm.ru/chocolate/)
+- [Лучшее для дома](https://pionperm.ru/luchshee/)
+- [Воздушные шары](https://pionperm.ru/balloons/)
+- [Продукция Flame](https://pionperm.ru/flame/)
 
 ## Информация
-- [О нас](https://kidw3st.github.io/pion/about/)
-- [Доставка и оплата](https://kidw3st.github.io/pion/delivery-and-payment/)
-- [Акции](https://kidw3st.github.io/pion/stock/)
-- [Контакты](https://kidw3st.github.io/pion/contacts/)
+- [О нас](https://pionperm.ru/about/)
+- [Доставка и оплата](https://pionperm.ru/delivery-and-payment/)
+- [Акции](https://pionperm.ru/stock/)
+- [Контакты](https://pionperm.ru/contacts/)
 
 ## Машиночитаемые данные
-- [Каталог и контакты (JSON)](https://kidw3st.github.io/pion/api/index.json)
+- [Каталог и контакты (JSON)](https://pionperm.ru/api/index.json)
