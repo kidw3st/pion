@@ -22,10 +22,6 @@
   display: block;
 }
 
-.logoCrop {
-  display: block;
-}
-
 .logoTagline {
   display: none;
 }
@@ -197,18 +193,10 @@
     width: auto;
   }
 
-  /* Окно по высоте знака: у картинки сверху 38 px из 261 занимает подпись,
-     её и прячем отрицательным сдвигом. */
-  .logoCrop {
-    width: var(--mark-width);
-    height: calc(var(--mark-width) * 223 / 500);
-    overflow: hidden;
-  }
-
+  /* Здесь подгружается logo-mark.webp — знак 500x223 без подписи. */
   .logo img {
     width: var(--mark-width);
-    height: calc(var(--mark-width) * 261 / 500);
-    margin-top: calc(var(--mark-width) * -38 / 500);
+    height: calc(var(--mark-width) * 223 / 500);
   }
 
   .logoTagline {

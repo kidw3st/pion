@@ -9,6 +9,10 @@
       "href": "/stock"
     },
     {
+      "label": "БЛОГ",
+      "href": "/blog"
+    },
+    {
       "label": "ДОСТАВКА",
       "href": "/delivery-and-payment"
     },

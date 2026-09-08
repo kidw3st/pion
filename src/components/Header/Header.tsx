@@ -1,9 +1,11 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { getSite } from '@/lib/content';
 import { VkIcon, TelegramIcon, WhatsappIcon } from './SocialIcons';
 import { MobileNav } from './MobileNav';
 import styles from './Header.module.css';
+
+// Путь к статике зависит от площадки: на GitHub Pages сайт лежит в /pion.
+const BASE = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
 
 // Icon per social network, matched on the link target rather than the label
 // so a label change in site.json can't silently drop the icon.
@@ -20,12 +22,20 @@ export function Header() {
     <header className={styles.header}>
       {/* Подпись «салон цветов и подарков» занимает в макете логотипа 17 px из
           261 — на телефоне это три пикселя, прочитать её невозможно. Поэтому на
-          узких экранах картинка обрезается до знака (см. logoCrop), а подпись
-          набирается настоящим текстом рядом. На десктопе логотип как в оригинале. */}
+          узких экранах берётся отдельный файл со знаком без подписи, а сама
+          подпись набирается текстом рядом. На десктопе логотип как в оригинале.
+          picture с media гарантирует, что браузер скачает ровно один файл. */}
       <Link href="/" className={styles.logo} aria-label="Пион — на главную">
-        <span className={styles.logoCrop}>
-          <Image src="/images/site/logo.webp" alt="Пион" width={500} height={261} priority />
-        </span>
+        <picture>
+          <source media="(max-width: 980px)" srcSet={`${BASE}/images/site/logo-mark.webp`} />
+          <img
+            src={`${BASE}/images/site/logo.webp`}
+            alt="Пион"
+            width={500}
+            height={261}
+            fetchPriority="high"
+          />
+        </picture>
         <span className={styles.logoTagline} aria-hidden="true">
           Салон цветов
           <br />
