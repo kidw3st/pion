@@ -80,9 +80,17 @@ export function MobileNav({ nav, phone, address, social }: Props) {
         <ul className={styles.links}>
           {nav.map((item) => (
             <li key={item.href}>
-              <Link href={item.href} onClick={() => setOpen(false)}>
-                {item.label}
-              </Link>
+              {/* См. комментарий в Header: external — это адрес за пределами
+                  нашего экспорта, туда нужен обычный переход. */}
+              {item.external ? (
+                <a href={item.href} onClick={() => setOpen(false)}>
+                  {item.label}
+                </a>
+              ) : (
+                <Link href={item.href} onClick={() => setOpen(false)}>
+                  {item.label}
+                </Link>
+              )}
             </li>
           ))}
         </ul>

@@ -45,9 +45,17 @@ export function Header() {
 
       <nav className={styles.nav}>
         <ul className={styles.navList}>
+          {/* Пункт с external ведёт не в наш экспорт, а на отдельный движок в
+              той же папке (сейчас это WordPress в /blog). Клиентский роутер
+              Next о таком адресе не знает, поэтому нужна обычная ссылка —
+              иначе переход упирается в его собственную страницу 404. */}
           {site.nav.map((item) => (
             <li key={item.href}>
-              <Link href={item.href}>{item.label}</Link>
+              {item.external ? (
+                <a href={item.href}>{item.label}</a>
+              ) : (
+                <Link href={item.href}>{item.label}</Link>
+              )}
             </li>
           ))}
         </ul>

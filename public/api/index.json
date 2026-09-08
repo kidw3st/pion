@@ -1,6 +1,6 @@
 {
   "name": "Салон цветов и подарков «Пион»",
-  "url": "https://pionperm.ru/",
+  "url": "https://kidw3st.github.io/pion/",
   "phone": "+7 342 258 45 45",
   "address": "г. Пермь, ул. Газеты Звезда, д. 27",
   "openingHours": "Режим работы:\nпн-пт 10:00-22:00\nсб-вс 10:00-22:00",
@@ -22,79 +22,79 @@
     {
       "slug": "balloons",
       "title": "Воздушные шары от салона \"Пион\"",
-      "url": "https://pionperm.ru/balloons/",
+      "url": "https://kidw3st.github.io/pion/balloons/",
       "productCount": 11
     },
     {
       "slug": "bukety",
       "title": "Букеты",
-      "url": "https://pionperm.ru/bukety/",
+      "url": "https://kidw3st.github.io/pion/bukety/",
       "productCount": 108
     },
     {
       "slug": "chocolate",
       "title": "ШОКОЛАД СhocoME",
-      "url": "https://pionperm.ru/chocolate/",
+      "url": "https://kidw3st.github.io/pion/chocolate/",
       "productCount": 15
     },
     {
       "slug": "flame",
       "title": "Ароматы Flame Moscow",
-      "url": "https://pionperm.ru/flame/",
+      "url": "https://kidw3st.github.io/pion/flame/",
       "productCount": 59
     },
     {
       "slug": "korobki",
       "title": "Цветочные коробки",
-      "url": "https://pionperm.ru/korobki/",
+      "url": "https://kidw3st.github.io/pion/korobki/",
       "productCount": 58
     },
     {
       "slug": "korziny",
       "title": "Корзины цветов",
-      "url": "https://pionperm.ru/korziny/",
+      "url": "https://kidw3st.github.io/pion/korziny/",
       "productCount": 16
     },
     {
       "slug": "luchshee",
       "title": "Лучшее для дома\nи офиса",
-      "url": "https://pionperm.ru/luchshee/",
+      "url": "https://kidw3st.github.io/pion/luchshee/",
       "productCount": 51
     },
     {
       "slug": "mixflower",
       "title": "mixflower",
-      "url": "https://pionperm.ru/mixflower/",
+      "url": "https://kidw3st.github.io/pion/mixflower/",
       "productCount": 50
     },
     {
       "slug": "new-year-2025",
       "title": "Новогодняя коллекция 2025",
-      "url": "https://pionperm.ru/new-year-2025/",
+      "url": "https://kidw3st.github.io/pion/new-year-2025/",
       "productCount": 71
     },
     {
       "slug": "pions",
       "title": "pions",
-      "url": "https://pionperm.ru/pions/",
+      "url": "https://kidw3st.github.io/pion/pions/",
       "productCount": 5
     },
     {
       "slug": "roses",
       "title": "roses",
-      "url": "https://pionperm.ru/roses/",
+      "url": "https://kidw3st.github.io/pion/roses/",
       "productCount": 22
     },
     {
       "slug": "valentinesday",
       "title": "Букеты и подарочные боксы",
-      "url": "https://pionperm.ru/valentinesday/",
+      "url": "https://kidw3st.github.io/pion/valentinesday/",
       "productCount": 13
     },
     {
       "slug": "wedding",
       "title": "Открываем свадебный сезон 2025",
-      "url": "https://pionperm.ru/wedding/",
+      "url": "https://kidw3st.github.io/pion/wedding/",
       "productCount": 8
     }
   ],

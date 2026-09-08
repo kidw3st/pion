@@ -129,7 +129,7 @@ export interface VkBlock {
 }
 
 export interface SiteData {
-  nav: { label: string; href: string }[];
+  nav: { label: string; href: string; external?: boolean }[];
   phone: string;
   address: string;
   social: { label: string; href: string }[];

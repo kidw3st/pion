@@ -10,7 +10,8 @@
     },
     {
       "label": "БЛОГ",
-      "href": "/blog"
+      "href": "/blog/",
+      "external": true
     },
     {
       "label": "ДОСТАВКА",

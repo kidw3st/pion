@@ -51,4 +51,4 @@ User-agent: Bingbot
 Crawl-delay: 1
 Allow: /
 
-Sitemap: https://pionperm.ru/sitemap.xml
+Sitemap: https://kidw3st.github.io/pion/sitemap.xml
