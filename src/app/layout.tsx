@@ -39,6 +39,10 @@ export const metadata: Metadata = {
   // and cookie flags are response headers — they have to come from whatever
   // serves the files.
   referrer: 'strict-origin-when-cross-origin',
+  // Подтверждение прав на сайт в Яндекс.Вебмастере. Next рендерит это как
+  // <meta name="yandex-verification">. Тег нужен постоянно: если его убрать,
+  // Вебмастер со временем снимет подтверждение и перестанет отдавать данные.
+  verification: { yandex: '3af3a385502c11ad' },
   // Копия на GitHub Pages — это предпросмотр, а не второй сайт. Пока она была
   // открыта для индексации, она конкурировала с pionperm.ru за те же страницы.
   // На боевой сборке ключ не выставляется вовсе, и поисковики работают как
