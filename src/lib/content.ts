@@ -80,6 +80,43 @@ export async function getCatalog(slug: string): Promise<Product[] | null> {
   return dedupeProducts(visible);
 }
 
+/**
+ * Каждый товар лежит ровно в одном разделе (проверено по uid: пересечений
+ * между файлами нет), поэтому пара «раздел + slug» однозначно адресует товар и
+ * годится в качестве постоянной ссылки.
+ */
+export async function getProduct(
+  category: string,
+  productSlug: string,
+): Promise<Product | null> {
+  const products = await getCatalog(category);
+  return products?.find((p) => p.slug === productSlug) ?? null;
+}
+
+/** Соседи по разделу — чтобы с карточки товара было куда пойти дальше. */
+export async function getRelatedProducts(
+  category: string,
+  productSlug: string,
+  limit = 4,
+): Promise<Product[]> {
+  const products = (await getCatalog(category)) ?? [];
+  return products.filter((p) => p.slug !== productSlug).slice(0, limit);
+}
+
+/**
+ * Все пары «раздел/товар» для статической генерации и карты сайта. Список
+ * строится из того же getCatalog, что рисует раздел, — значит страница не
+ * может появиться у товара, которого в разделе нет, и наоборот.
+ */
+export async function getAllProductParams(): Promise<{ slug: string; product: string }[]> {
+  const out: { slug: string; product: string }[] = [];
+  for (const slug of CATEGORY_SLUGS) {
+    const products = (await getCatalog(slug)) ?? [];
+    for (const p of products) out.push({ slug, product: p.slug });
+  }
+  return out;
+}
+
 export async function getPage(slug: string): Promise<PageSection[] | null> {
   if (!(PAGE_SLUGS as readonly string[]).includes(slug)) return null;
   const mod = await import(`../../data/pages/${slug}.json`);

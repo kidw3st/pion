@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next';
-import { CATEGORY_SLUGS, PAGE_SLUGS } from '@/lib/content';
+import { CATEGORY_SLUGS, PAGE_SLUGS, getAllProductParams } from '@/lib/content';
 import { absoluteUrl } from '@/lib/seo';
 
 /**
@@ -7,7 +7,7 @@ import { absoluteUrl } from '@/lib/seo';
  * — so the sitemap cannot list a page that does not exist, or miss one that
  * does. `trailingSlash: true` in next.config means URLs end with a slash.
  */
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const lastModified = new Date();
 
   const routes = [
@@ -20,7 +20,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: '/checkout/', priority: 0.3 },
   ];
 
-  return routes.map(({ path, priority }) => ({
+  // Страницы товаров — основной объём карты: под каждый букет свой адрес,
+  // иначе поисковику нечего сопоставить с запросом вроде «букет из пионов».
+  const products = (await getAllProductParams()).map(({ slug, product }) => ({
+    path: `/${slug}/${product}/`,
+    priority: 0.7,
+  }));
+
+  return [...routes, ...products].map(({ path, priority }) => ({
     url: absoluteUrl(path),
     lastModified,
     changeFrequency: priority >= 0.8 ? 'weekly' : 'monthly',

@@ -1,0 +1,96 @@
+/* Узкая полоса сразу под первым экраном: её задача — за секунду сказать то,
+   что покупатель иначе узнал бы только в 2ГИС. */
+.bar {
+  background: var(--color-bg-light);
+  padding: 22px 40px;
+}
+
+.inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 20px 44px;
+  max-width: 1160px;
+  margin: 0 auto;
+}
+
+.award {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.icon {
+  flex: none;
+  color: var(--color-accent);
+}
+
+.awardText {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--color-text-dark);
+  max-width: 22ch;
+}
+
+.rating {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.ratingValue {
+  font-size: 30px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--color-text-dark);
+}
+
+.ratingOf {
+  font-size: 14px;
+  font-weight: 300;
+  color: #7b7673;
+}
+
+.ratingMeta {
+  font-size: 14px;
+  font-weight: 300;
+  color: #55524f;
+}
+
+.link {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  border-bottom: 1px solid var(--color-accent);
+  padding-bottom: 2px;
+  transition: color 0.2s ease-in-out;
+}
+
+.link:hover {
+  color: var(--color-accent);
+}
+
+@media (max-width: 980px) {
+  .bar {
+    padding: 20px;
+  }
+
+  .inner {
+    flex-direction: column;
+    gap: 14px;
+    text-align: center;
+  }
+
+  .award {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .awardText {
+    max-width: none;
+    font-size: 15px;
+  }
+}

@@ -115,8 +115,54 @@ export function breadcrumbJsonLd(trail: { name: string; path: string }[]) {
  * salon's own copy says stock is confirmed when the order is placed, so
  * asserting InStock here would claim more than the shop does.
  */
+/** Постоянный адрес товара. Один на весь проект, чтобы ссылки не разошлись. */
+export function productPath(category: string, slug: string): string {
+  return `/${category}/${slug}/`;
+}
+
+/**
+ * Карточка товара для поисковика. `offers.url` ведёт на саму страницу товара —
+ * до появления отдельных страниц все предложения указывали на раздел, и
+ * поисковику было нечего показать по конкретному букету.
+ *
+ * Наличие не указываем жёстко: букеты собирают под заказ из того, что есть в
+ * это утро, поэтому честнее сказать «под заказ», чем обещать склад.
+ */
+export function productJsonLd(
+  product: { title: string; description: string; price: number; images: string[] },
+  category: string,
+  slug: string,
+) {
+  const url = absoluteUrl(productPath(category, slug));
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.title,
+    description: product.description || undefined,
+    image: product.images.map((i) => absoluteUrl(i)),
+    url,
+    brand: { '@type': 'Brand', name: 'Пион' },
+    offers: {
+      '@type': 'Offer',
+      price: product.price,
+      priceCurrency: 'RUB',
+      url,
+      availability: 'https://schema.org/PreOrder',
+      seller: { '@type': 'Organization', name: 'Салон цветов и подарков «Пион»' },
+      areaServed: CITY,
+    },
+  };
+}
+
 export function productListJsonLd(
-  products: { uid: string; title: string; description: string; price: number; images: string[] }[],
+  products: {
+    uid: string;
+    title: string;
+    description: string;
+    price: number;
+    images: string[];
+    slug: string;
+  }[],
   categoryPath: string,
 ) {
   return {
@@ -130,12 +176,14 @@ export function productListJsonLd(
         name: p.title,
         description: p.description || undefined,
         image: p.images[0] ? absoluteUrl(p.images[0]) : undefined,
-        url: absoluteUrl(categoryPath),
+        // Ссылка на страницу самого товара, а не на раздел: иначе поисковик
+        // видит список из ста предложений по одному адресу.
+        url: absoluteUrl(productPath(categoryPath.replace(/\//g, ''), p.slug)),
         offers: {
           '@type': 'Offer',
           price: p.price,
           priceCurrency: 'RUB',
-          url: absoluteUrl(categoryPath),
+          url: absoluteUrl(productPath(categoryPath.replace(/\//g, ''), p.slug)),
         },
       },
     })),

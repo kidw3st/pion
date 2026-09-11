@@ -129,6 +129,16 @@ export interface VkBlock {
 }
 
 export interface SiteData {
+  /** Награда и рейтинг с карточки 2ГИС. Показываются полосой под первым
+   *  экраном; цифры меняются, поэтому живут в данных, а не в разметке. */
+  reputation?: {
+    award: string;
+    rating: string;
+    ratingsCount: number;
+    source: string;
+    url: string;
+    note?: string;
+  };
   nav: { label: string; href: string; external?: boolean }[];
   phone: string;
   address: string;

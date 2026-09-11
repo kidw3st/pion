@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import Image from 'next/image';
 import { useCart } from '@/components/Cart/CartContext';
 import { BouquetBuilderPopup } from '@/components/BouquetBuilder/BouquetBuilderPopup';
+import { productPath } from '@/lib/seo';
 import type { Product } from '@/lib/types';
 import { sortProducts, type SortOrder } from './sortProducts';
 import { filterProducts, priceBounds } from './filterProducts';
@@ -19,27 +21,50 @@ const PAGE_SIZE = 36;
  */
 function StoreCard({
   product,
+  href,
   onShow,
   onBuy,
 }: {
   product: Product;
+  /** Адрес страницы товара. Нет — раздел без своих страниц (витрина из CRM). */
+  href: string | null;
   onShow: () => void;
   onBuy: () => void;
 }) {
+  // Фото и название — настоящие ссылки, когда у товара есть своя страница.
+  // Раньше вся карточка была набором div и button: на конкретный букет нельзя
+  // было ни сослаться, ни привести рекламу, и поисковику нечего было
+  // индексировать. Без адреса (витрина) остаётся прежнее поведение с окном.
+  const photo = product.images[0] && (
+    <Image src={product.images[0]} alt={product.title} fill sizes="360px" className={styles.cardPhoto} />
+  );
+
   return (
     <div className={styles.card}>
-      <button type="button" className={styles.cardPhotoBtn} onClick={onShow}>
-        {product.images[0] && (
-          <Image src={product.images[0]} alt={product.title} fill sizes="360px" className={styles.cardPhoto} />
-        )}
-      </button>
-      <h3 className={styles.cardTitle}>{product.title}</h3>
+      {href ? (
+        <Link href={href} className={styles.cardPhotoBtn} aria-label={product.title}>
+          {photo}
+        </Link>
+      ) : (
+        <button type="button" className={styles.cardPhotoBtn} onClick={onShow}>
+          {photo}
+        </button>
+      )}
+      <h3 className={styles.cardTitle}>
+        {href ? <Link href={href}>{product.title}</Link> : product.title}
+      </h3>
       {product.description && <p className={styles.cardDescr}>{product.description}</p>}
       <span className={styles.cardPrice}>{product.price.toLocaleString('ru-RU')} р.</span>
       <div className={styles.cardButtons}>
-        <button type="button" className={styles.btnPrimary} onClick={onShow}>
-          Описание
-        </button>
+        {href ? (
+          <Link href={href} className={styles.btnPrimary}>
+            Подробнее
+          </Link>
+        ) : (
+          <button type="button" className={styles.btnPrimary} onClick={onShow}>
+            Описание
+          </button>
+        )}
         <button type="button" className={styles.btnSecondary} onClick={onBuy}>
           Купить похожий
         </button>
@@ -84,11 +109,15 @@ export function CategoryGrid({
   subtitle,
   showNotFoundBand = false,
   headingLevel = 'h1',
+  category,
 }: {
   products: Product[];
   title: string;
   subtitle: string;
   showNotFoundBand?: boolean;
+  /** Раздел, к которому принадлежат товары. Задан — карточки ведут на свои
+   *  страницы; не задан — остаётся окно с описанием. */
+  category?: string;
   /** Categories that open with a cover already have their h1 there. */
   headingLevel?: 'h1' | 'h2';
 }) {
@@ -212,7 +241,13 @@ export function CategoryGrid({
 
             <div className={styles.grid}>
               {slice.map((p) => (
-                <StoreCard key={p.uid} product={p} onShow={() => setShown(p)} onBuy={() => buy(p)} />
+                <StoreCard
+                  key={p.uid}
+                  product={p}
+                  href={category ? productPath(category, p.slug) : null}
+                  onShow={() => setShown(p)}
+                  onBuy={() => buy(p)}
+                />
               ))}
             </div>
 

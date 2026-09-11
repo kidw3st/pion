@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { getSite } from '@/lib/content';
 import { buildMetadata } from '@/lib/seo';
 import { HeroSlider } from '@/components/HeroSlider/HeroSlider';
+import { ReputationBar } from '@/components/Reputation/ReputationBar';
 import { ProductCard } from '@/components/ProductCard/ProductCard';
 import { Features } from '@/components/Features/Features';
 import { BouquetBlock } from '@/components/BouquetBlock/BouquetBlock';
@@ -44,6 +45,8 @@ export default async function HomePage() {
       <h1 className="srOnly">Доставка цветов и букетов в Перми — салон «Пион»</h1>
 
       <HeroSlider slides={site.heroSlides} />
+
+      {site.reputation && <ReputationBar data={site.reputation} />}
 
       {/* Живая витрина из CRM: появляется, только когда на витрине есть
           букеты, поэтому стоит выше постоянных «Новинок». */}

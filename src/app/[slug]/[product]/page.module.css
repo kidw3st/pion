@@ -1,0 +1,236 @@
+/* Страница товара. Ширина и отступы те же, что у остальных разделов сайта,
+   чтобы она не выглядела вставной. */
+.page {
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 28px 40px 80px;
+}
+
+.crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 26px;
+  font-size: 13px;
+  font-weight: 300;
+  color: #7b7673;
+}
+
+.crumbs a {
+  color: #7b7673;
+  transition: color 0.2s ease-in-out;
+}
+
+.crumbs a:hover {
+  color: var(--color-text-dark);
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 560px) minmax(0, 1fr);
+  gap: 48px;
+  align-items: start;
+}
+
+/* ------------------------------------------------------------------- фото */
+.photo {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background: var(--color-bg-light);
+}
+
+.photoImg {
+  object-fit: cover;
+}
+
+.photoEmpty {
+  background: var(--color-bg-light);
+}
+
+.thumbs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.thumb {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  background: var(--color-bg-light);
+}
+
+/* ---------------------------------------------------------------- сведения */
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding-top: 4px;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(24px, calc(1.6vw + 16px), 34px);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--color-text-dark);
+}
+
+.price {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--color-text-dark);
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.blockTitle {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7b7673;
+}
+
+.composition {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1.6;
+  color: #3a3836;
+}
+
+.assurance {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 300;
+  line-height: 1.6;
+  color: #6a6764;
+}
+
+.facts {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 15px;
+  font-weight: 300;
+  line-height: 1.65;
+  color: #3a3836;
+}
+
+.facts li {
+  margin-bottom: 6px;
+}
+
+.facts li::marker {
+  color: var(--color-accent);
+}
+
+.more {
+  align-self: flex-start;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-dark);
+  border-bottom: 1px solid var(--color-accent);
+  padding-bottom: 2px;
+  transition: color 0.2s ease-in-out;
+}
+
+.more:hover {
+  color: var(--color-accent);
+}
+
+/* --------------------------------------------------------------- соседи */
+.related {
+  margin-top: 72px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.relatedTitle {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--color-text-dark);
+}
+
+.relatedGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.relatedCard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.relatedPhoto {
+  position: relative;
+  display: block;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background: var(--color-bg-light);
+}
+
+.relatedCard .photoImg {
+  transition: transform 0.4s ease-in-out;
+}
+
+.relatedCard:hover .photoImg {
+  transform: scale(1.04);
+}
+
+.relatedName {
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--color-text-dark);
+}
+
+.relatedPrice {
+  font-size: 15px;
+  font-weight: 300;
+  color: #55524f;
+}
+
+@media (max-width: 980px) {
+  .page {
+    padding: 20px 20px 64px;
+  }
+
+  .layout {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  .relatedGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+
+  .related {
+    margin-top: 56px;
+  }
+}
+
+@media (max-width: 480px) {
+  .price {
+    font-size: 24px;
+  }
+}

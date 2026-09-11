@@ -150,6 +150,7 @@ export default async function SlugPage({ params }: { params: { slug: string } })
           <PageCover title={coverTitle} subtitle={meta?.sub ?? ''} images={meta!.covers} />
         )}
         <CategoryGrid
+          category={slug}
           products={products}
           title={meta?.heading ?? (meta?.title ? '' : label)}
           subtitle={meta?.headingSub ?? ''}
