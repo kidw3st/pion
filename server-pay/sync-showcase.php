@@ -88,7 +88,19 @@ try {
             continue;
         }
         $a = $inc['attributes'] ?? [];
-        $photos[$inc['id']] = $a['fileShop'] ?? $a['fileMedium'] ?? $a['file'] ?? null;
+        $url = $a['fileShop'] ?? $a['fileMedium'] ?? $a['file'] ?? null;
+        if ($url === null) {
+            continue;
+        }
+        // hash меняется вместе с самой картинкой — он попадёт в имя файла,
+        // и замена фотографии в CRM сама приведёт к перекачке. Без этого
+        // скачанный однажды снимок жил на сайте вечно: имя файла зависело
+        // только от букета, а существующий файл скрипт не трогает. Из-за
+        // этого витрина месяцами показывала кадры, которых в CRM уже не было.
+        $photos[$inc['id']] = [
+            'url' => $url,
+            'hash' => substr((string)($a['hash'] ?? md5($url)), 0, 12),
+        ];
     }
 
     if (!is_dir($imgDir) && !@mkdir($imgDir, 0755, true) && !is_dir($imgDir)) {
@@ -115,27 +127,28 @@ try {
         // Все фотографии букета, а не только первая: флористы часто снимают
         // букет с двух-трёх сторон, и раньше на сайт попадал лишь один кадр.
         // Порядок сохраняем как в CRM — первый снимок там главный.
-        $urls = [];
+        $shots = [];
         foreach (($b['relationships']['images']['data'] ?? []) as $rel) {
             if (!empty($photos[$rel['id']])) {
-                $urls[] = $photos[$rel['id']];
+                $shots[] = $photos[$rel['id']];
             }
-            if (count($urls) >= SHOWCASE_MAX_PHOTOS) {
+            if (count($shots) >= SHOWCASE_MAX_PHOTOS) {
                 break;
             }
         }
-        if ($urls === []) {
+        if ($shots === []) {
             continue; // без фотографии карточка выглядит пустой
         }
 
         $images = [];
-        foreach ($urls as $i => $url) {
-            // Имя вида <id>-0.jpg: первый файл остаётся главным кадром, а по
-            // номеру видно порядок. Старое имя <id>.jpg больше не используется
-            // — прошлые файлы подчистит уборка ниже.
-            $file = $id . '-' . $i . '.jpg';
+        foreach ($shots as $i => $shot) {
+            // Имя вида <букет>-0-<hash>.jpg: по номеру видно порядок кадров,
+            // по hash — что это именно та картинка, что сейчас в CRM. Заменили
+            // фотографию — имя стало другим, файл скачается заново, а старый
+            // уберёт уборка ниже (её условие «нет в keepFiles» это покрывает).
+            $file = $id . '-' . $i . '-' . $shot['hash'] . '.jpg';
             $dest = $imgDir . '/' . $file;
-            if (!is_file($dest) && !download($url, $dest)) {
+            if (!is_file($dest) && !download($shot['url'], $dest)) {
                 sync_log('не скачалось фото ' . ($i + 1) . ' для ' . $title . ' (' . $id . ')');
                 continue;
             }
