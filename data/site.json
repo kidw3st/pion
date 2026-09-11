@@ -260,7 +260,8 @@
   },
   "analytics": {
     "yandexMetrika": 93951387,
+    "googleTagManager": "GTM-PR5WHJCL",
     "googleAnalytics": "",
-    "note": "googleAnalytics — идентификатор GA4 вида G-XXXXXXXXXX. Пусто — счётчик Google не подключается и CSP его не пускает."
+    "note": "googleTagManager — контейнер GTM, сам по себе статистику не собирает: нужен тег GA4 внутри контейнера. googleAnalytics — счётчик GA4 напрямую, если GTM не нужен. Новые теги, добавленные в GTM, надо разрешать в CSP в src/app/layout.tsx, иначе они молча не сработают."
   }
 }

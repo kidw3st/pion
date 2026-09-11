@@ -55,12 +55,20 @@ export const metadata: Metadata = {
 const METRIKA_ID = 93951387;
 
 /**
- * Идентификатор Google Analytics 4 (вид G-XXXXXXXXXX) из data/site.json.
- * Пока он пуст, счётчик не подключается вовсе: ни скрипт, ни разрешения в
- * политике безопасности. Так сайт не обращается к Google до тех пор, пока
- * владелец не заведёт счётчик и не согласится с условиями Google сам.
+ * Счётчики Google из data/site.json. Оба необязательны и включаются порознь:
+ *
+ * - `googleTagManager` — контейнер GTM (вид GTM-XXXXXXX). Сам по себе ничего
+ *   не считает: это только загрузчик, статистика появится, когда внутри
+ *   контейнера будет настроен тег GA4.
+ * - `googleAnalytics` — счётчик GA4 напрямую (вид G-XXXXXXXXXX), если GTM не
+ *   нужен.
+ *
+ * Пока оба пусты, к Google не уходит ничего: ни скриптов, ни разрешений в
+ * политике безопасности.
  */
-const GA_ID = (getSite().analytics?.googleAnalytics ?? "").trim();
+const GTM_ID = (getSite().analytics?.googleTagManager ?? '').trim();
+const GA_ID = (getSite().analytics?.googleAnalytics ?? '').trim();
+const USES_GOOGLE = Boolean(GTM_ID || GA_ID);
 
 /**
  * Content-Security-Policy, declared in the document because a static host
@@ -76,11 +84,20 @@ const GA_ID = (getSite().analytics?.googleAnalytics ?? "").trim();
 // текущем pionperm.ru, чтобы статистика не оборвалась при переезде.
 // Домены Google подключаются к политике безопасности только вместе со
 // счётчиком: без него сайт по-прежнему не ходит никуда, кроме себя и Метрики.
-const GA_SCRIPT = GA_ID ? " https://www.googletagmanager.com" : "";
-const GA_IMG = GA_ID ? " https://www.google-analytics.com https://*.google-analytics.com" : "";
-const GA_CONNECT = GA_ID
-  ? " https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com"
-  : "";
+//
+// Важно про GTM: контейнер умеет подгружать любые теги, которые в него потом
+// добавят в панели Google. Эта политика их не пустит — сайту разрешены только
+// перечисленные домены. Значит, каждый новый тег в GTM (Директ, пиксель VK,
+// Google Ads) потребует дописать сюда его домен, иначе он молча не заработает.
+const GA_SCRIPT = USES_GOOGLE ? ' https://www.googletagmanager.com' : '';
+const GA_IMG = USES_GOOGLE
+  ? ' https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com'
+  : '';
+const GA_CONNECT = USES_GOOGLE
+  ? ' https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com'
+  : '';
+// Тег GTM для посетителей без JavaScript — это iframe, его надо разрешить.
+const GA_FRAME = GTM_ID ? ' https://www.googletagmanager.com' : '';
 
 const CSP = [
   "default-src 'self'",
@@ -94,7 +111,7 @@ const CSP = [
   "object-src 'none'",
   // Метрика поднимает служебный iframe; без него счётчик ругается на каждой
   // странице и часть данных не уходит. Чужие фреймы по-прежнему запрещены.
-  'frame-src https://mc.yandex.ru',
+  `frame-src https://mc.yandex.ru${GA_FRAME}`,
   "base-uri 'self'",
   "form-action 'self'",
 ].join('; ');
@@ -116,6 +133,15 @@ gtag('js', new Date());
 gtag('config', '${GA_ID}');
 `;
 
+/** Официальный сниппет Google Tag Manager, как его выдаёт панель GTM. */
+const GTM_SNIPPET = `
+(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','${GTM_ID}');
+`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   // The VK band sits above the footer on every page of the live site, not just
   // the homepage, so it belongs to the layout rather than to any one page.
@@ -128,11 +154,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <script dangerouslySetInnerHTML={{ __html: METRIKA_SNIPPET }} />
+        {/* GTM должен стоять как можно раньше в документе — он загружает
+            остальные теги, и всё, что срабатывает до него, теряется. */}
+        {GTM_ID && <script dangerouslySetInnerHTML={{ __html: GTM_SNIPPET }} />}
         {GA_ID && (
           <>
             <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} />
             <script dangerouslySetInnerHTML={{ __html: GA_SNIPPET }} />
           </>
+        )}
+        {GTM_ID && (
+          <noscript>
+            <iframe
+              src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
+              height="0"
+              width="0"
+              style={{ display: 'none', visibility: 'hidden' }}
+              title="Google Tag Manager"
+            />
+          </noscript>
         )}
         <noscript>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -152,7 +192,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ScrollTop />
           <MessengerFab />
           <CookieNotice
-            services={GA_ID ? 'Яндекс.Метрику и Google Analytics' : 'Яндекс.Метрику'}
+            services={USES_GOOGLE ? 'Яндекс.Метрику и сервисы Google' : 'Яндекс.Метрику'}
           />
           <CartDrawer />
           <WebMcpTools />

@@ -132,6 +132,7 @@ export interface SiteData {
   /** Счётчики посещаемости. Пустой googleAnalytics — Google не подключается. */
   analytics?: {
     yandexMetrika?: number;
+    googleTagManager?: string;
     googleAnalytics?: string;
     note?: string;
   };
