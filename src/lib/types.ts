@@ -129,6 +129,12 @@ export interface VkBlock {
 }
 
 export interface SiteData {
+  /** Счётчики посещаемости. Пустой googleAnalytics — Google не подключается. */
+  analytics?: {
+    yandexMetrika?: number;
+    googleAnalytics?: string;
+    note?: string;
+  };
   /** Награда и рейтинг с карточки 2ГИС. Показываются полосой под первым
    *  экраном; цифры меняются, поэтому живут в данных, а не в разметке. */
   reputation?: {

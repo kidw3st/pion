@@ -12,7 +12,12 @@ const STORAGE_KEY = 'pion-cookie-ok';
  * ставит. Появляется после гидрации, чтобы сервер и клиент рисовали одно и
  * то же.
  */
-export function CookieNotice() {
+/**
+ * Перечисление сервисов должно совпадать с тем, что страница правда грузит,
+ * иначе уведомление вводит в заблуждение. Поэтому список приходит из layout,
+ * где и решается, подключать ли Google.
+ */
+export function CookieNotice({ services = 'Яндекс.Метрику' }: { services?: string }) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -58,7 +63,7 @@ export function CookieNotice() {
   return (
     <div className={styles.banner} role="region" aria-label="Уведомление об использовании cookie">
       <p className={styles.text}>
-        Мы используем cookie и Яндекс.Метрику, чтобы сайт работал и становился удобнее.
+        Мы используем cookie и {services}, чтобы сайт работал и становился удобнее.
         Оставаясь здесь, вы соглашаетесь с{' '}
         <Link href="/policy" className={styles.link}>
           политикой конфиденциальности

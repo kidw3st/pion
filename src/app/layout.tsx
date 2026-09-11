@@ -52,6 +52,16 @@ export const metadata: Metadata = {
     : {}),
 };
 
+const METRIKA_ID = 93951387;
+
+/**
+ * Идентификатор Google Analytics 4 (вид G-XXXXXXXXXX) из data/site.json.
+ * Пока он пуст, счётчик не подключается вовсе: ни скрипт, ни разрешения в
+ * политике безопасности. Так сайт не обращается к Google до тех пор, пока
+ * владелец не заведёт счётчик и не согласится с условиями Google сам.
+ */
+const GA_ID = (getSite().analytics?.googleAnalytics ?? "").trim();
+
 /**
  * Content-Security-Policy, declared in the document because a static host
  * sends no headers of ours. The site loads nothing from other origins — every
@@ -64,15 +74,23 @@ export const metadata: Metadata = {
  */
 // mc.yandex.ru везде ниже — Яндекс.Метрика: тот же счётчик, что стоит на
 // текущем pionperm.ru, чтобы статистика не оборвалась при переезде.
+// Домены Google подключаются к политике безопасности только вместе со
+// счётчиком: без него сайт по-прежнему не ходит никуда, кроме себя и Метрики.
+const GA_SCRIPT = GA_ID ? " https://www.googletagmanager.com" : "";
+const GA_IMG = GA_ID ? " https://www.google-analytics.com https://*.google-analytics.com" : "";
+const GA_CONNECT = GA_ID
+  ? " https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com"
+  : "";
+
 const CSP = [
   "default-src 'self'",
   // Dev needs eval (react-refresh source maps); the production build must not.
-  `script-src 'self' 'unsafe-inline' https://mc.yandex.ru${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}`,
+  `script-src 'self' 'unsafe-inline' https://mc.yandex.ru${GA_SCRIPT}${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: https://mc.yandex.ru",
+  `img-src 'self' data: https://mc.yandex.ru${GA_IMG}`,
   "font-src 'self'",
   // Dev HMR talks over a websocket; production only fetches its own JSON.
-  `connect-src 'self' https://mc.yandex.ru${process.env.NODE_ENV === 'development' ? ' ws:' : ''}`,
+  `connect-src 'self' https://mc.yandex.ru${GA_CONNECT}${process.env.NODE_ENV === 'development' ? ' ws:' : ''}`,
   "object-src 'none'",
   // Метрика поднимает служебный iframe; без него счётчик ругается на каждой
   // странице и часть данных не уходит. Чужие фреймы по-прежнему запрещены.
@@ -81,8 +99,6 @@ const CSP = [
   "form-action 'self'",
 ].join('; ');
 
-const METRIKA_ID = 93951387;
-
 /** Официальный сниппет Метрики; вебвизор и карта кликов — как на счётчике Tilda-версии. */
 const METRIKA_SNIPPET = `
 (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
@@ -90,6 +106,14 @@ m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],
 k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
 (window,document,"script","https://mc.yandex.ru/metrika/tag.js","ym");
 ym(${METRIKA_ID},"init",{clickmap:true,trackLinks:true,accurateTrackBounce:true,webvisor:true});
+`;
+
+/** Официальный сниппет GA4. Рендерится только когда задан идентификатор. */
+const GA_SNIPPET = `
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${GA_ID}');
 `;
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -104,6 +128,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body>
         <script dangerouslySetInnerHTML={{ __html: METRIKA_SNIPPET }} />
+        {GA_ID && (
+          <>
+            <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} />
+            <script dangerouslySetInnerHTML={{ __html: GA_SNIPPET }} />
+          </>
+        )}
         <noscript>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -121,7 +151,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <CartButton />
           <ScrollTop />
           <MessengerFab />
-          <CookieNotice />
+          <CookieNotice
+            services={GA_ID ? 'Яндекс.Метрику и Google Analytics' : 'Яндекс.Метрику'}
+          />
           <CartDrawer />
           <WebMcpTools />
         </CartProvider>

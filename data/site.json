@@ -257,5 +257,10 @@
     "source": "2ГИС",
     "url": "https://2gis.ru/perm/firm/70000001007434700",
     "note": "Проверено на карточке 2ГИС 11.09.2026. Цифры меняются — обновлять здесь."
+  },
+  "analytics": {
+    "yandexMetrika": 93951387,
+    "googleAnalytics": "",
+    "note": "googleAnalytics — идентификатор GA4 вида G-XXXXXXXXXX. Пусто — счётчик Google не подключается и CSP его не пускает."
   }
 }
