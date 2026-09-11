@@ -24,6 +24,9 @@ require __DIR__ . '/posiflora.php';
 // «Букеты на витрине» (подсмотрено в её же запросе).
 const SHOWCASE_STATUSES = 'demonstrated,edited';
 const SHOWCASE_LIMIT = 100;
+// Сколько кадров одного букета забирать. Больше четырёх в карусели никто не
+// пролистывает, а каждый файл — это трафик посетителя и место на диске.
+const SHOWCASE_MAX_PHOTOS = 4;
 
 $root = dirname(__DIR__);                    // .../www/pionperm.ru
 $imgDir = $root . '/images/showcase';
@@ -109,23 +112,37 @@ try {
             continue; // без цены или названия на витрине сайта делать нечего
         }
 
-        // Первая фотография букета; без неё карточка выглядит пустой.
-        $imageUrl = null;
+        // Все фотографии букета, а не только первая: флористы часто снимают
+        // букет с двух-трёх сторон, и раньше на сайт попадал лишь один кадр.
+        // Порядок сохраняем как в CRM — первый снимок там главный.
+        $urls = [];
         foreach (($b['relationships']['images']['data'] ?? []) as $rel) {
             if (!empty($photos[$rel['id']])) {
-                $imageUrl = $photos[$rel['id']];
+                $urls[] = $photos[$rel['id']];
+            }
+            if (count($urls) >= SHOWCASE_MAX_PHOTOS) {
                 break;
             }
         }
-        if ($imageUrl === null) {
-            continue;
+        if ($urls === []) {
+            continue; // без фотографии карточка выглядит пустой
         }
 
-        $file = $id . '.jpg';
-        $keepFiles[$file] = true;
-        $dest = $imgDir . '/' . $file;
-        if (!is_file($dest) && !download($imageUrl, $dest)) {
-            sync_log('не скачалось фото для ' . $title . ' (' . $id . ')');
+        $images = [];
+        foreach ($urls as $i => $url) {
+            // Имя вида <id>-0.jpg: первый файл остаётся главным кадром, а по
+            // номеру видно порядок. Старое имя <id>.jpg больше не используется
+            // — прошлые файлы подчистит уборка ниже.
+            $file = $id . '-' . $i . '.jpg';
+            $dest = $imgDir . '/' . $file;
+            if (!is_file($dest) && !download($url, $dest)) {
+                sync_log('не скачалось фото ' . ($i + 1) . ' для ' . $title . ' (' . $id . ')');
+                continue;
+            }
+            $keepFiles[$file] = true;
+            $images[] = '/images/showcase/' . $file;
+        }
+        if ($images === []) {
             continue;
         }
 
@@ -136,7 +153,7 @@ try {
             'title' => $title,
             'price' => $price,
             'description' => trim((string)($attr['description'] ?? '')),
-            'images' => ['/images/showcase/' . $file],
+            'images' => $images,
             'onWindowAt' => (string)($attr['onWindowAt'] ?? ''),
         ];
     }

@@ -60,7 +60,13 @@ export function PageSections({ sections }: { sections: PageSection[] }) {
                 {section.tiles.map((tile) => (
                   <Link key={tile.href} href={tile.href} className={styles.tile}>
                     {tile.image && (
-                      <Image src={tile.image} alt="" fill sizes="33vw" className={styles.photo} />
+                      <Image
+                        src={tile.image}
+                        alt={`${tile.label} — салон цветов «Пион», Пермь`}
+                        fill
+                        sizes="33vw"
+                        className={styles.photo}
+                      />
                     )}
                     <span className={styles.tileShade} />
                     <span className={styles.tileLabel}>{tile.label}</span>

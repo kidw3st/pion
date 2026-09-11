@@ -1,6 +1,6 @@
 'use client';
 
-import Image from 'next/image';
+import { Gallery } from '@/components/Gallery/Gallery';
 import { useCart } from '@/components/Cart/CartContext';
 import type { Product } from '@/lib/types';
 import styles from './ProductCard.module.css';
@@ -11,9 +11,14 @@ export function ProductCard({ product, isNew = false }: { product: Product; isNe
   return (
     <div className={styles.card}>
       <div className={styles.imageWrap}>
-        {product.images[0] && (
-          <Image src={product.images[0]} alt={product.title} fill className={styles.image} />
-        )}
+        {/* Букеты с витрины снимают с нескольких сторон — карусель показывает
+            все кадры прямо в карточке: своей страницы у них нет. */}
+        <Gallery
+          images={product.images}
+          alt={product.title}
+          sizes="(max-width: 900px) 50vw, 300px"
+          compact
+        />
         {isNew && <span className={styles.badge}>NEW</span>}
       </div>
       <h3 className={styles.title}>{product.title}</h3>

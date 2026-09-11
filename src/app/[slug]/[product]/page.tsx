@@ -11,6 +11,7 @@ import {
 } from '@/lib/content';
 import { JsonLd } from '@/components/JsonLd/JsonLd';
 import { AddToCart } from '@/components/ProductPage/AddToCart';
+import { Gallery } from '@/components/Gallery/Gallery';
 import { buildMetadata, breadcrumbJsonLd, productJsonLd, productPath } from '@/lib/seo';
 import styles from './page.module.css';
 
@@ -99,32 +100,12 @@ export default async function ProductPage({
       </nav>
 
       <div className={styles.layout}>
-        <div className={styles.gallery}>
-          {product.images[0] ? (
-            <div className={styles.photo}>
-              <Image
-                src={product.images[0]}
-                alt={product.title}
-                fill
-                sizes="(max-width: 900px) 100vw, 560px"
-                className={styles.photoImg}
-                priority
-              />
-            </div>
-          ) : (
-            <div className={`${styles.photo} ${styles.photoEmpty}`} aria-hidden="true" />
-          )}
-
-          {product.images.length > 1 && (
-            <ul className={styles.thumbs}>
-              {product.images.slice(1, 5).map((src) => (
-                <li key={src} className={styles.thumb}>
-                  <Image src={src} alt="" fill sizes="120px" className={styles.photoImg} />
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        <Gallery
+          images={product.images}
+          alt={product.title}
+          sizes="(max-width: 900px) 100vw, 560px"
+          priority
+        />
 
         <div className={styles.info}>
           <h1 className={styles.title}>{product.title}</h1>
@@ -177,7 +158,7 @@ export default async function ProductPage({
                 <Link href={productPath(params.slug, p.slug)} className={styles.relatedCard}>
                   <span className={styles.relatedPhoto}>
                     {p.images[0] && (
-                      <Image src={p.images[0]} alt="" fill sizes="260px" className={styles.photoImg} />
+                      <Image src={p.images[0]} alt={p.title} fill sizes="260px" className={styles.photoImg} />
                     )}
                   </span>
                   <span className={styles.relatedName}>{p.title}</span>

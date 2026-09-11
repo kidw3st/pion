@@ -28,13 +28,25 @@ export function CatalogTiles({ tiles }: { tiles: CatalogTile[] }) {
             className={styles.tile}
             onClick={() => setBuilderOpen(true)}
           >
-            <Image src={tile.image} alt="" fill sizes="25vw" className={styles.photo} />
+            <Image
+              src={tile.image}
+              alt={`${tile.label} в Перми — салон цветов «Пион»`}
+              fill
+              sizes="25vw"
+              className={styles.photo}
+            />
             <span className={styles.shade} />
             <span className={styles.label}>{tile.label}</span>
           </button>
         ) : (
           <Link key={tile.label} href={tile.href} className={styles.tile}>
-            <Image src={tile.image} alt="" fill sizes="25vw" className={styles.photo} />
+            <Image
+              src={tile.image}
+              alt={`${tile.label} в Перми — салон цветов «Пион»`}
+              fill
+              sizes="25vw"
+              className={styles.photo}
+            />
             <span className={styles.shade} />
             <span className={styles.label}>{tile.label}</span>
           </Link>
