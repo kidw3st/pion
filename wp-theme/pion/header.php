@@ -13,6 +13,16 @@ $pion_tel = pion_tel($pion['phone']);
 <head>
 	<meta charset="<?php bloginfo('charset'); ?>">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<?php $pion_descr = pion_meta_description(); ?>
+	<?php if ($pion_descr !== '') : ?>
+		<meta name="description" content="<?php echo esc_attr($pion_descr); ?>">
+	<?php endif; ?>
+	<link rel="canonical" href="<?php echo esc_url(pion_canonical_url()); ?>">
+	<?php foreach (pion_json_ld() as $pion_ld) : ?>
+		<script type="application/ld+json"><?php
+			echo wp_json_encode($pion_ld, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+		?></script>
+	<?php endforeach; ?>
 	<?php wp_head(); ?>
 </head>
 <body <?php body_class(); ?>>

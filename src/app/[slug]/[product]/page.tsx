@@ -7,6 +7,7 @@ import {
   getProduct,
   getRelatedProducts,
   getAllProductParams,
+  getAmbiguousTitles,
   getSite,
 } from '@/lib/content';
 import { JsonLd } from '@/components/JsonLd/JsonLd';
@@ -43,7 +44,19 @@ export async function generateMetadata({
   if (!product) return {};
 
   const composition = compositionLine(product.description);
-  const title = `${product.title} — купить в Перми | Салон «Пион»`;
+  // Одно и то же название бывает в двух разделах у разных товаров. Тогда в
+  // заголовок добавляется раздел — иначе две страницы выглядят для поисковика
+  // одинаково, и он показывает только одну из них.
+  const ambiguous = await getAmbiguousTitles();
+  const label = CATEGORY_LABELS[params.slug as keyof typeof CATEGORY_LABELS] ?? params.slug;
+  const short = product.title.trim().toLowerCase();
+  // «Пион» в разделе «Пионы» подписывать нечем — вышло бы «Пион — пионы».
+  // Достаточно, что подпись получит вторая страница пары: заголовки станут
+  // разными, а этот останется коротким и читаемым.
+  const needsLabel =
+    ambiguous.has(short) && !label.toLowerCase().includes(short) && !short.includes(label.toLowerCase());
+  const name = needsLabel ? `${product.title} — ${label.toLowerCase()}` : product.title;
+  const title = `${name} — купить в Перми | Салон «Пион»`;
 
   return {
     ...buildMetadata({

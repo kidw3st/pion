@@ -93,6 +93,31 @@ export async function getProduct(
   return products?.find((p) => p.slug === productSlug) ?? null;
 }
 
+/**
+ * Названия, которые встречаются больше чем в одном разделе.
+ *
+ * Таких всего два — «Пион» (в микс-букетах и в пионах) и «Нежность» (к 14
+ * февраля и свадебная), но это разные товары с разной ценой и фотографиями, а
+ * заголовки страниц у них совпадали слово в слово. Для поисковика это дубль:
+ * он выбирает одну страницу, вторая выпадает. Список считается из данных, а не
+ * держится руками, — появится третий такой товар, он попадёт сюда сам.
+ */
+export async function getAmbiguousTitles(): Promise<Set<string>> {
+  const seen = new Map<string, Set<string>>();
+  for (const slug of CATEGORY_SLUGS) {
+    for (const p of (await getCatalog(slug)) ?? []) {
+      const key = p.title.trim().toLowerCase();
+      if (!seen.has(key)) seen.set(key, new Set());
+      seen.get(key)!.add(slug);
+    }
+  }
+  const ambiguous = new Set<string>();
+  seen.forEach((cats, title) => {
+    if (cats.size > 1) ambiguous.add(title);
+  });
+  return ambiguous;
+}
+
 /** Соседи по разделу — чтобы с карточки товара было куда пойти дальше. */
 export async function getRelatedProducts(
   category: string,

@@ -92,4 +92,10 @@ Options -Indexes
   Header always set X-Content-Type-Options "nosniff"
   Header always set X-Frame-Options "SAMEORIGIN"
   Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+  # Сайт целиком на https (сертификат Let's Encrypt обновляется сам), поэтому
+  # просим браузер год не ходить по http вообще. Без includeSubDomains и без
+  # preload: это отменяется только временем, а поддоменов у домена нет — рисковать
+  # чужими именами незачем.
+  Header always set Strict-Transport-Security "max-age=31536000"
 </IfModule>

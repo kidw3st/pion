@@ -169,3 +169,132 @@ function pion_posted_on(): string
         esc_html(get_the_date())
     );
 }
+
+/**
+ * Описание страницы для поисковика.
+ *
+ * Блог отдавался вообще без description: в выдаче под заголовком поисковик
+ * показывал случайный кусок текста. У записи берём её же анонс, у рубрики —
+ * описание рубрики, у остальных страниц — подзаголовок блога.
+ */
+function pion_meta_description(): string
+{
+    if (is_singular()) {
+        $text = get_the_excerpt();
+        if ($text === '') {
+            $text = wp_strip_all_tags((string) get_post_field('post_content', get_the_ID()));
+        }
+    } elseif (is_category() || is_tag() || is_tax()) {
+        $text = (string) term_description();
+        if (trim(wp_strip_all_tags($text)) === '') {
+            $text = sprintf('%s — заметки флористов салона «Пион», Пермь.', single_term_title('', false));
+        }
+    } elseif (is_search()) {
+        $text = sprintf('Поиск по блогу салона «Пион»: «%s».', get_search_query());
+    } else {
+        $text = (string) get_bloginfo('description');
+    }
+
+    $text = trim(preg_replace('/\s+/u', ' ', wp_strip_all_tags($text)) ?? '');
+
+    // 160 символов — столько показывает поисковик; режем по слову, чтобы
+    // описание не обрывалось на середине.
+    if (mb_strlen($text) > 160) {
+        $text = mb_substr($text, 0, 160);
+        $cut = mb_strrpos($text, ' ');
+        if ($cut !== false && $cut > 100) {
+            $text = mb_substr($text, 0, $cut);
+        }
+        $text = rtrim($text, " ,.;:—-") . '…';
+    }
+
+    return $text;
+}
+
+/**
+ * Канонический адрес. WordPress ставит его сам только на одиночных записях —
+ * у главной, рубрик и архивов его не было, и они выглядели как возможные
+ * дубли друг друга.
+ */
+function pion_canonical_url(): string
+{
+    if (is_singular()) {
+        return (string) get_permalink();
+    }
+    if (is_category() || is_tag() || is_tax()) {
+        $link = get_term_link(get_queried_object());
+        return is_wp_error($link) ? home_url('/') : (string) $link;
+    }
+    if (is_home() || is_front_page()) {
+        return home_url('/');
+    }
+    return home_url(add_query_arg([], $GLOBALS['wp']->request ? '/' . $GLOBALS['wp']->request . '/' : '/'));
+}
+
+/** Разметка для поисковика: сам блог и, на странице записи, сама запись. */
+function pion_json_ld(): array
+{
+    $blog = [
+        '@context' => 'https://schema.org',
+        '@type' => 'Blog',
+        'name' => get_bloginfo('name'),
+        'description' => get_bloginfo('description'),
+        'url' => home_url('/'),
+        'inLanguage' => 'ru-RU',
+        'publisher' => [
+            '@type' => 'Organization',
+            'name' => 'Салон цветов и подарков «Пион»',
+            'url' => PION_SITE_URL . '/',
+        ],
+    ];
+
+    if (!is_singular('post')) {
+        return [$blog];
+    }
+
+    $post = [
+        '@context' => 'https://schema.org',
+        '@type' => 'BlogPosting',
+        'headline' => get_the_title(),
+        'description' => pion_meta_description(),
+        'datePublished' => get_the_date(DATE_W3C),
+        'dateModified' => get_the_modified_date(DATE_W3C),
+        'mainEntityOfPage' => ['@type' => 'WebPage', '@id' => get_permalink()],
+        'url' => get_permalink(),
+        'inLanguage' => 'ru-RU',
+        'author' => ['@type' => 'Organization', 'name' => 'Салон цветов «Пион»'],
+        'publisher' => $blog['publisher'],
+    ];
+
+    if (has_post_thumbnail()) {
+        $post['image'] = get_the_post_thumbnail_url(get_the_ID(), 'pion-cover');
+    }
+
+    $cat = pion_primary_category();
+    if ($cat) {
+        $post['articleSection'] = $cat->name;
+    }
+
+    return [$blog, $post];
+}
+
+/**
+ * Архив автора закрыт от поиска и убран из карты сайта: автор один, и такая
+ * страница — просто ещё одна копия ленты записей.
+ */
+add_filter('wp_robots', static function (array $robots): array {
+    if (is_author() || is_date() || is_search() || is_paged()) {
+        $robots['noindex'] = true;
+        $robots['follow'] = true;
+    }
+    return $robots;
+});
+
+add_filter('wp_sitemaps_add_provider', static function ($provider, string $name) {
+    return $name === 'users' ? false : $provider;
+}, 10, 2);
+
+// Свой canonical ставится в header.php для всех типов страниц. Штатный
+// rel_canonical WordPress работает только на одиночных записях — если его
+// оставить, там окажется два тега подряд.
+remove_action('wp_head', 'rel_canonical');
