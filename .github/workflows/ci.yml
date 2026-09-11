@@ -1,0 +1,31 @@
+name: Проверка сборки
+
+# Публикация на GitHub Pages убрана: сайт живёт на pionperm.ru, а копия на
+# github.io конкурировала с ним в выдаче за одни и те же страницы. Здесь
+# остался только прогон тестов и сборки — чтобы сломанный код было видно сразу,
+# а не при выкладке на боевой сервер.
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm test
+
+      # Боевая сборка. Шаг postbuild проверяет, что canonical, og, Schema и
+      # sitemap указывают на pionperm.ru, и роняет сборку, если нет.
+      - run: npm run build

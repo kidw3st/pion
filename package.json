@@ -9,7 +9,7 @@
     "lint": "next lint",
     "test": "vitest run",
     "prebuild": "node scripts/build-agent-assets.mjs",
-    "postbuild": "node scripts/build-blog-theme.mjs"
+    "postbuild": "node scripts/build-blog-theme.mjs && node scripts/check-build-urls.mjs"
   },
   "dependencies": {
     "next": "14.2.35",

@@ -12,7 +12,12 @@ import { dedupeProducts } from './lib/dedupeProducts.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const PUB = path.join(ROOT, 'public');
-const SITE_URL = process.env.SITE_URL || 'https://kidw3st.github.io/pion';
+// То же правило, что в next.config.mjs: по умолчанию боевой адрес, копия для
+// GitHub Pages опознаётся по своему флагу. Иначе robots.txt и llms.txt снова
+// разъедутся со страницами — так уже было.
+const SITE_URL =
+  process.env.SITE_URL
+  || (process.env.GITHUB_PAGES === 'true' ? 'https://kidw3st.github.io/pion' : 'https://pionperm.ru');
 
 const readJson = async (p) => JSON.parse(await readFile(path.join(ROOT, p), 'utf-8'));
 const write = async (rel, contents) => {
@@ -39,9 +44,18 @@ const BLOCKED_CRAWLERS = [
   'serpstatbot', 'MegaIndex', 'ZoominfoBot', 'Barkrowler', 'SeekportBot',
 ];
 
+// Копия на GitHub Pages не должна попадать в поиск: она дублирует боевой сайт
+// страница в страницу. Отдаём ей robots.txt, закрывающий всё, и выходим.
+const PAGES_ROBOTS = [
+  '# Тестовая копия pionperm.ru. Индексировать нечего — боевой сайт там.',
+  'User-agent: *',
+  'Disallow: /',
+  '',
+].join('\n');
+
 await write(
   'robots.txt',
-  [
+  process.env.GITHUB_PAGES === 'true' ? PAGES_ROBOTS : [
     '# Content preferences, see https://contentsignals.org/',
     'Content-Signal: ai-train=no, search=yes, ai-input=yes',
     '',

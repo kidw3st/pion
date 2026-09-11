@@ -2,10 +2,12 @@ import type { Metadata } from 'next';
 import { getSite } from './content';
 
 /**
- * Absolute site URL. Overridable so a custom domain needs one env var rather
- * than edits across the codebase.
+ * Абсолютный адрес сайта. Значение подставляет next.config.mjs — там же
+ * решается, боевая это сборка или копия для GitHub Pages. Запасной вариант
+ * здесь — именно боевой адрес: если переменная почему-то не доехала, страницы
+ * должны указывать на pionperm.ru, а не на тестовую копию.
  */
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://kidw3st.github.io/pion';
+export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://pionperm.ru';
 
 export const CITY = 'Пермь';
 
