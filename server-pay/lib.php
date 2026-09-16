@@ -99,10 +99,17 @@ function is_showcase_uid(string $uid): bool
 }
 
 /**
- * Пересчитывает заказ по серверным ценам.
+ * Пересчитывает заказ по серверным ценам и применяет акции.
  * Вход: [['uid' => ..., 'quantity' => ...], ...], id доставки.
- * Выход: ['items' => [...], 'goods' => int, 'delivery' => int,
- *         'discount' => int, 'total' => int] — всё в рублях.
+ * Выход (всё в целых рублях):
+ *   items          — позиции; price по прайсу, unitPrice и amount со скидкой
+ *   goods          — стоимость товара по прайсу
+ *   paidForGoods   — сколько за товар платят после скидок
+ *   delivery       — цена доставки, уже обнулённая, если сработала акция
+ *   deliveryFree   — доставка стала бесплатной по акции (а не самовывоз)
+ *   eveningDiscount, pickupDiscount, discount — из чего сложилась скидка
+ *   gifts          — что положить в заказ подарком
+ *   total          — сумма к оплате
  */
 function price_order(array $cartItems, string $deliveryId): array
 {
@@ -126,7 +133,6 @@ function price_order(array $cartItems, string $deliveryId): array
     $items = [];
     $goods = 0;          // по прайсу, без скидок
     $paidForGoods = 0;   // сколько человек реально платит за товар
-    $showcaseGoods = 0;
     $evening = 0;
     $pickup = 0;
     foreach ($cartItems as $row) {
@@ -170,9 +176,6 @@ function price_order(array $cartItems, string $deliveryId): array
         ];
         $goods += $price * $qty;
         $paidForGoods += $unit * $qty;
-        if ($showcase) {
-            $showcaseGoods += $price * $qty;
-        }
     }
     if ($items === []) {
         throw new InvalidArgumentException('Корзина пуста');
