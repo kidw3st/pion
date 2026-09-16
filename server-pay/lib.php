@@ -110,8 +110,11 @@ function is_showcase_uid(string $uid): bool
  *   eveningDiscount, pickupDiscount, discount — из чего сложилась скидка
  *   gifts          — что положить в заказ подарком
  *   total          — сумма к оплате
+ *
+ * $now подставляется только проверками: вечернюю скидку иначе не увидеть
+ * до восьми вечера, а это самая свежая и самая денежная часть расчёта.
  */
-function price_order(array $cartItems, string $deliveryId): array
+function price_order(array $cartItems, string $deliveryId, ?DateTimeImmutable $now = null): array
 {
     $catalog = catalog_index();
     $delivery = DELIVERY_OPTIONS[$deliveryId] ?? null;
@@ -128,7 +131,7 @@ function price_order(array $cartItems, string $deliveryId): array
     // Время проверяем один раз на весь заказ: если считать его для каждой
     // позиции, заказ, оформленный ровно в 22:00:00, получил бы скидку на
     // первый букет и не получил на второй.
-    $eveningActive = evening_discount_active();
+    $eveningActive = evening_discount_active($now);
 
     $items = [];
     $goods = 0;          // по прайсу, без скидок

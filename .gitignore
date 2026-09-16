@@ -45,3 +45,7 @@ server-pay/config.php
 
 # Витрина приходит из CRM на сервере и не должна попадать в сборку
 public/api/showcase.json
+
+# Архивы сборки — они живут только в ветке server-build.
+pion-site.tar.gz
+pion-pay.tar.gz
