@@ -11,10 +11,9 @@
 
 declare(strict_types=1);
 
-$payDir = rtrim($argv[1] ?? __DIR__, '/\');
+$payDir = rtrim($argv[1] ?? __DIR__, "/\\");
 if (!is_file($payDir . '/lib.php')) {
-    fwrite(STDERR, "Не нашёл lib.php в $payDir
-");
+    fwrite(STDERR, "Не нашёл lib.php в $payDir" . PHP_EOL);
     exit(2);
 }
 require $payDir . '/lib.php';
