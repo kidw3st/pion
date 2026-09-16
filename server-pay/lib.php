@@ -51,12 +51,52 @@ function catalog_index(): array
 }
 
 /** Тарифы доставки — те же, что печатает сайт. */
+// freeFrom — сумма заказа, с которой доставка в эту зону бесплатна (null —
+// никогда). Ближняя зона появилась вместе с акцией «бесплатно от 5000 ₽
+// в радиусе 3 км»: раньше самой близкой была пятикилометровая.
 const DELIVERY_OPTIONS = [
-    'zone-5' => ['label' => 'Доставка до 5 км от салона', 'price' => 500,  'discountPercent' => 0],
-    'zone-7' => ['label' => 'Доставка до 7 км от салона', 'price' => 800,  'discountPercent' => 0],
-    'zone-9' => ['label' => 'Доставка до 9 км от салона', 'price' => 950,  'discountPercent' => 0],
-    'pickup' => ['label' => 'Самовывоз: ул. Газеты Звезда, 27', 'price' => 0, 'discountPercent' => 5],
+    'zone-3' => ['label' => 'Доставка до 3 км от салона', 'price' => 300,  'discountPercent' => 0, 'freeFrom' => 5000],
+    'zone-5' => ['label' => 'Доставка до 5 км от салона', 'price' => 500,  'discountPercent' => 0, 'freeFrom' => null],
+    'zone-7' => ['label' => 'Доставка до 7 км от салона', 'price' => 800,  'discountPercent' => 0, 'freeFrom' => null],
+    'zone-9' => ['label' => 'Доставка до 9 км от салона', 'price' => 950,  'discountPercent' => 0, 'freeFrom' => null],
+    'pickup' => ['label' => 'Самовывоз: ул. Газеты Звезда, 27', 'price' => 0, 'discountPercent' => 5, 'freeFrom' => null],
 ];
+
+/** Часовой пояс салона. Сервер живёт по Москве, Пермь на два часа впереди. */
+const SALON_TZ = 'Asia/Yekaterinburg';
+
+// Вечерняя скидка на букеты с витрины: они собраны сегодня и до завтра не
+// доживут, поэтому вечером их отдают дешевле. Действует, пока салон открыт.
+const EVENING_PERCENT = 15;
+const EVENING_FROM_HOUR = 20;
+const EVENING_TO_HOUR = 22;
+
+// Подарки за сумму заказа. Считается оплаченная стоимость букетов — без
+// доставки и уже за вычетом скидок, то есть ровно то, что человек платит
+// за товар.
+const GIFT_BOX_FROM = 5000;
+const GIFT_SHOPPER_FROM = 15000;
+
+/**
+ * Идёт ли сейчас вечерняя скидка. Время берём по Перми, а не по серверу:
+ * иначе в 20:00 у покупателя скидки ещё нет, а в 18:00 она уже есть.
+ */
+function evening_discount_active(?DateTimeImmutable $now = null): bool
+{
+    $local = ($now ?? new DateTimeImmutable('now'))->setTimezone(new DateTimeZone(SALON_TZ));
+    $hour = (int)$local->format('G');
+
+    return $hour >= EVENING_FROM_HOUR && $hour < EVENING_TO_HOUR;
+}
+
+/**
+ * Товар с витрины? Синхронизатор помечает такие идентификаторы префиксом
+ * cs- (см. sync-showcase.php) — постоянный каталог его не использует.
+ */
+function is_showcase_uid(string $uid): bool
+{
+    return str_starts_with($uid, 'cs-');
+}
 
 /**
  * Пересчитывает заказ по серверным ценам.
@@ -78,8 +118,17 @@ function price_order(array $cartItems, string $deliveryId): array
         throw new InvalidArgumentException('Слишком много позиций в заказе');
     }
 
+    // Время проверяем один раз на весь заказ: если считать его для каждой
+    // позиции, заказ, оформленный ровно в 22:00:00, получил бы скидку на
+    // первый букет и не получил на второй.
+    $eveningActive = evening_discount_active();
+
     $items = [];
-    $goods = 0;
+    $goods = 0;          // по прайсу, без скидок
+    $paidForGoods = 0;   // сколько человек реально платит за товар
+    $showcaseGoods = 0;
+    $evening = 0;
+    $pickup = 0;
     foreach ($cartItems as $row) {
         $uid = (string)($row['uid'] ?? '');
         $qty = (int)($row['quantity'] ?? 0);
@@ -90,27 +139,78 @@ function price_order(array $cartItems, string $deliveryId): array
             throw new InvalidArgumentException('Товар не найден: ' . $uid);
         }
         $price = $catalog[$uid]['price'];
+        $showcase = is_showcase_uid($uid);
+
+        // Скидки считаем сразу в цене за штуку и в целых рублях. Так сумма
+        // позиций всегда в точности равна сумме платежа — банк отвергает чек,
+        // в котором они разошлись хоть на копейку, а распределять скидку по
+        // позициям задним числом пришлось бы с остатками от деления.
+        $unit = $price;
+        if ($showcase && $eveningActive) {
+            $unit -= (int)round($unit * EVENING_PERCENT / 100);
+            $evening += ($price - $unit) * $qty;
+        }
+        // Скидка самовывоза идёт следом, от уже уценённого: иначе две скидки
+        // на одну сумму накладывались бы друг на друга.
+        if ($delivery['discountPercent'] > 0) {
+            $afterEvening = $unit;
+            $unit -= (int)round($unit * $delivery['discountPercent'] / 100);
+            $pickup += ($afterEvening - $unit) * $qty;
+        }
+
         $items[] = [
             'uid' => $uid,
             'title' => $catalog[$uid]['title'],
             'price' => $price,
+            // Цена и стоимость строки уже со скидкой — их и платит покупатель.
+            'unitPrice' => $unit,
             'quantity' => $qty,
-            'amount' => $price * $qty,
+            'amount' => $unit * $qty,
+            'showcase' => $showcase,
         ];
         $goods += $price * $qty;
+        $paidForGoods += $unit * $qty;
+        if ($showcase) {
+            $showcaseGoods += $price * $qty;
+        }
     }
     if ($items === []) {
         throw new InvalidArgumentException('Корзина пуста');
     }
 
-    $discount = (int)round($goods * $delivery['discountPercent'] / 100);
+    $discount = $evening + $pickup;
+
+    $deliveryPrice = $delivery['price'];
+    $deliveryFree = $delivery['freeFrom'] !== null
+        && $deliveryPrice > 0
+        && $paidForGoods >= $delivery['freeFrom'];
+    if ($deliveryFree) {
+        $deliveryPrice = 0;
+    }
+
+    // Подарки кладём в заказ строками: флорист должен видеть, что положить
+    // в пакет, а покупатель — за что именно он их получил.
+    $gifts = [];
+    if ($paidForGoods >= GIFT_BOX_FROM) {
+        $gifts[] = 'Фирменная транспортировочная коробка';
+    }
+    if ($paidForGoods >= GIFT_SHOPPER_FROM) {
+        $gifts[] = 'Фирменный шоппер «Пион»';
+    }
+
     return [
         'items' => $items,
         'goods' => $goods,
+        'paidForGoods' => $paidForGoods,
         'deliveryLabel' => $delivery['label'],
-        'delivery' => $delivery['price'],
+        'delivery' => $deliveryPrice,
+        'deliveryFree' => $deliveryFree,
+        'eveningDiscount' => $evening,
+        'pickupDiscount' => $pickup,
+        // Общая скидка: на неё опираются чек и тексты уведомлений.
         'discount' => $discount,
-        'total' => $goods + $delivery['price'] - $discount,
+        'gifts' => $gifts,
+        'total' => $paidForGoods + $deliveryPrice,
     ];
 }
 
@@ -135,7 +235,7 @@ function tbank_receipt(array $order, string $email, string $phone): array
     foreach ($order['items'] as $item) {
         $items[] = [
             'Name' => mb_substr($item['title'], 0, 128),
-            'Price' => $item['price'] * 100,
+            'Price' => $item['unitPrice'] * 100,
             'Quantity' => $item['quantity'],
             'Amount' => $item['amount'] * 100,
             'Tax' => 'none',
@@ -154,11 +254,23 @@ function tbank_receipt(array $order, string $email, string $phone): array
             'PaymentObject' => 'service',
         ];
     }
-    // Скидка самовывоза уменьшает первую позицию, чтобы сумма чека сошлась
-    // с суммой платежа копейка в копейку.
-    if ($order['discount'] > 0 && $items !== []) {
-        $items[0]['Amount'] -= $order['discount'] * 100;
-        $items[0]['Price'] = (int)($items[0]['Amount'] / $items[0]['Quantity']);
+    // Ничего вычитать не нужно: price_order уже отдал цены со скидкой, и
+    // сумма позиций по построению равна сумме платежа. Раньше скидка целиком
+    // снималась с первой позиции — при 5% это сходило с рук, но с вечерними
+    // 15% дешёвая первая позиция ушла бы в минус, и банк отверг бы чек.
+
+    // Подарки — отдельными позициями по нулевой цене: так они видны и в чеке,
+    // и флористу в задании на сборку.
+    foreach ($order['gifts'] ?? [] as $gift) {
+        $items[] = [
+            'Name' => mb_substr($gift . ' (подарок)', 0, 128),
+            'Price' => 0,
+            'Quantity' => 1,
+            'Amount' => 0,
+            'Tax' => 'none',
+            'PaymentMethod' => 'full_payment',
+            'PaymentObject' => 'commodity',
+        ];
     }
 
     $receipt = ['Items' => $items, 'Taxation' => 'usn_income'];
@@ -174,6 +286,26 @@ function tbank_receipt(array $order, string $email, string $phone): array
 function rub(int $amount): string
 {
     return number_format($amount, 0, ',', ' ') . ' ₽';
+}
+
+/**
+ * Из чего сложилась скидка — одним списком на все три уведомления (Telegram,
+ * письмо, заявка в CRM), чтобы флорист везде видел одинаковые цифры.
+ * Возвращает пары [подпись, сумма в рублях].
+ *
+ * @return list<array{0: string, 1: int}>
+ */
+function order_discount_lines(array $order): array
+{
+    $lines = [];
+    if (($order['eveningDiscount'] ?? 0) > 0) {
+        $lines[] = ['Вечерняя скидка ' . EVENING_PERCENT . '% на витрину', (int)$order['eveningDiscount']];
+    }
+    if (($order['pickupDiscount'] ?? 0) > 0) {
+        $lines[] = ['Скидка за самовывоз', (int)$order['pickupDiscount']];
+    }
+
+    return $lines;
 }
 
 /** Экранирование для разметки Telegram: имя и адрес пишет посторонний. */
@@ -197,19 +329,29 @@ function order_telegram_text(
     $lines = ['<b>' . tg_escape($headline) . '</b>', ''];
 
     foreach ($order['items'] as $item) {
+        // Если на позицию была скидка, рядом зачёркнута цена по прайсу:
+        // флорист сразу видит, что букет ушёл дешевле не по ошибке.
+        $full = $item['price'] * $item['quantity'];
         $lines[] = '• ' . tg_escape($item['title'])
             . ($item['quantity'] > 1 ? ' × ' . $item['quantity'] : '')
-            . ' — ' . rub($item['amount']);
+            . ' — ' . rub($item['amount'])
+            . ($item['amount'] < $full ? ' <s>' . rub($full) . '</s>' : '');
     }
 
     $lines[] = '';
     $lines[] = tg_escape($order['deliveryLabel'])
-        . ($order['delivery'] > 0 ? ' — ' . rub($order['delivery']) : '');
-    if ($order['discount'] > 0) {
-        $lines[] = 'Скидка за самовывоз: −' . rub($order['discount']);
+        . ($order['delivery'] > 0
+            ? ' — ' . rub($order['delivery'])
+            : (!empty($order['deliveryFree']) ? ' — бесплатно по акции' : ''));
+    foreach (order_discount_lines($order) as [$label, $amount]) {
+        $lines[] = tg_escape($label) . ': −' . rub($amount);
     }
     $lines[] = '<b>Итого: ' . rub($order['total']) . '</b>';
     $lines[] = 'Оплата: ' . tg_escape($paymentLine);
+
+    if (!empty($order['gifts'])) {
+        $lines[] = '🎁 Положить в заказ: ' . tg_escape(implode(', ', $order['gifts']));
+    }
 
     $lines[] = '';
     $lines[] = '👤 <b>' . tg_escape($customer['name']) . '</b>';
@@ -323,13 +465,26 @@ function order_mail_body(array $order, array $customer, string $paymentLine): st
 {
     $lines = [];
     foreach ($order['items'] as $item) {
-        $lines[] = sprintf('  %s x %d — %d руб.', $item['title'], $item['quantity'], $item['amount']);
+        $full = $item['price'] * $item['quantity'];
+        $lines[] = sprintf('  %s x %d — %d руб.', $item['title'], $item['quantity'], $item['amount'])
+            . ($item['amount'] < $full ? sprintf(' (по прайсу %d руб.)', $full) : '');
     }
+
+    $discounts = '';
+    foreach (order_discount_lines($order) as [$label, $amount]) {
+        $discounts .= $label . ': -' . $amount . " руб.\n";
+    }
+
     return "Новый заказ на сайте pionperm.ru\n\n"
         . implode("\n", $lines) . "\n\n"
-        . 'Доставка: ' . $order['deliveryLabel'] . ' — ' . $order['delivery'] . " руб.\n"
-        . ($order['discount'] > 0 ? 'Скидка самовывоза: -' . $order['discount'] . " руб.\n" : '')
-        . 'ИТОГО: ' . $order['total'] . " руб.\n\n"
+        . 'Доставка: ' . $order['deliveryLabel'] . ' — '
+        . ($order['delivery'] > 0
+            ? $order['delivery'] . " руб.\n"
+            : (!empty($order['deliveryFree']) ? "бесплатно по акции\n" : "0 руб.\n"))
+        . $discounts
+        . 'ИТОГО: ' . $order['total'] . " руб.\n"
+        . (!empty($order['gifts']) ? 'Подарки: ' . implode(', ', $order['gifts']) . "\n" : '')
+        . "\n"
         . 'Имя: ' . $customer['name'] . "\n"
         . 'Телефон: ' . $customer['phone'] . "\n"
         . 'Email: ' . $customer['email'] . "\n"

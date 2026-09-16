@@ -65,15 +65,29 @@ function posiflora_push_order(array $order, array $customer, string $paymentLine
             return ['note' => 'CRM: пропущено (интеграция не настроена)', 'id' => null];
         }
 
+        // Суммы в заявке — те, что человек уже оплатил: скидки посчитаны на
+        // сервере до платежа, пересчитывать их в CRM вручную не нужно.
         $lines = [];
         foreach ($order['items'] as $item) {
-            $lines[] = sprintf('%s x %d — %d руб.', $item['title'], $item['quantity'], $item['amount']);
+            $full = $item['price'] * $item['quantity'];
+            $lines[] = sprintf('%s x %d — %d руб.', $item['title'], $item['quantity'], $item['amount'])
+                . ($item['amount'] < $full ? sprintf(' (по прайсу %d руб.)', $full) : '');
         }
+
+        $discounts = '';
+        foreach (order_discount_lines($order) as [$label, $amount]) {
+            $discounts .= $label . ': -' . $amount . " руб.\n";
+        }
+
         $description = "Заказ с сайта pionperm.ru\n"
             . implode("\n", $lines) . "\n"
-            . $order['deliveryLabel'] . ' — ' . $order['delivery'] . " руб.\n"
-            . ($order['discount'] > 0 ? 'Скидка самовывоза: -' . $order['discount'] . " руб.\n" : '')
+            . $order['deliveryLabel'] . ' — '
+            . ($order['delivery'] > 0
+                ? $order['delivery'] . " руб.\n"
+                : (!empty($order['deliveryFree']) ? "бесплатно по акции\n" : "0 руб.\n"))
+            . $discounts
             . 'ИТОГО: ' . $order['total'] . " руб.\n"
+            . (!empty($order['gifts']) ? 'Подарки: ' . implode(', ', $order['gifts']) . "\n" : '')
             . 'Оплата: ' . $paymentLine . "\n"
             . 'Клиент: ' . $customer['name'] . ', ' . $customer['phone']
             . ($customer['email'] !== '' ? ', ' . $customer['email'] : '');

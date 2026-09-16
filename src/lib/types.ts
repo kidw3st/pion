@@ -78,6 +78,8 @@ export interface DeliveryOption {
   label: string;
   priceRub: number;
   discountPercent?: number;
+  /** С какой суммы заказа доставка в этой зоне бесплатна. */
+  freeFromRub?: number;
 }
 
 export interface DeliveryInfo {

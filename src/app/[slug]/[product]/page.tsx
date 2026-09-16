@@ -91,6 +91,9 @@ export default async function ProductPage({
   const cheapest = site.delivery.options
     .filter((o) => o.priceRub > 0)
     .sort((a, b) => a.priceRub - b.priceRub)[0];
+  // Зона с бесплатной доставкой по акции — берём из данных, чтобы порог
+  // менялся в одном месте.
+  const freeZone = site.delivery.options.find((o) => o.freeFromRub !== undefined);
 
   return (
     <main className={styles.page}>
@@ -145,6 +148,12 @@ export default async function ProductPage({
                 <li>
                   Доставка по Перми от {cheapest.priceRub.toLocaleString('ru-RU')} ₽ — стоимость
                   зависит от расстояния до салона.
+                </li>
+              )}
+              {freeZone?.freeFromRub && (
+                <li>
+                  От {freeZone.freeFromRub.toLocaleString('ru-RU')} ₽ —{' '}
+                  {freeZone.label.toLowerCase()} бесплатно, плюс фирменная коробка в подарок.
                 </li>
               )}
               {pickup && (

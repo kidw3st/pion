@@ -87,3 +87,12 @@
   background: var(--color-accent);
   color: var(--color-white);
 }
+
+/* Старая цена рядом с вечерней: видно, что букет подешевел, а не что
+   флорист ошибся ценником. */
+.priceWas {
+  margin-left: 8px;
+  font-size: 14px;
+  font-weight: 400;
+  opacity: 0.55;
+}

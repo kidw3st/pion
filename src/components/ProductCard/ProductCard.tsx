@@ -2,11 +2,20 @@
 
 import { Gallery } from '@/components/Gallery/Gallery';
 import { useCart } from '@/components/Cart/CartContext';
+import { EVENING_PERCENT, isShowcaseUid } from '@/lib/promo';
+import { useEveningDiscount } from '@/lib/useEveningDiscount';
 import type { Product } from '@/lib/types';
 import styles from './ProductCard.module.css';
 
 export function ProductCard({ product, isNew = false }: { product: Product; isNew?: boolean }) {
   const { addItem } = useCart();
+  // Вечерняя скидка — только на витрину: у постоянного каталога цена своя.
+  // В корзину кладём цену по прайсу: скидку считает сервер при оформлении,
+  // иначе она снялась бы дважды.
+  const evening = useEveningDiscount() && isShowcaseUid(product.uid);
+  const price = evening
+    ? product.price - Math.round((product.price * EVENING_PERCENT) / 100)
+    : product.price;
 
   return (
     <div className={styles.card}>
@@ -23,7 +32,12 @@ export function ProductCard({ product, isNew = false }: { product: Product; isNe
       </div>
       <h3 className={styles.title}>{product.title}</h3>
       <p className={styles.description}>{product.description}</p>
-      <span className={styles.price}>{product.price.toLocaleString('ru-RU')} р.</span>
+      <span className={styles.price}>
+        {price.toLocaleString('ru-RU')} р.
+        {evening && (
+          <s className={styles.priceWas}>{product.price.toLocaleString('ru-RU')} р.</s>
+        )}
+      </span>
       <button
         type="button"
         className={styles.addBtn}

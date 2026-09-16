@@ -223,7 +223,9 @@ await write(
 // closest a static export gets, and they are what most agents fall back to.
 const pageFiles = (await readdir(path.join(ROOT, 'data/pages'))).filter((f) => f.endsWith('.json'));
 const sectionToMd = (s) => {
-  if (s.kind === 'cover' || s.kind === 'text') {
+  // textImage — самый частый блок на сайте: им написаны и акции, и условия
+  // доставки. Без него markdown-копии отдавали агентам пустые страницы.
+  if (s.kind === 'cover' || s.kind === 'text' || s.kind === 'textImage') {
     return [s.title ? `## ${s.title.replace(/\n/g, ' ')}` : '', s.body || s.subtitle || '']
       .filter(Boolean)
       .join('\n\n');

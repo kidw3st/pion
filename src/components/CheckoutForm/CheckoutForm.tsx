@@ -5,6 +5,8 @@ import { useCart } from '@/components/Cart/CartContext';
 import { getSite } from '@/lib/content';
 import { validateCheckout, type CheckoutValues } from './validateCheckout';
 import { orderTotals } from './orderTotals';
+import { EVENING_PERCENT, EVENING_FROM_HOUR, isShowcaseUid } from '@/lib/promo';
+import { useEveningDiscount } from '@/lib/useEveningDiscount';
 import styles from './CheckoutForm.module.css';
 
 // Delivery zones and prices come from data/site.json so the checkout, the
@@ -18,7 +20,7 @@ const initialValues: CheckoutValues = {
 const rub = (value: number) => `${value.toLocaleString('ru-RU')} ₽`;
 
 export function CheckoutForm() {
-  const { items, total, clear } = useCart();
+  const { items, clear } = useCart();
   const [values, setValues] = useState<CheckoutValues>(initialValues);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
@@ -26,6 +28,7 @@ export function CheckoutForm() {
   const [serverError, setServerError] = useState('');
   // Возврат с платёжной страницы банка: /checkout/?payment=success|fail
   const [paymentResult, setPaymentResult] = useState<'success' | 'fail' | null>(null);
+  const eveningActive = useEveningDiscount();
 
   useEffect(() => {
     const param = new URLSearchParams(window.location.search).get('payment');
@@ -39,7 +42,8 @@ export function CheckoutForm() {
   }, []);
 
   const chosenOption = DELIVERY.options.find((o) => o.id === values.deliveryOption) ?? null;
-  const totals = orderTotals(total, chosenOption);
+  const totals = orderTotals(items, chosenOption, eveningActive);
+  const hasShowcase = items.some((i) => isShowcaseUid(i.uid));
 
   function update<K extends keyof CheckoutValues>(key: K, value: CheckoutValues[K]) {
     setValues((v) => ({ ...v, [key]: value }));
@@ -122,25 +126,49 @@ export function CheckoutForm() {
         ))}
       </ul>
 
+      {eveningActive && hasShowcase && (
+        <p className={styles.promo}>
+          После {EVENING_FROM_HOUR}:00 букеты с витрины — со скидкой {EVENING_PERCENT}%. Она уже
+          учтена в сумме ниже.
+        </p>
+      )}
+
       <div className={styles.totals}>
         <div className={styles.totalsRow}>
           <span>Товары</span>
           <span>{rub(totals.goods)}</span>
         </div>
-        <div className={styles.totalsRow}>
-          <span>{chosenOption?.id === 'pickup' ? 'Самовывоз' : 'Доставка'}</span>
-          <span>{totals.delivery === 0 ? 'бесплатно' : rub(totals.delivery)}</span>
-        </div>
-        {totals.discount > 0 && (
+        {totals.eveningDiscount > 0 && (
           <div className={styles.totalsRow}>
-            <span>Скидка за самовывоз {chosenOption?.discountPercent}%</span>
-            <span>−{rub(totals.discount)}</span>
+            <span>Вечерняя скидка {EVENING_PERCENT}% на витрину</span>
+            <span>−{rub(totals.eveningDiscount)}</span>
           </div>
         )}
+        {totals.pickupDiscount > 0 && (
+          <div className={styles.totalsRow}>
+            <span>Скидка за самовывоз {chosenOption?.discountPercent}%</span>
+            <span>−{rub(totals.pickupDiscount)}</span>
+          </div>
+        )}
+        <div className={styles.totalsRow}>
+          <span>{chosenOption?.id === 'pickup' ? 'Самовывоз' : 'Доставка'}</span>
+          <span>
+            {totals.delivery === 0
+              ? totals.deliveryFree
+                ? 'бесплатно по акции'
+                : 'бесплатно'
+              : rub(totals.delivery)}
+          </span>
+        </div>
         <div className={styles.totalsFinal}>
           <span>Итого к оплате</span>
           <span>{rub(totals.total)}</span>
         </div>
+        {totals.gifts.length > 0 && (
+          <p className={styles.gifts}>
+            Подарок к заказу: {totals.gifts.join(', ').toLowerCase()}.
+          </p>
+        )}
         <p className={styles.totalsNote}>{DELIVERY.note}</p>
       </div>
 
@@ -185,6 +213,12 @@ export function CheckoutForm() {
                 {opt.priceRub === 0 ? 'бесплатно' : rub(opt.priceRub)}
                 {opt.discountPercent ? `, скидка ${opt.discountPercent}%` : ''}
               </strong>
+              {opt.freeFromRub !== undefined && (
+                <em className={styles.optionNote}>
+                  {' '}
+                  бесплатно от {rub(opt.freeFromRub)}
+                </em>
+              )}
             </span>
           </label>
         ))}

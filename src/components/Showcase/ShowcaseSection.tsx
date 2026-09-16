@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ProductCard } from '@/components/ProductCard/ProductCard';
+import { EVENING_PERCENT, EVENING_FROM_HOUR, EVENING_TO_HOUR } from '@/lib/promo';
+import { useEveningDiscount } from '@/lib/useEveningDiscount';
 import type { Product } from '@/lib/types';
 import styles from './ShowcaseSection.module.css';
 
@@ -30,6 +32,7 @@ export function ShowcaseSection({
   limit?: number;
 }) {
   const [products, setProducts] = useState<Product[] | null>(null);
+  const eveningActive = useEveningDiscount();
 
   useEffect(() => {
     const base = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
@@ -83,6 +86,13 @@ export function ShowcaseSection({
             Собраны сегодня и ждут вас в салоне — можно забрать или заказать доставку
           </p>
         </>
+      )}
+
+      {eveningActive && (
+        <p className={styles.evening}>
+          Сейчас действует вечерняя скидка: с {EVENING_FROM_HOUR}:00 до {EVENING_TO_HOUR}:00 все
+          букеты с витрины — на {EVENING_PERCENT}% дешевле. Цены ниже уже со скидкой.
+        </p>
       )}
 
       <div className={styles.grid}>

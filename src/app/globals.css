@@ -1,5 +1,7 @@
 :root {
   --color-accent: #b08d7a;
+  /* Разбавленный акцент для плашек: фон, на котором чёрный текст читается. */
+  --color-accent-soft: #f6efe9;
   /* Header/footer bar colour, sampled from the live site (not the accent). */
   --color-header: #d2b8a4;
   --color-black: #000000;
