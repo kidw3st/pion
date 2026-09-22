@@ -220,6 +220,71 @@ function price_order(array $cartItems, string $deliveryId, ?DateTimeImmutable $n
     ];
 }
 
+/**
+ * Гасит часть заказа бонусами UDS.
+ *
+ * Баллы снимаются последними — после вечерней скидки и самовывоза: они
+ * доплачивают то, что осталось. Раскладываются по цене за штуку целыми
+ * рублями, как и остальные скидки, иначе строки чека перестанут сходиться
+ * с суммой платежа и банк его отвергнет.
+ *
+ * Списать больше, чем стоит товар, нельзя: доставку баллами не гасим —
+ * это услуга, и в чеке она отдельной строкой.
+ *
+ * Возвращает заказ с новым total и ключом udsPoints — сколько баллов
+ * ушло на самом деле. Это число (а не запрошенное) уходит в UDS.
+ */
+function apply_points_discount(array $order, int $wanted): array
+{
+    $order['udsPoints'] = 0;
+    if ($wanted <= 0) {
+        return $order;
+    }
+
+    $capacity = $order['paidForGoods'];
+    $wanted = min($wanted, $capacity);
+    if ($wanted <= 0) {
+        return $order;
+    }
+
+    // Сначала пропорционально: каждой штуке — её доля, округлённая вниз.
+    $spent = 0;
+    foreach ($order['items'] as $k => $item) {
+        $off = intdiv($item['unitPrice'] * $wanted, $capacity);
+        if ($off <= 0) {
+            continue;
+        }
+        $order['items'][$k]['unitPrice'] -= $off;
+        $order['items'][$k]['amount'] = $order['items'][$k]['unitPrice'] * $item['quantity'];
+        $spent += $off * $item['quantity'];
+    }
+
+    // Остаток от округления добиваем по рублю на штуку. Рубль на штуку
+    // стоит ровно quantity рублей, поэтому меньшим шагом не разложить:
+    // до пары рублей может остаться неизрасходованным, и это нормально.
+    $left = $wanted - $spent;
+    $moved = true;
+    while ($left > 0 && $moved) {
+        $moved = false;
+        foreach ($order['items'] as $k => $item) {
+            $qty = $item['quantity'];
+            if ($left >= $qty && $order['items'][$k]['unitPrice'] > 0) {
+                $order['items'][$k]['unitPrice']--;
+                $order['items'][$k]['amount'] -= $qty;
+                $left -= $qty;
+                $spent += $qty;
+                $moved = true;
+            }
+        }
+    }
+
+    $order['udsPoints'] = $spent;
+    $order['paidForGoods'] -= $spent;
+    $order['total'] = $order['paidForGoods'] + $order['delivery'];
+
+    return $order;
+}
+
 /** Подпись запроса к Т-Банку: sha256 значений корневых скаляров + пароль. */
 function tbank_token(array $request): string
 {

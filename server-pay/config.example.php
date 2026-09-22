@@ -36,6 +36,14 @@ const POSIFLORA_PASSWORD = '';
 const POSIFLORA_STORE_ID = '';
 const POSIFLORA_SOURCE_ID = '';
 
+// UDS — программа лояльности. ID компании и API-ключ владелец берёт сам
+// в личном кабинете UDS на странице настроек API; ключ в любой момент
+// перевыпускается там же. Пусто — поле для кода списания на сайте просто
+// не показывается, заказы принимаются как обычно.
+const UDS_API = 'https://api.uds.app/partner/v2/';
+const UDS_COMPANY_ID = '';
+const UDS_API_KEY = '';
+
 // Товары главной страницы («Новинки»), которых нет в JSON-каталоге.
 // Цены — из data/site.json, uid — как их кладёт в корзину фронт.
 const EXTRA_ITEMS = [

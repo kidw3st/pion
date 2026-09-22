@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 require __DIR__ . '/lib.php';
 require __DIR__ . '/posiflora.php';
+require __DIR__ . '/uds.php';
 
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
     respond(405, ['error' => 'Только POST']);
@@ -58,6 +59,62 @@ try {
 
 $orderId = 'pion-' . date('ymd-His') . '-' . substr(bin2hex(random_bytes(3)), 0, 4);
 
+// Программа лояльности UDS. Баллы списываем только при оплате картой:
+// списать их раньше, чем пришли деньги, значит оставить человека без
+// бонусов, если он передумает на странице банка. Заказы «при получении»
+// флорист проводит в UDS сам, как делает это в салоне.
+//
+// Сама операция уходит в UDS не здесь, а после подтверждения оплаты
+// (notify.php) — тут только запоминаем намерение.
+$udsWho = null;
+$udsPoints = 0;
+$udsTotal = $order['total'];
+if ($payment === 'card' && uds_enabled()) {
+    try {
+        $session = uds_session_get(trim((string)($input['udsToken'] ?? '')));
+        if ($session !== null) {
+            $udsWho = ['uid' => (string)$session['uid']];
+
+            // Число баллов пересчитываем сами: тому, что прислал браузер,
+            // верить нельзя — это деньги.
+            $limits = uds_summary(uds_calc($udsWho, $udsTotal, 0));
+            $wanted = max(0, min(
+                (int)($input['udsPoints'] ?? 0),
+                $limits['maxPoints'],
+                $order['paidForGoods'],
+            ));
+            $withPoints = apply_points_discount($order, $wanted);
+
+            if ($withPoints['udsPoints'] > 0) {
+                $check = uds_summary(uds_calc($udsWho, $udsTotal, $withPoints['udsPoints']));
+                // Списываем, только если UDS согласен с нашей суммой
+                // до рубля. Разошлись — платит деньгами полностью.
+                if ($check['cash'] === $withPoints['total']) {
+                    $order = $withPoints;
+                    $udsPoints = $withPoints['udsPoints'];
+                }
+            }
+        }
+
+        // Кода не было — не беда: кешбэк начислим по телефону, для этого
+        // в настройках компании включён purchaseByPhone.
+        if ($udsWho === null) {
+            $phone = uds_phone($customer['phone']);
+            $udsWho = $phone === null ? null : ['phone' => $phone];
+        }
+    } catch (Throwable $e) {
+        // Лояльность не должна мешать покупке: заказ идёт дальше без неё.
+        $udsWho = null;
+        $udsPoints = 0;
+        @file_put_contents(
+            __DIR__ . '/orders.log',
+            date('Y-m-d H:i:s') . ' | UDS при оформлении: ' . $e->getMessage() . "
+",
+            FILE_APPEND | LOCK_EX,
+        );
+    }
+}
+
 if ($payment === 'cash') {
     $paymentLine = 'наличными или картой при получении';
     $crm = posiflora_push_order($order, $customer, $paymentLine);
@@ -89,6 +146,18 @@ $request = [
 $request['Token'] = tbank_token($request);
 $request['DATA'] = ['Phone' => $customer['phone'], 'Name' => $customer['name']];
 $request['Receipt'] = tbank_receipt($order, $customer['email'], $customer['phone']);
+
+// Намерение по баллам ждёт подтверждения оплаты. nonce делает операцию
+// повторяемой без последствий: банк иногда шлёт уведомление дважды.
+if ($udsWho !== null) {
+    uds_pending_put($orderId, [
+        'who' => $udsWho,
+        'total' => $udsTotal,
+        'points' => $udsPoints,
+        'cash' => $order['total'],
+        'nonce' => uds_uuid(),
+    ]);
+}
 
 $ch = curl_init(TBANK_API . 'Init');
 curl_setopt_array($ch, [

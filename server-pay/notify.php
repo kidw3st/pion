@@ -7,6 +7,7 @@
 declare(strict_types=1);
 
 require __DIR__ . '/lib.php';
+require __DIR__ . '/uds.php';
 
 $input = json_decode((string)file_get_contents('php://input'), true);
 if (!is_array($input) || empty($input['TerminalKey'])) {
@@ -32,13 +33,41 @@ $orderId = (string)($input['OrderId'] ?? '');
 $amount = (int)($input['Amount'] ?? 0) / 100;
 
 if ($status === 'CONFIRMED') {
+    // Деньги пришли — только теперь списываем баллы и начисляем кешбэк.
+    // Если UDS недоступен, на заказ это не влияет: в уведомлении будет
+    // строчка, и флорист проведёт операцию вручную.
+    $udsNote = '';
+    $pending = uds_pending_take($orderId);
+    if ($pending !== null) {
+        try {
+            uds_purchase(
+                (array)$pending['who'],
+                (int)$pending['total'],
+                (int)$pending['points'],
+                (int)$pending['cash'],
+                (string)$pending['nonce'],
+                $orderId,
+            );
+            $udsNote = (int)$pending['points'] > 0
+                ? PHP_EOL . 'UDS: списано ' . (int)$pending['points'] . ' баллов, кешбэк начислен.'
+                : PHP_EOL . 'UDS: кешбэк начислен.';
+        } catch (Throwable $e) {
+            $udsNote = PHP_EOL . 'UDS: НЕ ПРОВЕДЕНО (' . $e->getMessage() . ') — проведите вручную.';
+        }
+        @file_put_contents(
+            __DIR__ . '/orders.log',
+            date('Y-m-d H:i:s') . ' | ' . $orderId . ' |' . str_replace(PHP_EOL, ' ', $udsNote) . PHP_EOL,
+            FILE_APPEND | LOCK_EX,
+        );
+    }
+
     notify_salon(
         'ОПЛАЧЕН заказ ' . $orderId . ' — ' . $amount . ' руб.',
         'Т-Банк подтвердил оплату заказа ' . $orderId . ' на сумму ' . $amount . " руб.\n"
-        . 'Можно собирать букет.',
+        . 'Можно собирать букет.' . $udsNote,
         "<b>✅ Заказ оплачен — можно собирать</b>\n\n"
         . 'Сумма: <b>' . rub((int)round($amount)) . "</b>\n"
-        . '<i>Заказ ' . tg_escape($orderId) . '</i>',
+        . '<i>Заказ ' . tg_escape($orderId) . '</i>' . tg_escape($udsNote),
     );
 } elseif (in_array($status, ['REJECTED', 'DEADLINE_EXPIRED'], true)) {
     notify_salon(

@@ -7,6 +7,7 @@ import { validateCheckout, type CheckoutValues } from './validateCheckout';
 import { orderTotals } from './orderTotals';
 import { EVENING_PERCENT, EVENING_FROM_HOUR, isShowcaseUid } from '@/lib/promo';
 import { useEveningDiscount } from '@/lib/useEveningDiscount';
+import { UdsPoints, type UdsState } from './UdsPoints';
 import styles from './CheckoutForm.module.css';
 
 // Delivery zones and prices come from data/site.json so the checkout, the
@@ -29,6 +30,10 @@ export function CheckoutForm() {
   // Возврат с платёжной страницы банка: /checkout/?payment=success|fail
   const [paymentResult, setPaymentResult] = useState<'success' | 'fail' | null>(null);
   const eveningActive = useEveningDiscount();
+  // Баллы UDS: суммы приходят с сервера, поэтому при любом изменении
+  // заказа расчёт сбрасывается — иначе на экране осталась бы цена от
+  // прежней корзины.
+  const [uds, setUds] = useState<UdsState | null>(null);
 
   useEffect(() => {
     const param = new URLSearchParams(window.location.search).get('payment');
@@ -44,9 +49,16 @@ export function CheckoutForm() {
   const chosenOption = DELIVERY.options.find((o) => o.id === values.deliveryOption) ?? null;
   const totals = orderTotals(items, chosenOption, eveningActive);
   const hasShowcase = items.some((i) => isShowcaseUid(i.uid));
+  // Когда списываются баллы, итог называет сервер: он спросил UDS и
+  // разложил баллы по позициям так, чтобы сошёлся чек.
+  const udsPoints = uds?.points ?? 0;
+  const finalTotal = udsPoints > 0 ? uds!.total : totals.total;
 
   function update<K extends keyof CheckoutValues>(key: K, value: CheckoutValues[K]) {
     setValues((v) => ({ ...v, [key]: value }));
+    if (key === 'deliveryOption' || key === 'paymentMethod') {
+      setUds(null);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -65,6 +77,8 @@ export function CheckoutForm() {
           items: items.map((i) => ({ uid: i.uid, quantity: i.quantity })),
           delivery: values.deliveryOption,
           payment: values.paymentMethod,
+          udsToken: uds?.token ?? null,
+          udsPoints: uds?.points ?? 0,
           customer: {
             name: values.name,
             phone: values.phone,
@@ -160,10 +174,19 @@ export function CheckoutForm() {
               : rub(totals.delivery)}
           </span>
         </div>
+        {udsPoints > 0 && (
+          <div className={styles.totalsRow}>
+            <span>Оплачено бонусами UDS</span>
+            <span>−{rub(udsPoints)}</span>
+          </div>
+        )}
         <div className={styles.totalsFinal}>
           <span>Итого к оплате</span>
-          <span>{rub(totals.total)}</span>
+          <span>{rub(finalTotal)}</span>
         </div>
+        {uds && uds.cashBack > 0 && (
+          <p className={styles.gifts}>За эту покупку начислим {rub(uds.cashBack)} бонусов UDS.</p>
+        )}
         {totals.gifts.length > 0 && (
           <p className={styles.gifts}>
             Подарок к заказу: {totals.gifts.join(', ').toLowerCase()}.
@@ -258,6 +281,18 @@ export function CheckoutForm() {
         </label>
       </fieldset>
       {errors.paymentMethod && <span className={styles.error}>{errors.paymentMethod}</span>}
+
+      {/* Баллами можно заплатить только картой: списывать их до того, как
+          пришли деньги, нечестно по отношению к покупателю. Заказ «при
+          получении» флорист проводит в UDS сам, как в салоне. */}
+      {values.paymentMethod === 'card' && (
+        <UdsPoints
+          items={items}
+          delivery={values.deliveryOption}
+          value={uds}
+          onChange={setUds}
+        />
+      )}
 
       {paymentResult === 'fail' && (
         <p className={styles.error}>

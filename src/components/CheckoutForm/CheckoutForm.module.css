@@ -170,3 +170,63 @@
   font-weight: 300;
   opacity: 0.7;
 }
+
+/* Оплата бонусами UDS: свёрнута по умолчанию — большинству покупателей
+   она не нужна, и лишнее поле только тормозит оформление. */
+.udsToggle {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-text-dark);
+  font-family: inherit;
+  font-size: 14px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.uds {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.udsHint {
+  margin: 0;
+  font-size: 14px;
+  line-height: 20px;
+  color: var(--color-text-dark);
+}
+
+.udsRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.udsRow input {
+  flex: 1 1 160px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid var(--color-border);
+  font-family: inherit;
+  font-size: 15px;
+}
+
+.udsRow button {
+  padding: 12px 20px;
+  border: 1px solid var(--color-accent);
+  background: transparent;
+  color: var(--color-text-dark);
+  font-family: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.udsRow button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

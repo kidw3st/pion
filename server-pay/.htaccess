@@ -19,4 +19,6 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteRule ^rate/ - [F,L]
+  # Там же лежат номерки UDS: по ним списываются чужие баллы, наружу нельзя.
+  RewriteRule ^uds/ - [F,L]
 </IfModule>
