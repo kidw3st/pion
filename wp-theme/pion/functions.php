@@ -275,7 +275,147 @@ function pion_json_ld(): array
         $post['articleSection'] = $cat->name;
     }
 
-    return [$blog, $post];
+    $graph = [$blog, $post];
+
+    $faq = json_decode((string) get_post_meta(get_the_ID(), 'pion_faq_jsonld', true), true);
+    if (is_array($faq) && $faq !== []) {
+        $graph[] = [
+            '@context'   => 'https://schema.org',
+            '@type'      => 'FAQPage',
+            'mainEntity' => $faq,
+        ];
+    }
+
+    return $graph;
+}
+
+/**
+ * SEO-поля записи. Пустое поле — работает обычное поведение темы.
+ *  - pion_seo_title  — заголовок для <title> и выдачи; H1 статьи остаётся своим,
+ *                      заголовки намеренно разные (так их разводят SEO-паспорта);
+ *  - pion_faq_jsonld — вопросы и ответы для разметки FAQPage: JSON-массив
+ *                      объектов Question (mainEntity), собирается из раздела
+ *                      «Частые вопросы» самой статьи;
+ *  - pion_og_image   — картинка 1200×630 для превью в соцсетях и мессенджерах.
+ * Поля открыты в REST, чтобы статьи можно было публиковать через /wp-json/wp/v2/posts.
+ */
+function pion_register_meta(): void
+{
+    $can_edit = static fn(): bool => current_user_can('edit_posts');
+
+    register_post_meta('post', 'pion_seo_title', [
+        'type'              => 'string',
+        'single'            => true,
+        'show_in_rest'      => true,
+        'sanitize_callback' => 'sanitize_text_field',
+        'auth_callback'     => $can_edit,
+    ]);
+    register_post_meta('post', 'pion_faq_jsonld', [
+        'type'              => 'string',
+        'single'            => true,
+        'show_in_rest'      => true,
+        'sanitize_callback' => 'pion_sanitize_faq',
+        'auth_callback'     => $can_edit,
+    ]);
+    register_post_meta('post', 'pion_og_image', [
+        'type'              => 'string',
+        'single'            => true,
+        'show_in_rest'      => true,
+        'sanitize_callback' => 'esc_url_raw',
+        'auth_callback'     => $can_edit,
+    ]);
+}
+add_action('init', 'pion_register_meta');
+
+/**
+ * Разметку вопросов храним только валидным JSON: битая строка в поле дала бы
+ * битый <script type="application/ld+json">, и поисковик отбросил бы всю разметку
+ * страницы, а не только FAQ.
+ */
+function pion_sanitize_faq($value): string
+{
+    $faq = json_decode(trim((string) $value), true);
+    if (is_array($faq) && isset($faq['mainEntity']) && is_array($faq['mainEntity'])) {
+        $faq = $faq['mainEntity'];
+    }
+    if (!is_array($faq) || $faq === [] || array_keys($faq) !== range(0, count($faq) - 1)) {
+        return '';
+    }
+
+    return (string) wp_json_encode($faq, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+}
+
+/** Заголовок для выдачи, если он задан у записи. */
+add_filter('pre_get_document_title', static function (string $title): string {
+    if (is_singular('post')) {
+        $seo = trim((string) get_post_meta(get_queried_object_id(), 'pion_seo_title', true));
+        if ($seo !== '') {
+            return $seo;
+        }
+    }
+    return $title;
+});
+
+/** Картинка для превью: своя 1200×630, иначе обложка записи. */
+function pion_share_image(): array
+{
+    if (!is_singular('post')) {
+        return [];
+    }
+
+    $id  = get_queried_object_id();
+    $own = trim((string) get_post_meta($id, 'pion_og_image', true));
+    if ($own !== '') {
+        return ['url' => $own, 'width' => 1200, 'height' => 630];
+    }
+
+    $thumb = get_post_thumbnail_id($id);
+    if ($thumb) {
+        $src = wp_get_attachment_image_src($thumb, 'pion-cover');
+        if ($src) {
+            return ['url' => $src[0], 'width' => (int) $src[1], 'height' => (int) $src[2]];
+        }
+    }
+
+    return [];
+}
+
+/**
+ * Open Graph и карточка для Telegram, ВКонтакте и других площадок. Без них
+ * ссылка на статью уходила в мессенджер без картинки и с чужим описанием.
+ */
+function pion_social_meta(): array
+{
+    $single = is_singular('post');
+    $meta = [
+        'og:locale'    => 'ru_RU',
+        'og:site_name' => (string) get_bloginfo('name'),
+        'og:type'      => $single ? 'article' : 'website',
+        'og:title'     => $single ? get_the_title(get_queried_object_id()) : wp_get_document_title(),
+        'og:description' => pion_meta_description(),
+        'og:url'       => pion_canonical_url(),
+    ];
+
+    $image = pion_share_image();
+    if ($image) {
+        $meta['og:image']        = $image['url'];
+        $meta['og:image:width']  = (string) $image['width'];
+        $meta['og:image:height'] = (string) $image['height'];
+    }
+
+    if ($single) {
+        $id = get_queried_object_id();
+        $meta['article:published_time'] = (string) get_the_date(DATE_W3C, $id);
+        $meta['article:modified_time']  = (string) get_the_modified_date(DATE_W3C, $id);
+        $cats = get_the_category($id);
+        if ($cats) {
+            $meta['article:section'] = $cats[0]->name;
+        }
+    }
+
+    $meta['twitter:card'] = $image ? 'summary_large_image' : 'summary';
+
+    return array_filter($meta, static fn($v): bool => $v !== '');
 }
 
 /**

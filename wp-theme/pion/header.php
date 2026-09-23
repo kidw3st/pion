@@ -18,6 +18,9 @@ $pion_tel = pion_tel($pion['phone']);
 		<meta name="description" content="<?php echo esc_attr($pion_descr); ?>">
 	<?php endif; ?>
 	<link rel="canonical" href="<?php echo esc_url(pion_canonical_url()); ?>">
+	<?php foreach (pion_social_meta() as $pion_prop => $pion_value) : ?>
+		<meta <?php echo str_starts_with($pion_prop, 'twitter:') ? 'name' : 'property'; ?>="<?php echo esc_attr($pion_prop); ?>" content="<?php echo esc_attr($pion_value); ?>">
+	<?php endforeach; ?>
 	<?php foreach (pion_json_ld() as $pion_ld) : ?>
 		<script type="application/ld+json"><?php
 			echo wp_json_encode($pion_ld, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);

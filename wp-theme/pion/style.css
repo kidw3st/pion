@@ -3,7 +3,7 @@ Theme Name: Пион
 Theme URI: https://pionperm.ru/blog/
 Author: Салон цветов «Пион»
 Description: Тема блога, повторяющая оформление основного сайта pionperm.ru: та же шапка, тот же подвал, тот же шрифт Montserrat и та же палитра. Шапка и подвал собираются из data/site.json основного сайта на этапе сборки, поэтому меню и контакты не расходятся.
-Version: 1.0
+Version: 1.1
 Requires at least: 6.0
 Tested up to: 7.1
 Requires PHP: 8.0
@@ -708,6 +708,55 @@ img {
   font-size: 13px;
   font-weight: 300;
   color: #6a6764;
+}
+
+/* Иллюстрации статей — во всю колонку текста. */
+.pion-content .wp-block-image {
+  margin-top: 28px;
+  margin-bottom: 28px;
+}
+
+.pion-content .wp-block-image img {
+  width: 100%;
+  height: auto;
+  background: var(--color-bg-light);
+}
+
+/* Ссылка на раздел (#якорь) не должна прятать заголовок под шапкой. */
+.pion-content h2[id],
+.pion-content h3[id] {
+  scroll-margin-top: 110px;
+}
+
+/* Таблицы-шпаргалки. На телефоне таблица прокручивается внутри своей рамки,
+   а не растягивает страницу. */
+.pion-content .wp-block-table {
+  margin-left: 0;
+  margin-right: 0;
+  overflow-x: auto;
+}
+
+.pion-content table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.pion-content th,
+.pion-content td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  vertical-align: top;
+  font-weight: 300;
+}
+
+.pion-content th {
+  font-weight: 600;
+  background: var(--color-bg-light);
+  color: var(--color-text-dark);
 }
 
 /* ------------------------------------------------------ подвал статьи и др. */
