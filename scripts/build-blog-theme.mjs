@@ -50,6 +50,12 @@ const data = {
     legal: site.footer.legal,
     hours: site.footer.hours,
   },
+  // Тот же счётчик, что на сайте: блог живёт на том же домене, и переход из
+  // статьи в каталог должен быть одним визитом, а не двумя в разных счётчиках.
+  analytics: {
+    yandexMetrika: Number(site.analytics?.yandexMetrika) || 0,
+    googleAnalytics: site.analytics?.googleAnalytics || '',
+  },
 };
 
 /** PHP-литерал из значения JSON. Строки — в одинарных кавычках с экранированием. */

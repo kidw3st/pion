@@ -28,11 +28,12 @@ function pion_site_data(): array
         $data = is_readable($file) ? require $file : [];
 
         $data += [
-            'nav'     => [],
-            'phone'   => '',
-            'address' => '',
-            'social'  => [],
-            'footer'  => ['columns' => [], 'legal' => '', 'hours' => ''],
+            'nav'       => [],
+            'phone'     => '',
+            'address'   => '',
+            'social'    => [],
+            'footer'    => ['columns' => [], 'legal' => '', 'hours' => ''],
+            'analytics' => ['yandexMetrika' => 0, 'googleAnalytics' => ''],
         ];
     }
 
@@ -417,6 +418,55 @@ function pion_social_meta(): array
 
     return array_filter($meta, static fn($v): bool => $v !== '');
 }
+
+/**
+ * Счётчики — те же, что на сайте (data/site.json → analytics). До этого блог
+ * жил без Метрики, и переходы из статей в каталог нельзя было посчитать.
+ * Визиты тех, кто вошёл в админку, не считаем: иначе правки статей попадут
+ * в статистику как чтение.
+ */
+function pion_counters_head(): void
+{
+    if (is_user_logged_in()) {
+        return;
+    }
+
+    $a  = pion_site_data()['analytics'];
+    $ym = (int) ($a['yandexMetrika'] ?? 0);
+    $ga = (string) ($a['googleAnalytics'] ?? '');
+
+    if ($ym > 0) {
+        printf(
+            "<script>(function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};m[i].l=1*new Date();k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})(window,document,'script','https://mc.yandex.ru/metrika/tag.js','ym');ym(%d,'init',{clickmap:true,trackLinks:true,accurateTrackBounce:true,webvisor:true});</script>\n",
+            $ym
+        );
+    }
+
+    if ($ga !== '' && preg_match('/^G-[A-Z0-9]+$/', $ga)) {
+        printf(
+            "<script async src=\"https://www.googletagmanager.com/gtag/js?id=%1\$s\"></script>\n<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','%1\$s');</script>\n",
+            esc_attr($ga)
+        );
+    }
+}
+add_action('wp_head', 'pion_counters_head', 20);
+
+/** Метрика для браузеров без JavaScript — тот же пиксель, что на сайте. */
+function pion_counters_noscript(): void
+{
+    if (is_user_logged_in()) {
+        return;
+    }
+
+    $ym = (int) (pion_site_data()['analytics']['yandexMetrika'] ?? 0);
+    if ($ym > 0) {
+        printf(
+            '<noscript><img src="https://mc.yandex.ru/watch/%d" style="position:absolute;left:-9999px" alt=""></noscript>' . "\n",
+            $ym
+        );
+    }
+}
+add_action('wp_footer', 'pion_counters_noscript');
 
 /**
  * Архив автора закрыт от поиска и убран из карты сайта: автор один, и такая
