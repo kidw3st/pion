@@ -114,6 +114,28 @@ await write(
   ].join('\n'),
 );
 
+// ------------------------------------------------ карта старых адресов Tilda
+// Старый адрес товара выглядел так:
+//   /bukety/tproduct/280188558-261853384891-buket-nezhnii-persik
+// Средний номер — uid товара, он не менялся при переезде. Slug в конце —
+// менялся: Tilda переводила «ы» в "i", а мы в "y", поэтому у каждого пятого
+// товара адреса разошлись («нежный» → nezhnii против nezhnyi).
+//
+// Правило в .htaccess ищет страницу по slug из старого адреса и на таких
+// товарах промахивалось, отправляя человека и поисковик в раздел вместо
+// карточки. По uid промахнуться нельзя — отсюда эта карта.
+const tildaMap = {};
+for (const file of catalogFiles) {
+  const slug = file.replace(/.json$/, '');
+  for (const product of dedupeProducts(await readJson(`data/catalog/${file}`))) {
+    // uid витрины (cs-) и товаров главной (new-) в Tilda не существовало.
+    if (!/^[0-9]+$/.test(String(product.uid))) continue;
+    tildaMap[product.uid] =
+      product.published === false ? `/${slug}/` : `/${slug}/${product.slug}/`;
+  }
+}
+await write('api/tilda-map.json', JSON.stringify(tildaMap, null, 0) + '\n');
+
 // ----------------------------------------------------- static JSON for agents
 // Not an HTTP API — plain files, but they give agents the catalogue without
 // scraping the rendered pages.
