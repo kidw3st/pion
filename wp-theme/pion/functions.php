@@ -279,6 +279,24 @@ function pion_json_ld(): array
         $post['articleSection'] = $cat->name;
     }
 
+    $author = trim((string) get_post_meta(get_the_ID(), 'pion_author_name', true));
+    if ($author !== '') {
+        $person = [
+            '@type'    => 'Person',
+            'name'     => $author,
+            'worksFor' => $blog['publisher'],
+        ];
+        $job = trim((string) get_post_meta(get_the_ID(), 'pion_author_title', true));
+        if ($job !== '') {
+            $person['jobTitle'] = $job;
+        }
+        $url = trim((string) get_post_meta(get_the_ID(), 'pion_author_url', true));
+        if ($url !== '') {
+            $person['url'] = $url;
+        }
+        $post['author'] = $person;
+    }
+
     $graph = [$blog, $post];
 
     $faq = json_decode((string) get_post_meta(get_the_ID(), 'pion_faq_jsonld', true), true);
@@ -328,6 +346,17 @@ function pion_register_meta(): void
         'sanitize_callback' => 'esc_url_raw',
         'auth_callback'     => $can_edit,
     ]);
+    // Автор статьи — человек из команды салона (имя, должность, страница на сайте).
+    // Пусто — автором в разметке остаётся сам салон.
+    foreach (['pion_author_name' => 'sanitize_text_field', 'pion_author_title' => 'sanitize_text_field', 'pion_author_url' => 'esc_url_raw'] as $key => $clean) {
+        register_post_meta('post', $key, [
+            'type'              => 'string',
+            'single'            => true,
+            'show_in_rest'      => true,
+            'sanitize_callback' => $clean,
+            'auth_callback'     => $can_edit,
+        ]);
+    }
 }
 add_action('init', 'pion_register_meta');
 
