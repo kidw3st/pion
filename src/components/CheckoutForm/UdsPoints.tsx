@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import styles from './CheckoutForm.module.css';
 
 /** Что сервер рассказал про покупателя и его баллы. */
@@ -44,10 +44,24 @@ export function UdsPoints({
   value: UdsState | null;
   onChange: (state: UdsState | null) => void;
 }) {
+  // Включена ли программа на сервере. Пока не знаем — кнопку не рисуем:
+  // без ключей UDS она вела бы прямиком к ошибке «недоступно».
+  const [enabled, setEnabled] = useState(false);
   const [open, setOpen] = useState(false);
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    fetch('/pay/uds-check.php', { cache: 'no-store' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => alive && setEnabled(data?.enabled === true))
+      .catch(() => alive && setEnabled(false));
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   async function ask(body: Record<string, unknown>) {
     setBusy(true);
@@ -79,6 +93,10 @@ export function UdsPoints({
     onChange(null);
     setCode('');
     setError('');
+  }
+
+  if (!enabled) {
+    return null;
   }
 
   if (!open) {

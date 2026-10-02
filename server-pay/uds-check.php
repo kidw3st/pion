@@ -21,8 +21,15 @@ declare(strict_types=1);
 require __DIR__ . '/lib.php';
 require __DIR__ . '/uds.php';
 
+// GET — вопрос корзины «показывать ли кнопку бонусов». Без ключей кнопка
+// вела бы к ошибке: человек вводит код и получает «недоступно». Корзина
+// спрашивает один раз и прячет кнопку, а с появлением ключей она включится
+// сама, без пересборки сайта.
+if (($_SERVER['REQUEST_METHOD'] ?? '') === 'GET') {
+    respond(200, ['enabled' => uds_enabled()]);
+}
 if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
-    respond(405, ['error' => 'Только POST']);
+    respond(405, ['error' => 'Только GET или POST']);
 }
 if (!uds_enabled()) {
     respond(503, ['error' => 'Программа лояльности временно недоступна']);
