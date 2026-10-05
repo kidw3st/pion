@@ -403,9 +403,11 @@ const DEPLOY_ALERT_COOLDOWN = 10800;
  *   alerts  — когда последний раз писали о сбое каждого рода (fatal,
  *             transient, lag). Запись снимается, когда сбой кончился или
  *             начался другой: новая поломка не ждёт расписания прошлой;
- *   master  — последний увиденный коммит master и с какого времени;
- *   head    — sha самой новой сборки в ветке server-build из виденных. По нему
- *             отличают поломку, которая ещё в силе, от устаревшей.
+ *   master  — последний увиденный коммит master и с какого времени: sha, since;
+ *   head    — последняя увиденная сборка в ветке server-build и с какого
+ *             времени: sha, since. По sha отличают поломку, которая ещё в
+ *             силе, от устаревшей; по since — коммит, после которого сборки
+ *             так и нет, от сборки, появившейся позже коммита.
  */
 function deploy_empty_state(): array
 {
@@ -487,7 +489,8 @@ function deploy_mark_bad(array $state, string $sha, string $why): array
 function deploy_state_after_failure(array $state, string $kind, string $message, ?string $sha, int $now): array
 {
     $prev = $state['failure'];
-    if ($kind === 'transient' && is_array($prev) && $prev['kind'] === 'fatal' && $prev['sha'] === $state['head']) {
+    $headSha = $state['head']['sha'] ?? null;
+    if ($kind === 'transient' && is_array($prev) && $prev['kind'] === 'fatal' && $prev['sha'] === $headSha) {
         return $state;
     }
     $same = is_array($prev) && $prev['kind'] === $kind && ($kind === 'transient' || $prev['sha'] === $sha);
@@ -529,16 +532,23 @@ function deploy_state_after_rollback(array $state, int $now): array
 function deploy_state_idle(array $state): array
 {
     $failure = $state['failure'];
-    if (is_array($failure) && ($failure['kind'] === 'transient' || $failure['sha'] !== $state['head'])) {
+    $headSha = $state['head']['sha'] ?? null;
+    if (is_array($failure) && ($failure['kind'] === 'transient' || $failure['sha'] !== $headSha)) {
         $state['failure'] = null;
     }
     return $state;
 }
 
-/** Запоминает сборку, которая сейчас последняя в ветке server-build. */
-function deploy_note_head(array $state, string $sha): array
+/**
+ * Запоминает последнюю сборку в ветке server-build и когда её увидели. Время
+ * не меняется, пока сборка та же: по нему отличают коммит master, после
+ * которого сборки так и нет, от сборки, появившейся позже коммита.
+ */
+function deploy_note_head(array $state, string $sha, int $now): array
 {
-    $state['head'] = $sha;
+    if (($state['head']['sha'] ?? null) !== $sha) {
+        $state['head'] = ['sha' => $sha, 'since' => $now];
+    }
     return $state;
 }
 
@@ -561,10 +571,16 @@ function deploy_alert_due(array $state, string $kind, int $now): bool
 /**
  * О чём пора написать в служебный чат.
  *
- * Об отставании от master молчим, пока выкладка сбоит (причина та же) и пока
- * голова ветки признана плохой — отклонена проверкой или откачена вручную.
- * Сборка была, просто выкладывать её нельзя, и «проверьте GitHub Actions»
- * было бы ложным.
+ * Пока выкладка сбоит, об отставании от master молчим: причина та же.
+ *
+ * Отставание — коммит master, замеченный ПОЗЖЕ последней сборки, после
+ * которого новой сборки нет уже 90 минут: сборка не получилась или не
+ * запустилась. Сравниваются времена, а не коммиты: сборка появляется в ветке
+ * через несколько минут после коммита, поэтому коммит и сборка, замеченные за
+ * один запуск, отставанием не считаются. Так нет ложной тревоги после отката
+ * или отклонения сборки (она остаётся последней в ветке, но коммитов после
+ * неё нет), а новый коммит после отката, который так и не собрался, тревогу
+ * даёт.
  *
  * @return list<string> 'fatal' | 'transient' | 'lag'
  */
@@ -577,10 +593,8 @@ function deploy_pending_alerts(array $state, int $now): array
         return $ripe && deploy_alert_due($state, $failure['kind'], $now) ? [$failure['kind']] : [];
     }
     $master = $state['master'];
-    $current = $state['current'];
     $head = $state['head'];
-    $headBad = $head !== null && isset($state['bad'][$head]);
-    if (is_array($master) && is_array($current) && !$headBad && $master['sha'] !== $current['commit']
+    if (is_array($master) && is_array($head) && $master['since'] > $head['since']
         && $now - $master['since'] >= DEPLOY_LAG_ALERT_AFTER && deploy_alert_due($state, 'lag', $now)) {
         return ['lag'];
     }

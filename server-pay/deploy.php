@@ -112,9 +112,11 @@ function deploy_telegram(string $text): string
         CURLOPT_POST => true,
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT => 10,
+        // В тексте бывает вывод php -l с байтами не в UTF-8: сначала их
+        // заменяем, потом обрезаем (mb_substr битые байты не трогает).
         CURLOPT_POSTFIELDS => http_build_query([
             'chat_id' => $chat,
-            'text' => mb_substr($text, 0, 4000),
+            'text' => mb_substr(mb_scrub($text, 'UTF-8'), 0, 4000),
             'disable_web_page_preview' => 'true',
         ]),
     ]);
@@ -207,7 +209,7 @@ function deploy_run(string $home, string $webroot, bool $dryRun): int
         return 1;
     }
     $sha = $refs[DEPLOY_BRANCH];
-    $state = deploy_note_head($state, $sha);
+    $state = deploy_note_head($state, $sha, $now);
     if (isset($refs['master'])) {
         $state = deploy_note_master($state, $refs['master'], $now);
     }
