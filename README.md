@@ -51,6 +51,15 @@ How it works and what to do when it fails: [`docs/deploy.md`](docs/deploy.md)
 GitHub Pages is intentionally off: a github.io copy competed with pionperm.ru in
 search results. No workflow sets `GITHUB_PAGES`.
 
+## Product feed (2GIS, Yandex Maps)
+
+`scripts/build-feed.mjs` runs in `prebuild` and writes the catalogue as a YML
+feed: https://pionperm.ru/feed/products.xml — the link for the «Товары и
+услуги → Указать URL» setting in 2GIS (Yandex Business accepts the same feed).
+It carries the sections shown in the site navigation. 2GIS takes only JPG/PNG/GIF
+photos, so pictures point to `/feed/img/<section>/<name>.jpg`; the server makes
+these JPG copies of the WebP photos on first request (`server-pay/feed-img.php`).
+
 ## Agent discovery
 
 `scripts/build-agent-assets.mjs` runs before every build and emits, into

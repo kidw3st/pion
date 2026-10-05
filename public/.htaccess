@@ -46,34 +46,47 @@ Options -Indexes
   # Служебные адреса магазина Tilda индексировать было незачем.
   RewriteRule ^([a-z0-9_-]+/)?tstore/ /catalog/ [R=301,L]
 
+  # --- Товарный фид для 2ГИС и Яндекс Карт --------------------------------
+  # /feed/products.xml собирается при каждой выкладке. Фото в нём — JPG:
+  # 2ГИС не принимает WebP. Копию фото делает /pay/feed-img.php при первом
+  # обращении, дальше готовый файл отдаёт сам Apache.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^feed/img/([a-z0-9-]+)/([a-z0-9-]+)\.jpg$ /pay/feed-img.php?s=$1&f=$2 [L]
+
   # --- Защита от парсеров -------------------------------------------------
   # Платёжные точки исключены из всех правил ниже: туда стучится банк и наш
-  # же сервер, и их «агенты» выглядят как роботы.
+  # же сервер, и их «агенты» выглядят как роботы. Фид тоже: его забирают
+  # роботы 2ГИС и Яндекса, и как они представляются — заранее не известно.
   #
   # Блокируем сборщиков баз и SEO-краулеров, которые выкачивают каталог
   # целиком и создают нагрузку, но покупателей не приводят. Поисковики
   # (Яндекс, Google, Bing, Mail.ru) и ИИ-боты (GPTBot, ClaudeBot,
   # PerplexityBot, YandexGPT) в список НЕ входят — они нам нужны.
   RewriteCond %{REQUEST_URI} !^/pay/ [NC]
+  RewriteCond %{REQUEST_URI} !^/feed/ [NC]
   RewriteCond %{HTTP_USER_AGENT} (ahrefsbot|semrushbot|mj12bot|dotbot|blexbot|dataforseo|serpstat|megaindex|zoominfo|barkrowler|seekport|linkfluence|magpie-crawler|netestate|sitebulb|screaming\ frog|sistrix|spbot|seokicks|backlink|domcop|webmeup|riddler|purebot) [NC]
   RewriteRule .* - [F,L]
 
   # Инструменты массового скачивания сайтов и «голые» скрипты.
   RewriteCond %{REQUEST_URI} !^/pay/ [NC]
+  RewriteCond %{REQUEST_URI} !^/feed/ [NC]
   RewriteCond %{HTTP_USER_AGENT} (httrack|webcopier|webzip|teleport|offline\ explorer|sitesnagger|website\ extractor|wget|libwww|lwp-trivial|larbin|xenu|scrapy|node-fetch|go-http-client|python-urllib|python-requests|okhttp|java/|jakarta|apache-httpclient) [NC]
   RewriteRule .* - [F,L]
 
   # Запрос совсем без User-Agent — почти всегда самописный парсер.
   RewriteCond %{REQUEST_URI} !^/pay/ [NC]
+  RewriteCond %{REQUEST_URI} !^/feed/ [NC]
   RewriteCond %{HTTP_USER_AGENT} ^$
   RewriteRule .* - [F,L]
 
   # --- Чужие сайты не показывают наши фотографии со своих страниц ---------
   # Пустой Referer разрешён (прямое открытие картинки, часть браузеров),
-  # как и переходы из поиска и мессенджеров — иначе пропадут превью.
+  # как и переходы из поиска, карт и мессенджеров — иначе пропадут превью.
+  # Фото фида открыты всем: их показывают 2ГИС и Яндекс Карты.
+  RewriteCond %{REQUEST_URI} !^/feed/ [NC]
   RewriteCond %{HTTP_REFERER} !^$
   RewriteCond %{HTTP_REFERER} !^https?://([a-z0-9-]+\.)?pionperm\.ru [NC]
-  RewriteCond %{HTTP_REFERER} !(google|yandex|bing|duckduckgo|mail\.ru|vk\.com|t\.me|telegram|whatsapp|instagram|facebook) [NC]
+  RewriteCond %{HTTP_REFERER} !(google|yandex|bing|duckduckgo|mail\.ru|vk\.com|t\.me|telegram|whatsapp|instagram|facebook|2gis) [NC]
   RewriteRule \.(jpe?g|png|webp|gif|svg)$ - [F,NC,L]
 </IfModule>
 
@@ -81,6 +94,7 @@ Options -Indexes
 <IfModule mod_expires.c>
   ExpiresActive On
   ExpiresByType image/webp "access plus 30 days"
+  ExpiresByType image/jpeg "access plus 30 days"
   ExpiresByType image/svg+xml "access plus 30 days"
   ExpiresByType image/x-icon "access plus 30 days"
   ExpiresByType font/woff2 "access plus 365 days"
@@ -104,4 +118,9 @@ Options -Indexes
   # preload: это отменяется только временем, а поддоменов у домена нет — рисковать
   # чужими именами незачем.
   Header always set Strict-Transport-Security "max-age=31536000"
+
+  # Фид — для 2ГИС и Яндекс Карт, в поиске ему делать нечего.
+  <Files "products.xml">
+    Header set X-Robots-Tag "noindex"
+  </Files>
 </IfModule>

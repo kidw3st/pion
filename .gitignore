@@ -49,3 +49,6 @@ public/api/showcase.json
 # Архивы сборки — они живут только в ветке server-build.
 pion-site.tar.gz
 pion-pay.tar.gz
+
+# Товарный фид для 2ГИС и Яндекс Карт собирается при каждой сборке
+public/feed/
