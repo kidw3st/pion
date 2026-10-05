@@ -573,14 +573,13 @@ function deploy_alert_due(array $state, string $kind, int $now): bool
  *
  * Пока выкладка сбоит, об отставании от master молчим: причина та же.
  *
- * Отставание — коммит master, замеченный ПОЗЖЕ последней сборки, после
- * которого новой сборки нет уже 90 минут: сборка не получилась или не
- * запустилась. Сравниваются времена, а не коммиты: сборка появляется в ветке
- * через несколько минут после коммита, поэтому коммит и сборка, замеченные за
- * один запуск, отставанием не считаются. Так нет ложной тревоги после отката
- * или отклонения сборки (она остаётся последней в ветке, но коммитов после
- * неё нет), а новый коммит после отката, который так и не собрался, тревогу
- * даёт.
+ * Отставание — коммит master, по которому сборки нет уже 90 минут (не
+ * получилась или не запустилась), в двух случаях: (А) коммит замечен ПОЗЖЕ
+ * последней сборки; (Б) последняя сборка уже выложена, а коммита master в ней
+ * нет — так ловится коммит, увиденный в одном запуске с предыдущей сборкой, у
+ * которого время равно времени сборки. После отката или отклонения сборки
+ * тревоги нет: она остаётся последней в ветке, но не выложена, и новых
+ * коммитов после неё нет.
  *
  * @return list<string> 'fatal' | 'transient' | 'lag'
  */
@@ -594,7 +593,14 @@ function deploy_pending_alerts(array $state, int $now): array
     }
     $master = $state['master'];
     $head = $state['head'];
-    if (is_array($master) && is_array($head) && $master['since'] > $head['since']
+    $current = $state['current'];
+    if (!is_array($master) || !is_array($head)) {
+        return [];
+    }
+    $laterThanBuild = $master['since'] > $head['since'];
+    $buildLacksMaster = is_array($current) && ($head['sha'] ?? null) === $current['sha']
+        && $master['sha'] !== $current['commit'];
+    if (($laterThanBuild || $buildLacksMaster)
         && $now - $master['since'] >= DEPLOY_LAG_ALERT_AFTER && deploy_alert_due($state, 'lag', $now)) {
         return ['lag'];
     }

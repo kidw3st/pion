@@ -150,6 +150,8 @@ foreach (['a', 'b'] as $i => $c) {
 }
 $s = deploy_state_idle(deploy_state_after_rollback($s, 400));
 t_equal($s['failure'], null, 'после отката сбоя нет');
+// Коммит master (commit-b) не совпадает с выложенной сборкой «a», но «b» не
+// выложена, так что вторая ветка правила (последняя сборка выложена) молчит.
 t_equal(deploy_pending_alerts($s, 200 + 5400), [], 'откат: «b» всё ещё голова, но коммитов после неё нет — тишина');
 t_equal(deploy_pending_alerts($s, 200 + 5400 + 10800), [], 'откат: и через 3 часа об отставании не напоминаем');
 $s = deploy_note_master($s, 'commit-c', 1000);
@@ -223,7 +225,7 @@ t_equal(deploy_pending_alerts($s, 6500 + 5400), ['lag'], 'новый комми�
 // --- Отставание — это коммит, после которого сборки так и нет ------------
 // Сравниваются времена: сборка появляется в ветке через несколько минут после
 // коммита. Коммит и сборка замечены за один запуск или сборка позже коммита —
-// отставания нет, сколько бы времени ни прошло.
+// отставания нет, сколько бы времени ни прошло, если этот коммит в сборке есть.
 $s = deploy_state_after_success(deploy_empty_state(), $rel('a'), 0);
 $s = deploy_note_master($s, 'commit-a', 5000);
 $s = deploy_note_head($s, str_repeat('a', 40), 5000);
@@ -238,10 +240,33 @@ $s = deploy_note_master($s, 'commit-b', 1000);
 $s = deploy_note_head($s, str_repeat('b', 40), 1900);
 t_equal(deploy_pending_alerts($s, 1000 + 5400), [], 'сборка появилась после коммита — отставания нет');
 t_equal(deploy_pending_alerts(deploy_note_master(deploy_empty_state(), 'commit-a', 0), 10_000), [], 'головы ветки ещё не видели — об отставании не пишем');
-// Выложенная сборка в правиле не участвует: решают только время коммита и сборки.
+// Правилу по времени выложенная сборка не нужна: решают время коммита и сборки.
 $s = deploy_note_head(deploy_empty_state(), str_repeat('a', 40), 0);
 $s = deploy_note_master($s, 'commit-b', 1000);
 t_equal(deploy_pending_alerts($s, 1000 + 5400), ['lag'], 'отставание определяют время коммита и сборки, выложенная сборка не нужна');
+
+// --- Коммит, увиденный вместе с прошлой сборкой, а своей сборки так и нет -
+// 12:14: опрос видит сборку B2 (коммит c2) и сразу коммит c3, по которому сборка
+// не пошла (тесты упали). Время у коммита и сборки одно, «позже» не выходит; но
+// последняя в ветке сборка уже выложена, а коммита master в ней нет.
+$b2 = ['sha' => str_repeat('b', 40), 'commit' => 'c2', 'paySha256' => 'pay-b2'];
+$b3 = ['sha' => str_repeat('c', 40), 'commit' => 'c3', 'paySha256' => 'pay-b3'];
+$late = deploy_note_head(deploy_empty_state(), $b2['sha'], 0);
+$late = deploy_note_master($late, 'c3', 0);
+$late = deploy_state_after_success($late, $b2, 0);
+t_equal(deploy_pending_alerts($late, 5399), [], 'коммит увиден вместе с прошлой сборкой: сначала 90 минут ждём');
+t_equal(deploy_pending_alerts($late, 5400), ['lag'], 'коммит увиден вместе с прошлой сборкой и так не собрался — отставание');
+$late = deploy_mark_alerted($late, 'lag', 5400);
+t_equal(deploy_pending_alerts($late, 5400 + 10799), [], 'это отставание напоминает не чаще раза в 3 часа');
+t_equal(deploy_pending_alerts($late, 5400 + 10800), ['lag'], 'это отставание напоминает через 3 часа');
+// Обычный ход дел: коммит c3 замечен, затем появилась сборка B3 и выложена.
+$s = deploy_state_after_success(deploy_empty_state(), $b2, -100);
+$s = deploy_note_head($s, $b2['sha'], -100);
+$s = deploy_note_master($s, 'c3', 0);
+t_equal(deploy_pending_alerts($s, 5400), ['lag'], 'пока сборки по коммиту нет, отставание подступает');
+$s = deploy_note_head($s, $b3['sha'], 600);
+$s = deploy_state_after_success($s, $b3, 600);
+t_equal(deploy_pending_alerts($s, 600 + 10_000), [], 'сборка по коммиту появилась и выложена — отставания нет');
 
 // --- Тихий проход снимает устаревшую поломку -----------------------------
 $s = deploy_note_head(deploy_empty_state(), $x, 100);
