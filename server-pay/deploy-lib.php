@@ -374,3 +374,225 @@ function deploy_apply(
         deploy_rmtree($work);
     }
 }
+
+// --- Состояние выкладки ------------------------------------------------------
+
+/** Сколько прошлых сборок хранится для отката (плюс текущая). */
+const DEPLOY_KEEP_PREVIOUS = 2;
+/**
+ * Временный сбой (сеть, GitHub, не запустился tar или php -l) — пишем, если
+ * он не прошёл за час: такое обычно проходит само.
+ */
+const DEPLOY_TRANSIENT_ALERT_AFTER = 3600;
+/** Коммит в master 90 минут не стал сборкой — видимо, сборка падает. */
+const DEPLOY_LAG_ALERT_AFTER = 5400;
+/** Одно и то же сообщение — не чаще раза в 3 часа. */
+const DEPLOY_ALERT_COOLDOWN = 10800;
+
+/**
+ * Состояние лежит в pion-deploy/state.json:
+ *   current — выложенная сборка: sha (коммит ветки server-build), commit
+ *             (коммит кода в master), paySha256, deployedAt;
+ *   history — прошлые сборки для отката, новая первой;
+ *   bad     — сборки, которые выкладывать нельзя: sha => причина;
+ *   failure — текущий сбой: kind (transient|fatal), message, sha, since;
+ *   alerts  — когда последний раз писали о сбое каждого рода;
+ *   master  — последний увиденный коммит master и с какого времени.
+ */
+function deploy_empty_state(): array
+{
+    return ['current' => null, 'history' => [], 'bad' => [], 'failure' => null, 'alerts' => [], 'master' => null];
+}
+
+function deploy_state_load(string $home): array
+{
+    $raw = @file_get_contents($home . '/state.json');
+    $state = is_string($raw) ? json_decode($raw, true) : null;
+    return is_array($state) ? $state + deploy_empty_state() : deploy_empty_state();
+}
+
+/** Пишет состояние целиком: во временный файл, потом подменяет. */
+function deploy_state_save(string $home, array $state): void
+{
+    $json = json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $tmp = $home . '/state.json.part';
+    if ($json === false || file_put_contents($tmp, $json . PHP_EOL) === false || !rename($tmp, $home . '/state.json')) {
+        throw new RuntimeException('не записать state.json');
+    }
+}
+
+/** @param array{sha:string,commit:string,paySha256:string} $release */
+function deploy_state_after_success(array $state, array $release, int $now): array
+{
+    if ($state['current'] !== null) {
+        array_unshift($state['history'], $state['current']);
+        $state['history'] = array_slice($state['history'], 0, DEPLOY_KEEP_PREVIOUS);
+    }
+    $release['deployedAt'] = $now;
+    $state['current'] = $release;
+    $state['failure'] = null;
+    return $state;
+}
+
+/** Помечает сборку плохой. Помним 20 последних — этого хватает с запасом. */
+function deploy_mark_bad(array $state, string $sha, string $why): array
+{
+    unset($state['bad'][$sha]);
+    $state['bad'][$sha] = $why;
+    $state['bad'] = array_slice($state['bad'], -20, null, true);
+    return $state;
+}
+
+function deploy_state_after_failure(array $state, string $kind, string $message, ?string $sha, int $now): array
+{
+    $prev = $state['failure'];
+    $same = is_array($prev) && $prev['kind'] === $kind && $prev['sha'] === $sha;
+    $state['failure'] = [
+        'kind' => $kind,
+        'message' => $message,
+        'sha' => $sha,
+        'since' => $same ? $prev['since'] : $now,
+    ];
+    if ($kind === 'fatal' && $sha !== null) {
+        $state = deploy_mark_bad($state, $sha, $message);
+    }
+    return $state;
+}
+
+function deploy_state_after_rollback(array $state, int $now): array
+{
+    $previous = $state['history'][0] ?? null;
+    if ($state['current'] === null || $previous === null) {
+        throw new RuntimeException('откатываться не на что: прошлой сборки нет');
+    }
+    $state = deploy_mark_bad($state, $state['current']['sha'], 'откат вручную');
+    array_shift($state['history']);
+    $previous['deployedAt'] = $now;
+    $state['current'] = $previous;
+    $state['failure'] = null;
+    return $state;
+}
+
+/**
+ * Новой сборки нет. Сбой сети на этом прошёл, а испорченная сборка всё ещё
+ * последняя — её сбой не снимаем, пока не придёт новая.
+ */
+function deploy_state_idle(array $state): array
+{
+    if (($state['failure']['kind'] ?? null) === 'transient') {
+        $state['failure'] = null;
+    }
+    return $state;
+}
+
+function deploy_note_master(array $state, string $sha, int $now): array
+{
+    if (($state['master']['sha'] ?? null) !== $sha) {
+        $state['master'] = ['sha' => $sha, 'since' => $now];
+    }
+    return $state;
+}
+
+function deploy_alert_due(array $state, string $kind, int $now): bool
+{
+    $last = $state['alerts'][$kind] ?? null;
+    return !is_int($last) || $now - $last >= DEPLOY_ALERT_COOLDOWN;
+}
+
+/**
+ * О чём пора написать в служебный чат.
+ *
+ * @return list<string> 'fatal' | 'transient' | 'lag'
+ */
+function deploy_pending_alerts(array $state, int $now): array
+{
+    $failure = $state['failure'];
+    if (is_array($failure)) {
+        $ripe = $failure['kind'] === 'fatal' || $now - $failure['since'] >= DEPLOY_TRANSIENT_ALERT_AFTER;
+        // Пока выкладка сбоит, об отставании от master не пишем: причина та же.
+        return $ripe && deploy_alert_due($state, $failure['kind'], $now) ? [$failure['kind']] : [];
+    }
+    $master = $state['master'];
+    $current = $state['current'];
+    if (is_array($master) && is_array($current) && $master['sha'] !== $current['commit']
+        && $now - $master['since'] >= DEPLOY_LAG_ALERT_AFTER && deploy_alert_due($state, 'lag', $now)) {
+        return ['lag'];
+    }
+    return [];
+}
+
+function deploy_mark_alerted(array $state, string $kind, int $now): array
+{
+    $state['alerts'][$kind] = $now;
+    return $state;
+}
+
+function deploy_alert_text(string $kind, array $state): string
+{
+    $failure = $state['failure'] ?? [];
+    $build = substr((string)($failure['sha'] ?? ''), 0, 7);
+    $message = (string)($failure['message'] ?? '');
+    $master = substr((string)($state['master']['sha'] ?? ''), 0, 7);
+    return match ($kind) {
+        'fatal' => "Выкладка pionperm.ru остановлена: сборка $build не прошла проверку — $message. Сайт работает на прежней сборке.",
+        'transient' => "Выкладка pionperm.ru: больше часа не получается выложить новую сборку — $message.",
+        'lag' => "Выкладка pionperm.ru: коммит $master в master больше 90 минут не превращается в сборку. Проверьте GitHub Actions.",
+        default => "Выкладка pionperm.ru: $kind",
+    };
+}
+
+// --- Скачанные сборки --------------------------------------------------------
+
+function deploy_release_dir(string $home, string $sha): string
+{
+    return $home . '/releases/' . $sha;
+}
+
+/**
+ * Файлы, которые разложила сборка. null — неизвестно (ещё не выкладывалась
+ * или выложена до новой схемы): тогда удалять нечего.
+ *
+ * @return list<string>|null
+ */
+function deploy_release_files(string $home, ?string $sha): ?array
+{
+    if ($sha === null) {
+        return null;
+    }
+    $raw = @file_get_contents(deploy_release_dir($home, $sha) . '/files.txt');
+    if (!is_string($raw)) {
+        return null;
+    }
+    return array_values(array_filter(
+        explode("\n", str_replace("\r", '', $raw)),
+        static fn(string $line): bool => $line !== '',
+    ));
+}
+
+/** @param list<string> $files */
+function deploy_save_release_files(string $home, string $sha, array $files): void
+{
+    if (file_put_contents(deploy_release_dir($home, $sha) . '/files.txt', implode("\n", $files) . "\n") === false) {
+        throw new RuntimeException('не записать список файлов сборки');
+    }
+}
+
+/**
+ * Удаляет скачанные сборки, кроме текущей и прошлых для отката, и
+ * недокачанные (.part).
+ *
+ * @return list<string> имена удалённых папок
+ */
+function deploy_prune_releases(string $home, array $state): array
+{
+    $keep = array_column(array_filter([$state['current'], ...$state['history']]), 'sha');
+    $removed = [];
+    foreach (glob($home . '/releases/*', GLOB_ONLYDIR) ?: [] as $dir) {
+        if (!in_array(basename($dir), $keep, true)) {
+            deploy_rmtree($dir);
+            $removed[] = basename($dir);
+        }
+    }
+    sort($removed, SORT_STRING);
+    return $removed;
+}

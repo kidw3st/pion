@@ -23,6 +23,11 @@ const SALON_EMAIL = 'pion-perm59@yandex.ru, pionperm@gmail.com';
 const TELEGRAM_TOKEN = '';
 const TELEGRAM_CHAT_ID = '';
 
+// Служебный чат для сообщений о сбоях выкладки (deploy.php). Не чат заказов:
+// салону эти сообщения ни к чему. id подскажет `php deploy.php --find-chat`
+// после того, как разработчик напишет боту. Пусто — сбои пишутся только в лог.
+const DEPLOY_ALERT_CHAT_ID = '';
+
 // Публичный адрес сайта — для ссылок возврата с оплаты.
 const SITE_ORIGIN = 'https://pionperm.ru';
 
