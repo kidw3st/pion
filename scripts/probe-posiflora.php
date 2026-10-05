@@ -3,8 +3,12 @@
  * Что умеет Posiflora салона: есть ли там постоянный каталог с категориями,
  * из которого сайт мог бы брать букеты по разделам, как раньше из Tilda.
  *
+ * Разведка показала: каталог букетов в Posiflora — это «спецификации»
+ * (рецепты букетов) с категорией, тегами, фото и флажком «публичный».
+ * Этот проход считает, насколько он заполнен у салона.
+ *
  * Только чтение: одни GET-запросы, в CRM ничего не создаётся и не меняется.
- * Секретов не печатает — только структуру ответов и счётчики.
+ * Секретов не печатает — только счётчики и названия.
  *
  * Запуск на сервере: php probe-posiflora.php /путь/к/pay
  */
@@ -21,60 +25,81 @@ if ($token === null) {
     exit(1);
 }
 
-/** GET и короткая сводка: сколько записей, какие поля и связи у первой. */
-function probe(string $path, string $token): ?array
-{
-    try {
-        $resp = posiflora_request('GET', $path, null, $token);
-    } catch (Throwable $e) {
-        printf("  %-44s → %s\n", $path, mb_substr($e->getMessage(), 0, 60));
-        return null;
-    }
-    $data = $resp['data'] ?? [];
-    $list = isset($data['id']) ? [$data] : $data;
-    $first = $list[0] ?? null;
-    printf(
-        "  %-44s → %d шт.; поля: %s\n",
-        $path,
-        count($list),
-        $first ? implode(', ', array_slice(array_keys($first['attributes'] ?? []), 0, 16)) : '—',
+$specs = [];
+$included = [];
+for ($page = 1; $page <= 20; $page++) {
+    $resp = posiflora_request(
+        'GET',
+        'specifications?page[size]=100&page[number]=' . $page . '&include=category,tags,images',
+        null,
+        $token,
     );
-    if ($first && !empty($first['relationships'])) {
-        printf("  %-44s   связи: %s\n", '', implode(', ', array_keys($first['relationships'])));
+    $batch = $resp['data'] ?? [];
+    foreach (($resp['included'] ?? []) as $inc) {
+        $included[$inc['type'] . ':' . $inc['id']] = $inc;
     }
-    return $resp;
-}
-
-echo "=== Категории с товарами (непустые и не удалённые) ===\n";
-$cats = posiflora_request('GET', 'categories?page[size]=200', null, $token)['data'] ?? [];
-$shown = 0;
-foreach ($cats as $c) {
-    $a = $c['attributes'] ?? [];
-    if (!empty($a['deleted'])) {
-        continue;
+    $specs = array_merge($specs, $batch);
+    if (count($batch) < 100) {
+        break;
     }
-    printf(
-        "  %-38s товаров: %-4s статус: %-10s путь: %s\n",
-        mb_substr((string)($a['title'] ?? '?'), 0, 38),
-        (string)($a['countPublicItems'] ?? '?'),
-        (string)($a['status'] ?? '?'),
-        mb_substr((string)($a['path'] ?? ''), 0, 60),
-    );
-    $shown++;
-}
-printf("  всего категорий без удалённых: %d\n", $shown);
-$firstCatId = $cats[0]['id'] ?? null;
-
-echo "\n=== Где лежат сами товары ===\n";
-foreach ([
-    'inventory-items', 'store-items', 'public-items', 'catalog',
-    'variants', 'item-variants', 'specifications', 'specs',
-    'groups', 'category-groups', 'flowers', 'materials',
-] as $endpoint) {
-    probe($endpoint . '?page[size]=3', $token);
-}
-if ($firstCatId) {
-    probe('categories/' . $firstCatId . '?include=group,parent', $token);
 }
 
+$total = count($specs);
+$public = 0;
+$withImages = 0;
+$withPrice = 0;
+$byStatus = [];
+$byCategory = [];
+$byTag = [];
+$recent = [];
+foreach ($specs as $s) {
+    $a = $s['attributes'] ?? [];
+    $r = $s['relationships'] ?? [];
+    if (!empty($a['public'])) {
+        $public++;
+    }
+    if (!empty($r['images']['data'])) {
+        $withImages++;
+    }
+    if ((float)($a['maxPrice'] ?? 0) > 0) {
+        $withPrice++;
+    }
+    $st = (string)($a['status'] ?? '?');
+    $byStatus[$st] = ($byStatus[$st] ?? 0) + 1;
+
+    $cat = $r['category']['data'] ?? null;
+    $catTitle = $cat ? ($included['categories:' . $cat['id']]['attributes']['title'] ?? $cat['id']) : '— без категории';
+    $byCategory[$catTitle] = ($byCategory[$catTitle] ?? 0) + 1;
+
+    foreach (($r['tags']['data'] ?? []) as $t) {
+        $title = $included[$t['type'] . ':' . $t['id']]['attributes']['title'] ?? ($t['type'] . ':' . $t['id']);
+        $byTag[$title] = ($byTag[$title] ?? 0) + 1;
+    }
+    $recent[] = [(string)($a['updatedAt'] ?? ''), (string)($a['title'] ?? '?'), !empty($a['public']), !empty($r['images']['data'])];
+}
+
+printf("Спецификаций всего: %d\n", $total);
+printf("  публичных: %d · с фото: %d · с ценой: %d\n", $public, $withImages, $withPrice);
+echo "  по статусам: ";
+foreach ($byStatus as $k => $v) {
+    echo "$k=$v  ";
+}
+echo "\n\nПо категориям:\n";
+arsort($byCategory);
+foreach (array_slice($byCategory, 0, 15, true) as $k => $v) {
+    printf("  %-34s %d\n", mb_substr((string)$k, 0, 34), $v);
+}
+echo "\nТеги:\n";
+arsort($byTag);
+if (!$byTag) {
+    echo "  тегов нет\n";
+}
+foreach (array_slice($byTag, 0, 20, true) as $k => $v) {
+    printf("  %-34s %d\n", mb_substr((string)$k, 0, 34), $v);
+}
+echo "\nПоследние изменённые:\n";
+usort($recent, fn($x, $y) => strcmp($y[0], $x[0]));
+foreach (array_slice($recent, 0, 8) as [$when, $title, $isPublic, $hasImg]) {
+    printf("  %s  %-40s %s %s\n", substr($when, 0, 10), mb_substr($title, 0, 40), $isPublic ? 'публ.' : 'скрыт', $hasImg ? 'фото' : 'без фото');
+}
 echo "\nГотово. Ничего не изменено.\n";
