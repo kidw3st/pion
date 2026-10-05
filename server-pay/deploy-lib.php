@@ -156,3 +156,209 @@ function deploy_check_archives(array $info, array $paths): array
     }
     return $errors;
 }
+
+// --- Раскладка сборки ------------------------------------------------------
+
+/**
+ * tar для exec. На хостинге — системный GNU tar. На Windows (локальные
+ * проверки) — встроенный bsdtar по полному пути: tar из Git Bash принял бы
+ * «C:» в пути к архиву за имя удалённого сервера.
+ */
+function deploy_tar(): string
+{
+    if (PHP_OS_FAMILY !== 'Windows') {
+        return 'tar';
+    }
+    return escapeshellarg((getenv('SystemRoot') ?: 'C:\\Windows') . '\\System32\\tar.exe');
+}
+
+/** Удаляет папку со всем содержимым; нет папки — ничего не делает. */
+function deploy_rmtree(string $dir): void
+{
+    if (is_file($dir) || is_link($dir)) {
+        unlink($dir);
+        return;
+    }
+    if (!is_dir($dir)) {
+        return;
+    }
+    $it = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::CHILD_FIRST,
+    );
+    foreach ($it as $item) {
+        if ($item->isDir() && !$item->isLink()) {
+            rmdir($item->getPathname());
+        } else {
+            unlink($item->getPathname());
+        }
+    }
+    rmdir($dir);
+}
+
+/** Распаковывает tar.gz в папку, создавая её. Ошибка tar — исключение. */
+function deploy_extract(string $archive, string $dir): void
+{
+    if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+        throw new RuntimeException("не создать папку $dir");
+    }
+    $out = [];
+    exec(deploy_tar() . ' -xzf ' . escapeshellarg($archive) . ' -C ' . escapeshellarg($dir) . ' 2>&1', $out, $code);
+    if ($code !== 0) {
+        throw new RuntimeException('не распаковался ' . basename($archive) . ': ' . implode(' ', array_slice($out, 0, 2)));
+    }
+}
+
+/**
+ * php -l для каждого PHP-файла. Ошибка синтаксиса в /pay/ — сломанная
+ * оплата, в теме — белый экран блога, поэтому такую сборку не выкладываем.
+ *
+ * @param list<string> $files пути относительно $root
+ * @return list<string> ошибки вида «pay/init.php: PHP Parse error …»
+ */
+function deploy_lint_php(string $root, array $files, string $label = ''): array
+{
+    $php = PHP_BINARY !== '' ? PHP_BINARY : 'php';
+    $errors = [];
+    foreach ($files as $rel) {
+        if (!str_ends_with($rel, '.php')) {
+            continue;
+        }
+        $out = [];
+        exec(escapeshellarg($php) . ' -l ' . escapeshellarg($root . '/' . $rel) . ' 2>&1', $out, $code);
+        if ($code !== 0) {
+            $first = trim((string)($out[0] ?? 'ошибка синтаксиса'));
+            $errors[] = $label . $rel . ': ' . str_replace($root . '/', '', $first);
+        }
+    }
+    return $errors;
+}
+
+/**
+ * Копирует файлы на место. Каждый пишется рядом под временным именем и
+ * переименовывается: посетитель не получит наполовину записанную страницу.
+ *
+ * @param list<string> $files пути относительно $from
+ */
+function deploy_copy_files(string $from, array $files, string $to): void
+{
+    foreach ($files as $rel) {
+        $dst = $to . '/' . $rel;
+        $dir = dirname($dst);
+        if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+            throw new RuntimeException("не создать папку $dir");
+        }
+        $tmp = $dst . '.deploy-part';
+        if (!copy($from . '/' . $rel, $tmp) || !rename($tmp, $dst)) {
+            @unlink($tmp);
+            throw new RuntimeException("не скопировать $rel");
+        }
+    }
+}
+
+/**
+ * Удаляет устаревшие файлы сборки и опустевшие после этого папки.
+ *
+ * @param list<string> $files пути относительно $root
+ * @return list<string> что действительно удалено
+ */
+function deploy_delete_files(string $root, array $files): array
+{
+    $deleted = [];
+    foreach ($files as $rel) {
+        if (deploy_is_protected($rel) || !is_file($root . '/' . $rel)) {
+            continue;
+        }
+        if (unlink($root . '/' . $rel)) {
+            $deleted[] = $rel;
+            deploy_prune_dirs($root, dirname($rel));
+        }
+    }
+    return $deleted;
+}
+
+/** Поднимается от папки к веб-корню и удаляет пустые; защищённые не трогает. */
+function deploy_prune_dirs(string $root, string $relDir): void
+{
+    while ($relDir !== '.' && $relDir !== '' && !deploy_is_protected($relDir . '/')) {
+        $abs = $root . '/' . $relDir;
+        if (!is_dir($abs) || (new FilesystemIterator($abs))->valid() || !@rmdir($abs)) {
+            return;
+        }
+        $relDir = dirname($relDir);
+    }
+}
+
+/**
+ * Раскладывает сборку на сайт.
+ *
+ * Испорченная сборка не трогает ни одного файла: распаковка во временную
+ * папку и все проверки идут до копирования. Проверки: обязательные файлы,
+ * ничего в защищённых путях, нет config.php в платёжном архиве, php -l.
+ * Провал — DeployFatal, сайт остаётся прежним.
+ *
+ * @param array{site:string,pay:string} $archives
+ * @param list<string>|null $previousFiles файлы прошлой сборки; null — первая выкладка, удалять нечего
+ * @param bool $updatePay раскладывать ли платёжный архив (false — он не менялся)
+ * @param string $work временная папка; очищается до и после
+ * @param bool $dryRun только проверить и посчитать
+ * @return array{files:list<string>,stale:list<string>,deleted:list<string>,payFiles:list<string>,payUpdated:bool}
+ */
+function deploy_apply(
+    array $archives,
+    ?array $previousFiles,
+    string $webroot,
+    bool $updatePay,
+    string $work,
+    bool $dryRun,
+): array {
+    deploy_rmtree($work);
+    try {
+        deploy_extract($archives['site'], $work . '/site');
+        deploy_extract($archives['pay'], $work . '/pay');
+        $files = deploy_list_files($work . '/site');
+        $payFiles = deploy_list_files($work . '/pay');
+
+        $problems = [];
+        $missing = deploy_missing_required($files);
+        if ($missing !== []) {
+            $problems[] = 'нет обязательных файлов: ' . implode(', ', $missing);
+        }
+        $forbidden = deploy_forbidden_files($files);
+        if ($forbidden !== []) {
+            $problems[] = 'файлы в чужих путях: ' . implode(', ', array_slice($forbidden, 0, 5));
+        }
+        if (in_array('config.php', $payFiles, true)) {
+            $problems[] = 'в платёжном архиве лежит config.php';
+        }
+        array_push(
+            $problems,
+            ...deploy_lint_php($work . '/site', $files),
+            ...deploy_lint_php($work . '/pay', $payFiles, 'pay/'),
+        );
+        if ($problems !== []) {
+            throw new DeployFatal(implode('; ', $problems));
+        }
+
+        $report = [
+            'files' => $files,
+            'stale' => $previousFiles === null ? [] : deploy_stale_files($previousFiles, $files),
+            'deleted' => [],
+            'payFiles' => $payFiles,
+            'payUpdated' => false,
+        ];
+        if ($dryRun) {
+            return $report;
+        }
+
+        deploy_copy_files($work . '/site', $files, $webroot);
+        $report['deleted'] = deploy_delete_files($webroot, $report['stale']);
+        if ($updatePay) {
+            deploy_copy_files($work . '/pay', $payFiles, $webroot . '/pay');
+            $report['payUpdated'] = true;
+        }
+        return $report;
+    } finally {
+        deploy_rmtree($work);
+    }
+}
