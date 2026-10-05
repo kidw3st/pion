@@ -100,7 +100,9 @@ function uds_request(string $method, string $path, ?array $body = null): array
     }
     if ($code >= 400) {
         $message = (string)($data['message'] ?? $data['errorCode'] ?? ('HTTP ' . $code));
-        throw new RuntimeException('UDS: ' . $message);
+        // Код ответа — в исключении: по нему корзина отличает «код не найден»
+        // (404) от настоящего сбоя и пишет покупателю по-русски.
+        throw new RuntimeException('UDS: ' . $message, $code);
     }
 
     return $data;
@@ -287,8 +289,12 @@ function uds_pending_take(string $orderId): ?array
 /**
  * Есть ли у этого телефона карта в программе.
  *
- * Кешбэк по телефону начисляем только участникам: человеку без карты UDS
- * начислять некуда, а сбой на каждом таком заказе засорял бы уведомления.
+ * Кешбэк по телефону начисляем только участникам: заводить человеку
+ * карту в программе без его ведома — не наше решение.
+ *
+ * Участник — тот, у кого есть participant.id. Приложение для этого не
+ * нужно: в салоне кешбэк начисляют и по номеру, такие люди есть в UDS с
+ * пустым uid. На неизвестный номер UDS отвечает 200 с пустым id, а не 404.
  * Любая ошибка здесь означает «не начисляем» — денег при этом не теряется.
  */
 function uds_is_member_phone(string $phone): bool
@@ -296,7 +302,7 @@ function uds_is_member_phone(string $phone): bool
     try {
         $found = uds_request('GET', 'customers/find?phone=' . rawurlencode($phone));
 
-        return !empty($found['user']['uid']);
+        return !empty($found['user']['participant']['id']);
     } catch (Throwable $e) {
         return false;
     }
