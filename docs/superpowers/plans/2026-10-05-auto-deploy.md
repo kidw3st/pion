@@ -16,7 +16,7 @@
 
 - Сервер — shared-хостинг reg.ru, PHP 8.2.33 CLI; `exec`, `tar`, `git`, `curl`, `flock` есть; Node нет. Веб-корень `/var/www/u3620798/data/www/pionperm.ru`, служебная папка выкладки `/var/www/u3620798/data/pion-deploy` (вне веб-корня).
 - Сервер берёт сборку только по SHA: `https://raw.githubusercontent.com/kidw3st/pion/<SHA>/<файл>`. SHA ветки — из `https://github.com/kidw3st/pion.git/info/refs?service=git-upload-pack`, не из REST API: у него лимит 60 запросов в час на IP, а IP хостинга общий.
-- Защищённые пути веб-корня выкладка сайта не перезаписывает и не удаляет: `pay/`, `blog/` (кроме `blog/wp-content/themes/pion/`), `images/catalog/`, `images/showcase/`, `api/showcase.json`, `.well-known/`.
+- Защищённые пути веб-корня выкладка сайта не перезаписывает и не удаляет: `pay/`, `blog/` (кроме `blog/wp-content/themes/pion/`), `images/catalog/`, `images/showcase/`, `api/showcase.json`, `.well-known/` (кроме `.well-known/agent-skills/` — их кладёт сборка, исправлено при выполнении задачи 5).
 - Обязательные файлы архива сайта: `index.html`, `404.html`, `.htaccess`, `sitemap.xml`, `robots.txt`.
 - `images/catalog/` в архив сайта не входит. `config.php` в платёжный архив не входит и выкладкой не трогается никогда.
 - Каждый PHP-файл сборки (платёжная часть и тема блога) проходит `php -l`. Одна ошибка — выкладка отменяется целиком, сайт остаётся прежним.
@@ -417,6 +417,8 @@ const DEPLOY_PROTECTED = [
 
 /** Внутри защищённых путей сборке принадлежит только тема блога. */
 const DEPLOY_OWNED_IN_PROTECTED = ['blog/wp-content/themes/pion/'];
+// При выполнении задачи 5 сюда добавлен '.well-known/agent-skills/' —
+// эти файлы для ИИ-ассистентов кладёт сборка (scripts/build-agent-assets.mjs).
 
 /** Без этих файлов сайт не работает — такую сборку не выкладываем. */
 const DEPLOY_REQUIRED = ['index.html', '404.html', '.htaccess', 'sitemap.xml', 'robots.txt'];
@@ -2253,10 +2255,14 @@ Expected: `No syntax errors detected`, `1`, `отправлено`. У влад�
 ## Как это устроено
 
 1. Коммит в `master` запускает `.github/workflows/deploy.yml`: тесты (vitest и
-   PHP), `next build`, проверка адресов, упаковка (`scripts/pack-build.mjs`).
+   PHP), `next build`, проверка адресов, упаковка (`scripts/pack-build.mjs`) и
+   проверка упакованной сборки теми же правилами, что на сервере
+   (`scripts/check-server-build.php`). Не прошла — на сервер ничего не уходит,
+   а запуск в GitHub Actions красный.
 2. В ветку `server-build` кладутся `pion-site.tar.gz` (сайт без
    `images/catalog/`), `pion-pay.tar.gz` (`server-pay/` без `config.php`) и
-   `build-info.json` с sha256 обоих.
+   `build-info.json` с sha256 обоих. Архивы воспроизводимые: при том же
+   содержимом sha256 тот же.
 3. На сервере расписание раз в 15 минут запускает `pay/deploy.php`. Он
    узнаёт SHA ветки, скачивает файлы по SHA, сверяет sha256, проверяет состав
    и `php -l`, раскладывает сайт и удаляет файлы прошлой сборки, которых нет
@@ -2271,8 +2277,10 @@ Expected: `No syntax errors detected`, `1`, `отправлено`. У влад�
 
 `pay/config.php` и вообще `pay/` (кроме раскладки платёжного архива),
 `blog/` (кроме нашей темы `blog/wp-content/themes/pion/`), `images/catalog/`,
-`images/showcase/`, `api/showcase.json`, `.well-known/`. Список — в
-`DEPLOY_PROTECTED` в `server-pay/deploy-lib.php`.
+`images/showcase/`, `api/showcase.json`, `.well-known/` (кроме
+`.well-known/agent-skills/` — эти файлы для ИИ-ассистентов кладёт сборка).
+Списки — `DEPLOY_PROTECTED` и `DEPLOY_OWNED_IN_PROTECTED` в
+`server-pay/deploy-lib.php`.
 
 ## Команды на сервере (ISPmanager → Shell-клиент)
 
