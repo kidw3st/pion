@@ -386,7 +386,11 @@ const DEPLOY_KEEP_PREVIOUS = 2;
 const DEPLOY_TRANSIENT_ALERT_AFTER = 3600;
 /** Коммит в master 90 минут не стал сборкой — видимо, сборка падает. */
 const DEPLOY_LAG_ALERT_AFTER = 5400;
-/** Одно и то же сообщение — не чаще раза в 3 часа. */
+/**
+ * Одно и то же сообщение об одном и том же сбое — не чаще раза в 3 часа.
+ * Другой сбой (новая испорченная сборка, новый коммит master) этим сроком не
+ * связан: см. deploy_state_after_failure и deploy_note_master.
+ */
 const DEPLOY_ALERT_COOLDOWN = 10800;
 
 /**
@@ -396,12 +400,19 @@ const DEPLOY_ALERT_COOLDOWN = 10800;
  *   history — прошлые сборки для отката, новая первой;
  *   bad     — сборки, которые выкладывать нельзя: sha => причина;
  *   failure — текущий сбой: kind (transient|fatal), message, sha, since;
- *   alerts  — когда последний раз писали о сбое каждого рода;
- *   master  — последний увиденный коммит master и с какого времени.
+ *   alerts  — когда последний раз писали о сбое каждого рода (fatal,
+ *             transient, lag). Запись снимается, когда сбой кончился или
+ *             начался другой: новая поломка не ждёт расписания прошлой;
+ *   master  — последний увиденный коммит master и с какого времени;
+ *   head    — sha самой новой сборки в ветке server-build из виденных. По нему
+ *             отличают поломку, которая ещё в силе, от устаревшей.
  */
 function deploy_empty_state(): array
 {
-    return ['current' => null, 'history' => [], 'bad' => [], 'failure' => null, 'alerts' => [], 'master' => null];
+    return [
+        'current' => null, 'history' => [], 'bad' => [], 'failure' => null,
+        'alerts' => [], 'master' => null, 'head' => null,
+    ];
 }
 
 function deploy_state_load(string $home): array
@@ -411,17 +422,31 @@ function deploy_state_load(string $home): array
     return is_array($state) ? $state + deploy_empty_state() : deploy_empty_state();
 }
 
-/** Пишет состояние целиком: во временный файл, потом подменяет. */
+/**
+ * Пишет состояние целиком: во временный файл, потом подменяет. В тексте сбоя
+ * бывают байты не в UTF-8 (php -l цитирует файл как есть, хоть в CP1251): их
+ * json_encode заменяет, а не отказывается писать — иначе из-за одной строки
+ * состояние не сохранилось бы совсем.
+ */
 function deploy_state_save(string $home, array $state): void
 {
-    $json = json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $json = json_encode(
+        $state,
+        JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE,
+    );
     $tmp = $home . '/state.json.part';
     if ($json === false || file_put_contents($tmp, $json . PHP_EOL) === false || !rename($tmp, $home . '/state.json')) {
         throw new RuntimeException('не записать state.json');
     }
 }
 
-/** @param array{sha:string,commit:string,paySha256:string} $release */
+/**
+ * Сборка выложена: она становится текущей, прежняя уходит в историю, сбой
+ * снимается вместе с расписанием сообщений о нём — следующий сбой сообщит о
+ * себе сразу, а не по сроку прошлого.
+ *
+ * @param array{sha:string,commit:string,paySha256:string} $release
+ */
 function deploy_state_after_success(array $state, array $release, int $now): array
 {
     if ($state['current'] !== null) {
@@ -431,6 +456,7 @@ function deploy_state_after_success(array $state, array $release, int $now): arr
     $release['deployedAt'] = $now;
     $state['current'] = $release;
     $state['failure'] = null;
+    unset($state['alerts']['fatal'], $state['alerts']['transient']);
     return $state;
 }
 
@@ -443,10 +469,31 @@ function deploy_mark_bad(array $state, string $sha, string $why): array
     return $state;
 }
 
+/**
+ * Записывает сбой. Время начала (since) и расписание сообщений относятся к
+ * «эпизоду» сбоя:
+ *   - сеть (transient): эпизод общий для любых сбоев подряд — опрос GitHub и
+ *     скачивание сборки могут чередоваться, а час отсчитывается с первого;
+ *   - испорченная сборка (fatal): эпизод — сама сборка, другая испорченная
+ *     сборка начинает новый.
+ * Новый эпизод сообщается по своему расписанию, а не по расписанию прошлого:
+ * о новой испорченной сборке пишем сразу, даже если о прошлой писали недавно.
+ *
+ * Сбой сети не затирает поломку головы ветки: сборка всё ещё испорчена, и
+ * сторож должен напоминать о ней дальше, а не забыть при первом же сбое сети.
+ *
+ * @param string $kind 'transient' | 'fatal'
+ */
 function deploy_state_after_failure(array $state, string $kind, string $message, ?string $sha, int $now): array
 {
     $prev = $state['failure'];
-    $same = is_array($prev) && $prev['kind'] === $kind && $prev['sha'] === $sha;
+    if ($kind === 'transient' && is_array($prev) && $prev['kind'] === 'fatal' && $prev['sha'] === $state['head']) {
+        return $state;
+    }
+    $same = is_array($prev) && $prev['kind'] === $kind && ($kind === 'transient' || $prev['sha'] === $sha);
+    if (!$same) {
+        unset($state['alerts'][$kind]);
+    }
     $state['failure'] = [
         'kind' => $kind,
         'message' => $message,
@@ -474,21 +521,33 @@ function deploy_state_after_rollback(array $state, int $now): array
 }
 
 /**
- * Новой сборки нет. Сбой сети на этом прошёл, а испорченная сборка всё ещё
- * последняя — её сбой не снимаем, пока не придёт новая.
+ * Новой сборки нет. Сбой сети на этом прошёл. Поломка остаётся, пока
+ * испорченная сборка всё ещё голова ветки: сторож напоминает о ней до тех
+ * пор, пока не придёт новая. Если голова уже другая (ветку вернули или
+ * пересобрали), поломка устарела и снимается.
  */
 function deploy_state_idle(array $state): array
 {
-    if (($state['failure']['kind'] ?? null) === 'transient') {
+    $failure = $state['failure'];
+    if (is_array($failure) && ($failure['kind'] === 'transient' || $failure['sha'] !== $state['head'])) {
         $state['failure'] = null;
     }
     return $state;
 }
 
+/** Запоминает сборку, которая сейчас последняя в ветке server-build. */
+function deploy_note_head(array $state, string $sha): array
+{
+    $state['head'] = $sha;
+    return $state;
+}
+
+/** Новый коммит master — новый отсчёт отставания и новое напоминание о нём. */
 function deploy_note_master(array $state, string $sha, int $now): array
 {
     if (($state['master']['sha'] ?? null) !== $sha) {
         $state['master'] = ['sha' => $sha, 'since' => $now];
+        unset($state['alerts']['lag']);
     }
     return $state;
 }
@@ -502,6 +561,11 @@ function deploy_alert_due(array $state, string $kind, int $now): bool
 /**
  * О чём пора написать в служебный чат.
  *
+ * Об отставании от master молчим, пока выкладка сбоит (причина та же) и пока
+ * голова ветки признана плохой — отклонена проверкой или откачена вручную.
+ * Сборка была, просто выкладывать её нельзя, и «проверьте GitHub Actions»
+ * было бы ложным.
+ *
  * @return list<string> 'fatal' | 'transient' | 'lag'
  */
 function deploy_pending_alerts(array $state, int $now): array
@@ -514,7 +578,9 @@ function deploy_pending_alerts(array $state, int $now): array
     }
     $master = $state['master'];
     $current = $state['current'];
-    if (is_array($master) && is_array($current) && $master['sha'] !== $current['commit']
+    $head = $state['head'];
+    $headBad = $head !== null && isset($state['bad'][$head]);
+    if (is_array($master) && is_array($current) && !$headBad && $master['sha'] !== $current['commit']
         && $now - $master['since'] >= DEPLOY_LAG_ALERT_AFTER && deploy_alert_due($state, 'lag', $now)) {
         return ['lag'];
     }

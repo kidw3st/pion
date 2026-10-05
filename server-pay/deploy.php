@@ -207,6 +207,7 @@ function deploy_run(string $home, string $webroot, bool $dryRun): int
         return 1;
     }
     $sha = $refs[DEPLOY_BRANCH];
+    $state = deploy_note_head($state, $sha);
     if (isset($refs['master'])) {
         $state = deploy_note_master($state, $refs['master'], $now);
     }
@@ -260,8 +261,15 @@ function deploy_run(string $home, string $webroot, bool $dryRun): int
 
     deploy_save_release_files($home, $sha, $report['files']);
     $state = deploy_state_after_success($state, $release, $now);
-    foreach (deploy_prune_releases($home, $state) as $old) {
-        deploy_log($home, 'удалена старая сборка ' . substr($old, 0, 7));
+    // Сначала состояние: сайт уже на новой сборке, и это должно быть записано,
+    // что бы ни случилось с уборкой старых сборок.
+    deploy_state_save($home, $state);
+    try {
+        foreach (deploy_prune_releases($home, $state) as $old) {
+            deploy_log($home, 'удалена старая сборка ' . substr($old, 0, 7));
+        }
+    } catch (RuntimeException $e) {
+        deploy_log($home, 'не удалось удалить старые сборки: ' . $e->getMessage());
     }
     deploy_log($home, 'выложена ' . $summary);
     deploy_finish($home, $state, $now);
@@ -403,9 +411,19 @@ if ($lock === false || !flock($lock, LOCK_EX | LOCK_NB)) {
     exit(0);
 }
 
-exit(match ($mode) {
-    '' => deploy_run($home, $webroot, false),
-    '--dry-run' => deploy_run($home, $webroot, true),
-    '--rollback' => deploy_rollback($home, $webroot),
-    default => deploy_usage(),
-});
+try {
+    exit(match ($mode) {
+        '' => deploy_run($home, $webroot, false),
+        '--dry-run' => deploy_run($home, $webroot, true),
+        '--rollback' => deploy_rollback($home, $webroot),
+        default => deploy_usage(),
+    });
+} catch (Throwable $e) {
+    // Под расписанием вывод никто не читает, поэтому о падении — в лог и в
+    // служебный чат. Без ограничения частоты: если не сохраняется состояние,
+    // разработчик должен узнать об этом сразу, а не через 3 часа.
+    $why = get_class($e) . ': ' . $e->getMessage();
+    deploy_log($home, 'deploy.php упал: ' . $why);
+    deploy_log($home, 'сообщение о падении: ' . deploy_telegram('Выкладка pionperm.ru: deploy.php упал — ' . $why));
+    exit(1);
+}

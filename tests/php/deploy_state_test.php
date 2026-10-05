@@ -35,7 +35,7 @@ t_equal($s['bad'], [str_repeat('f', 40) => 'нет robots.txt'], 'испорче
 // --- Без дела: сеть восстановилась, а испорченная сборка всё ещё последняя -
 $t = deploy_state_after_failure(deploy_empty_state(), 'transient', 'таймаут', null, 1);
 t_equal(deploy_state_idle($t)['failure'], null, 'сеть восстановилась — сбоя нет');
-t_equal(deploy_state_idle($s)['failure']['kind'], 'fatal', 'испорченная сборка — сбой остаётся');
+t_equal(deploy_state_idle(deploy_note_head($s, str_repeat('f', 40)))['failure']['kind'], 'fatal', 'испорченная сборка — сбой остаётся');
 
 // --- Список плохих сборок не растёт бесконечно ----------------------------
 $b = deploy_empty_state();
@@ -110,3 +110,116 @@ deploy_save_release_files($home, str_repeat('d', 40), ['index.html', 'a/b.html']
 t_equal(deploy_release_files($home, str_repeat('d', 40)), ['index.html', 'a/b.html'], 'список файлов сборки');
 t_equal(deploy_release_files($home, null), null, 'нет сборки — нет списка');
 t_equal(deploy_release_files($home, str_repeat('b', 40)), null, 'список не сохранялся — null');
+
+// --- Голова ветки server-build: новый ключ состояния ---------------------
+$x = str_repeat('e', 40);
+$y = str_repeat('d', 40);
+$z = str_repeat('c', 40);
+t_equal(
+    array_keys(deploy_empty_state()),
+    ['current', 'history', 'bad', 'failure', 'alerts', 'master', 'head'],
+    'head — последний ключ состояния',
+);
+t_equal(deploy_note_head(deploy_empty_state(), $x)['head'], $x, 'голова ветки запоминается');
+$home = t_tmpdir();
+file_put_contents($home . '/state.json', json_encode(['current' => null, 'history' => [], 'bad' => [], 'failure' => null, 'alerts' => [], 'master' => null]));
+t_equal(deploy_state_load($home)['head'], null, 'файл состояния без head читается');
+
+// --- После отката ложного «отставания» нет -------------------------------
+// Откатились с «b» на «a». В master всё ещё коммит сборки «b», а сама «b» —
+// голова server-build и в списке плохих: сборка была, выкладывать её нельзя.
+$s = deploy_empty_state();
+foreach (['a', 'b'] as $i => $c) {
+    $s = deploy_state_after_success($s, $rel($c), 100 * ($i + 1));
+}
+$s = deploy_note_master($s, 'commit-b', 300);
+$s = deploy_note_head($s, str_repeat('b', 40));
+$s = deploy_state_idle(deploy_state_after_rollback($s, 400));
+t_equal($s['failure'], null, 'после отката сбоя нет');
+t_equal(deploy_pending_alerts($s, 300 + 5400), [], 'откат: master старше 90 минут, но голова в плохих — тишина');
+t_equal(deploy_pending_alerts($s, 300 + 5400 + 10800), [], 'откат: и через 3 часа об отставании не напоминаем');
+t_equal(deploy_pending_alerts(deploy_note_head($s, $x), 300 + 5400), ['lag'], 'голова не в плохих — отставание настоящее');
+
+// --- Сбой сети не затирает испорченную сборку ----------------------------
+$s = deploy_note_head(deploy_empty_state(), $x);
+$s = deploy_state_after_failure($s, 'fatal', 'нет robots.txt', $x, 100);
+$s = deploy_mark_alerted($s, 'fatal', 100);
+$fatal = $s['failure'];
+$s = deploy_state_after_failure($s, 'transient', 'таймаут', null, 1000);
+t_equal($s['failure'], $fatal, 'мигнула сеть — поломка головы ветки остаётся');
+t_equal(deploy_state_idle($s)['failure'], $fatal, 'тихий проход поломку головы не снимает');
+t_equal(deploy_pending_alerts($s, 100 + 10799), [], 'испорченная сборка: раньше чем через 3 часа не напоминаем');
+t_equal(deploy_pending_alerts($s, 100 + 10800), ['fatal'], 'испорченная сборка: через 3 часа напоминаем');
+
+// --- Пришла другая сборка: прежняя поломка новый сбой не затеняет --------
+$s = deploy_note_head(deploy_empty_state(), $x);
+$s = deploy_state_after_failure($s, 'fatal', 'нет robots.txt', $x, 100);
+$s = deploy_note_head($s, $y);
+$s = deploy_state_after_failure($s, 'transient', 'таймаут', $y, 1000);
+t_equal($s['failure']['kind'], 'transient', 'голова сменилась — старая поломка не держится');
+t_equal($s['failure']['since'], 1000, 'новый сбой — отсчёт заново');
+t_equal(array_keys($s['bad']), [$x], 'испорченная сборка остаётся в плохих');
+
+// --- Новая поломка сообщается по своему расписанию -----------------------
+// Между поломками была выкладка.
+$s = deploy_note_head(deploy_empty_state(), $x);
+$s = deploy_state_after_failure($s, 'fatal', 'нет robots.txt', $x, 0);
+$s = deploy_mark_alerted($s, 'fatal', 0);
+$s = deploy_state_after_success($s, $rel('a'), 900);
+$s = deploy_note_head($s, $z);
+$s = deploy_state_after_failure($s, 'fatal', 'php -l', $z, 1800);
+t_equal(deploy_pending_alerts($s, 1800), ['fatal'], 'после выкладки новая поломка — сразу, хоть писали недавно');
+// Выкладки не было: следующая сборка тоже испорчена.
+$s = deploy_note_head(deploy_empty_state(), $x);
+$s = deploy_state_after_failure($s, 'fatal', 'нет robots.txt', $x, 0);
+$s = deploy_mark_alerted($s, 'fatal', 0);
+$s = deploy_note_head($s, $z);
+$s = deploy_state_after_failure($s, 'fatal', 'php -l', $z, 1800);
+t_equal($s['failure']['since'], 1800, 'другая испорченная сборка — отсчёт заново');
+t_equal(deploy_pending_alerts($s, 1800), ['fatal'], 'другая испорченная сборка — сразу, не через 3 часа после прошлой');
+// Та же сборка, тот же сбой: расписание прежнее.
+$s = deploy_mark_alerted($s, 'fatal', 1800);
+$s = deploy_state_after_failure($s, 'fatal', 'php -l', $z, 2700);
+t_equal($s['failure']['since'], 1800, 'та же испорченная сборка — время начала прежнее');
+t_equal(deploy_pending_alerts($s, 2700), [], 'та же испорченная сборка — расписание напоминаний прежнее');
+// Выкладка сама сбрасывает расписание сбоев (но не отставания).
+$s = deploy_mark_alerted(deploy_mark_alerted(deploy_mark_alerted(deploy_empty_state(), 'fatal', 1), 'transient', 2), 'lag', 3);
+$s = deploy_state_after_success($s, $rel('a'), 10);
+t_equal($s['alerts'], ['lag' => 3], 'выкладка сбрасывает расписание сбоев, но не отставания');
+
+// --- Сбой сети отсчитывается сквозь смену стадии -------------------------
+$s = deploy_state_after_failure(deploy_empty_state(), 'transient', 'GitHub не ответил', null, 0);
+$s = deploy_state_after_failure($s, 'transient', 'не скачалась сборка', $x, 900);
+$s = deploy_state_after_failure($s, 'transient', 'GitHub не ответил', null, 1800);
+t_equal($s['failure']['since'], 0, 'сбои чередуются (опрос, скачивание), а отсчёт общий');
+t_equal(deploy_pending_alerts($s, 3599), [], 'сеть: меньше часа подряд — молчим');
+t_equal(deploy_pending_alerts($s, 3600), ['transient'], 'сеть: час подряд — пишем');
+
+// --- Новый коммит в master — новое напоминание об отставании -------------
+$s = deploy_state_after_success(deploy_empty_state(), $rel('a'), 0);
+$s = deploy_note_master($s, 'commit-new', 1000);
+$s = deploy_mark_alerted($s, 'lag', 6400);
+$s = deploy_note_master($s, 'commit-newer', 6500);
+t_equal(deploy_pending_alerts($s, 6500 + 5399), [], 'новый коммит: сначала 90 минут ждём');
+t_equal(deploy_pending_alerts($s, 6500 + 5400), ['lag'], 'новый коммит — своё напоминание, прошлое не мешает');
+
+// --- Тихий проход снимает устаревшую поломку -----------------------------
+$s = deploy_note_head(deploy_empty_state(), $x);
+$s = deploy_state_after_failure($s, 'fatal', 'нет robots.txt', $x, 100);
+t_equal(deploy_state_idle($s)['failure']['kind'], 'fatal', 'голова всё ещё испорчена — сбой остаётся');
+t_equal(deploy_state_idle(deploy_note_head($s, $y))['failure'], null, 'голова другая — поломка устарела, сбоя нет');
+
+// --- Байты не в UTF-8 в тексте сбоя не мешают сохранить состояние --------
+// php -l цитирует файл как есть, в том числе в CP1251.
+$home = t_tmpdir();
+$s = deploy_state_after_failure(deploy_empty_state(), 'fatal', "pay/init.php: ошибка \xC0\xAF и \xCF\xF0\xE8", $x, 100);
+$threw = null;
+try {
+    deploy_state_save($home, $s);
+} catch (Throwable $e) {
+    $threw = $e;
+}
+t_true($threw === null, 'состояние сохраняется, хотя в тексте сбоя битые байты' . ($threw === null ? '' : ' (' . $threw->getMessage() . ')'));
+$msg = (string)(deploy_state_load($home)['failure']['message'] ?? '');
+t_true($msg !== '' && preg_match('//u', $msg) === 1, 'в файле корректный UTF-8');
+t_true(str_starts_with($msg, 'pay/init.php: ошибка ') && str_contains($msg, "\u{FFFD}"), 'битые байты заменены, остальной текст на месте');
