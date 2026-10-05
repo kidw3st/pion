@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
+    "test:php": "php tests/php/run.php",
     "prebuild": "node scripts/build-agent-assets.mjs",
     "postbuild": "node scripts/build-blog-theme.mjs && node scripts/check-build-urls.mjs"
   },
