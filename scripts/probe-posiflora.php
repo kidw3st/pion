@@ -27,44 +27,54 @@ function probe(string $path, string $token): ?array
     try {
         $resp = posiflora_request('GET', $path, null, $token);
     } catch (Throwable $e) {
-        printf("  %-48s → %s\n", $path, mb_substr($e->getMessage(), 0, 90));
+        printf("  %-44s → %s\n", $path, mb_substr($e->getMessage(), 0, 60));
         return null;
     }
     $data = $resp['data'] ?? [];
     $list = isset($data['id']) ? [$data] : $data;
     $first = $list[0] ?? null;
     printf(
-        "  %-48s → %d шт.; поля: %s\n",
+        "  %-44s → %d шт.; поля: %s\n",
         $path,
         count($list),
-        $first ? implode(', ', array_slice(array_keys($first['attributes'] ?? []), 0, 14)) : '—',
+        $first ? implode(', ', array_slice(array_keys($first['attributes'] ?? []), 0, 16)) : '—',
     );
     if ($first && !empty($first['relationships'])) {
-        printf("  %-48s   связи: %s\n", '', implode(', ', array_keys($first['relationships'])));
+        printf("  %-44s   связи: %s\n", '', implode(', ', array_keys($first['relationships'])));
     }
     return $resp;
 }
 
-echo "=== Букеты: все статусы, не только витрина ===\n";
-$all = probe('bouquets?page[size]=100&filter[stores]=' . POSIFLORA_STORE_ID, $token);
-$byStatus = [];
-foreach (($all['data'] ?? []) as $b) {
-    $s = (string)($b['attributes']['status'] ?? '?');
-    $byStatus[$s] = ($byStatus[$s] ?? 0) + 1;
+echo "=== Категории с товарами (непустые и не удалённые) ===\n";
+$cats = posiflora_request('GET', 'categories?page[size]=200', null, $token)['data'] ?? [];
+$shown = 0;
+foreach ($cats as $c) {
+    $a = $c['attributes'] ?? [];
+    if (!empty($a['deleted'])) {
+        continue;
+    }
+    printf(
+        "  %-38s товаров: %-4s статус: %-10s путь: %s\n",
+        mb_substr((string)($a['title'] ?? '?'), 0, 38),
+        (string)($a['countPublicItems'] ?? '?'),
+        (string)($a['status'] ?? '?'),
+        mb_substr((string)($a['path'] ?? ''), 0, 60),
+    );
+    $shown++;
 }
-arsort($byStatus);
-foreach ($byStatus as $s => $n) {
-    printf("    статус %-14s — %d\n", $s, $n);
-}
+printf("  всего категорий без удалённых: %d\n", $shown);
+$firstCatId = $cats[0]['id'] ?? null;
 
-echo "\n=== Возможные справочники каталога ===\n";
+echo "\n=== Где лежат сами товары ===\n";
 foreach ([
-    'categories', 'bouquet-categories', 'catalog-categories', 'product-categories',
-    'item-categories', 'tags', 'bouquet-tags', 'collections',
-    'products', 'catalog-items', 'items', 'goods', 'nomenclatures',
-    'bouquet-templates', 'templates', 'compositions',
+    'inventory-items', 'store-items', 'public-items', 'catalog',
+    'variants', 'item-variants', 'specifications', 'specs',
+    'groups', 'category-groups', 'flowers', 'materials',
 ] as $endpoint) {
-    probe($endpoint . '?page[size]=5', $token);
+    probe($endpoint . '?page[size]=3', $token);
+}
+if ($firstCatId) {
+    probe('categories/' . $firstCatId . '?include=group,parent', $token);
 }
 
 echo "\nГотово. Ничего не изменено.\n";
