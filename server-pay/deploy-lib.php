@@ -213,8 +213,18 @@ function deploy_extract(string $archive, string $dir): void
  * php -l для каждого PHP-файла. Ошибка синтаксиса в /pay/ — сломанная
  * оплата, в теме — белый экран блога, поэтому такую сборку не выкладываем.
  *
+ * Код выхода php -l: 0 — файл в порядке; 255 — PHP разобрал файл и нашёл
+ * ошибку, это вина сборки, и сообщение попадает в результат. Любой другой
+ * ненулевой код (1 — файл не открылся, -1 — процесс не запустился,
+ * 126/127 — нет PHP, 137 — убит лимитами хостинга) значит, что проверка
+ * не состоялась. Это сбой окружения, а не доказательство, что сборка плоха:
+ * из-за него хорошую сборку нельзя навсегда помечать испорченной
+ * (DeployFatal). Поэтому бросается обычный RuntimeException, и выкладку
+ * повторят при следующем запуске.
+ *
  * @param list<string> $files пути относительно $root
  * @return list<string> ошибки вида «pay/init.php: PHP Parse error …»
+ * @throws RuntimeException php -l не запустился (код выхода не 0 и не 255)
  */
 function deploy_lint_php(string $root, array $files, string $label = ''): array
 {
@@ -226,9 +236,11 @@ function deploy_lint_php(string $root, array $files, string $label = ''): array
         }
         $out = [];
         exec(escapeshellarg($php) . ' -l ' . escapeshellarg($root . '/' . $rel) . ' 2>&1', $out, $code);
-        if ($code !== 0) {
+        if ($code === 255) {
             $first = trim((string)($out[0] ?? 'ошибка синтаксиса'));
             $errors[] = $label . $rel . ': ' . str_replace($root . '/', '', $first);
+        } elseif ($code !== 0) {
+            throw new RuntimeException("проверка синтаксиса не запустилась для $label$rel: код $code");
         }
     }
     return $errors;

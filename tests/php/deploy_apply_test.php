@@ -140,3 +140,28 @@ $e = t_throws(
     'битый архив — сбой',
 );
 t_true(!($e instanceof DeployFatal), 'битый архив сервер скачает заново, а не пометит сборку плохой');
+
+// --- php -l не запустился — сбой, но не приговор сборке ----------------
+// Код 255 — PHP нашёл ошибку в файле; любой другой ненулевой — проверка не
+// состоялась (нет файла, нет PHP, процесс убит), и хорошую сборку из-за этого
+// нельзя навсегда помечать испорченной.
+$lintDir = t_tmpdir();
+$lintE = t_throws(
+    fn() => deploy_lint_php($lintDir, ['missing.php'], 'pay/'),
+    RuntimeException::class,
+    'php -l не смог проверить файл — сбой',
+);
+t_true(!($lintE instanceof DeployFatal), 'сбой запуска php -l не помечает сборку плохой, выкладку повторят');
+t_true(
+    $lintE !== null
+        && str_contains($lintE->getMessage(), 'pay/missing.php')
+        && preg_match('~код \d+~u', $lintE->getMessage()) === 1,
+    'в сообщении о сбое файл с меткой и код выхода',
+);
+
+// --- php -l: ошибку синтаксиса по-прежнему находит ---------------------
+$lintDir = t_tmpdir();
+t_put_files($lintDir, ['bad.php' => '<?php echo (;', 'good.php' => '<?php echo 1;']);
+$lintErrors = deploy_lint_php($lintDir, ['bad.php', 'good.php'], 'pay/');
+t_equal(count($lintErrors), 1, 'php -l: из двух файлов испорчен один — одна ошибка');
+t_true(str_starts_with($lintErrors[0] ?? '', 'pay/bad.php: '), 'php -l: ошибка начинается с метки и пути файла');
