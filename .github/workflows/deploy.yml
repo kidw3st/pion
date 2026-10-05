@@ -53,6 +53,9 @@ jobs:
 
       - run: node scripts/pack-build.mjs
 
+      # Те же проверки, что у сервера: расхождение останавливает публикацию здесь.
+      - run: php scripts/check-server-build.php build/pion-site.tar.gz build/pion-pay.tar.gz
+
       # Ветка хранит только последнюю сборку: история архивов на мегабайты
       # в git никому не нужна.
       - name: Выложить в server-build

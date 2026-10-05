@@ -97,6 +97,30 @@ $report = deploy_apply(['site' => "$work/site.tgz", 'pay' => "$work/pay.tgz"], $
 t_equal(file_get_contents("$web/pay/init.php"), '<?php echo 0;', '/pay/ не тронут, если архив тот же');
 t_true(!$report['payUpdated'], 'отчёт: /pay/ не обновлялся');
 
+// --- .well-known/: файлы для ИИ-ассистентов свои, остальное — нет -----------
+$work = t_tmpdir();
+$web = t_webroot();
+t_put_files($web, [
+    '.well-known/acme-challenge/token' => 'le-token',
+    '.well-known/agent-skills/index.json' => 'old skills',
+    '.well-known/agent-skills/gone/SKILL.md' => 'stale skill',
+]);
+t_make_archive("$work/site.tgz", t_site(['.well-known/agent-skills/index.json' => 'new skills']));
+t_make_archive("$work/pay.tgz", ['init.php' => '<?php echo 1;']);
+$report = deploy_apply(
+    ['site' => "$work/site.tgz", 'pay' => "$work/pay.tgz"],
+    ['index.html', '.well-known/agent-skills/index.json', '.well-known/agent-skills/gone/SKILL.md', '.well-known/acme-challenge/token'],
+    $web,
+    true,
+    "$work/x",
+    false,
+);
+t_equal(file_get_contents("$web/.well-known/agent-skills/index.json"), 'new skills', 'файлы для ИИ-ассистентов обновлены');
+t_true(!file_exists("$web/.well-known/agent-skills/gone/SKILL.md"), 'устаревший файл для ИИ-ассистентов удалён');
+t_true(!is_dir("$web/.well-known/agent-skills/gone"), 'опустевшая папка для ИИ-ассистентов убрана');
+t_equal(file_get_contents("$web/.well-known/acme-challenge/token"), 'le-token', "проверка Let's Encrypt не тронута, хоть и была в прошлом списке");
+t_equal($report['deleted'], ['.well-known/agent-skills/gone/SKILL.md'], 'отчёт: удалён только устаревший файл для ИИ-ассистентов');
+
 // --- Пробный прогон ничего не меняет -------------------------------------
 $work = t_tmpdir();
 $web = t_webroot();

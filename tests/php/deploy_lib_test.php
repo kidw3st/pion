@@ -15,6 +15,8 @@ foreach ([
     'images/showcase/b.webp' => true,
     'api/showcase.json' => true,
     '.well-known/acme-challenge/x' => true,
+    '.well-known/agent-skills/index.json' => false,
+    '.well-known/agent-skills/pion-catalog/SKILL.md' => false,
     'index.html' => false,
     'images/site/logo.webp' => false,
     'api/catalog/bukety.json' => false,

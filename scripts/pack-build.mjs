@@ -24,6 +24,9 @@ const TAR =
     ? path.join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'tar.exe')
     : 'tar';
 
+/** GNU tar (Linux, GitHub Actions) умеет писать одинаковые архивы, bsdtar (Windows) — нет. */
+export const GNU_TAR = execFileSync(TAR, ['--version'], { encoding: 'utf8' }).includes('GNU tar');
+
 /** Файлы архива: пути без «./», без папок. */
 export function listArchive(file) {
   return execFileSync(TAR, ['-tzf', file], { encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 })
@@ -40,14 +43,30 @@ function describeArchive(file) {
   };
 }
 
+/**
+ * tar.gz из папки dir без пути exclude.
+ *
+ * sha256 архива должен меняться только вместе с содержимым: по нему deploy.php
+ * решает, перекладывать ли /pay/. Обычный tar пишет в архив время изменения
+ * файлов, а git checkout ставит им время клонирования, — хэш был бы новым при
+ * каждой сборке, и «/pay/ без изменений» не наступало бы никогда. Поэтому у
+ * GNU tar порядок файлов, время, владелец и заголовок gzip зафиксированы.
+ */
+function createArchive(file, dir, exclude) {
+  const create = GNU_TAR
+    ? ['--sort=name', '--mtime=@0', '--owner=0', '--group=0', '--numeric-owner', '-I', 'gzip -n', '-cf']
+    : ['-czf'];
+  execFileSync(TAR, [...create, file, '-C', dir, '--exclude', exclude, '.']);
+}
+
 export function pack({ outDir, payDir, dest, commit, now = new Date() }) {
   rmSync(dest, { recursive: true, force: true });
   mkdirSync(dest, { recursive: true });
   const site = path.join(dest, 'pion-site.tar.gz');
   const pay = path.join(dest, 'pion-pay.tar.gz');
 
-  execFileSync(TAR, ['-czf', site, '-C', outDir, '--exclude', './images/catalog', '.']);
-  execFileSync(TAR, ['-czf', pay, '-C', payDir, '--exclude', './config.php', '.']);
+  createArchive(site, outDir, './images/catalog');
+  createArchive(pay, payDir, './config.php');
 
   const siteFiles = listArchive(site);
   const leaked = siteFiles.filter((f) => f.startsWith('images/catalog/'));

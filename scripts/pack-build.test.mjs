@@ -1,9 +1,9 @@
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, utimesSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { listArchive, pack } from './pack-build.mjs';
+import { GNU_TAR, listArchive, pack } from './pack-build.mjs';
 
 /** Временная папка с файлами: путь => содержимое. */
 function tree(files) {
@@ -13,6 +13,14 @@ function tree(files) {
     writeFileSync(path.join(dir, rel), body);
   }
   return dir;
+}
+
+/** Ставит время изменения всем файлам и папкам внутри dir и ей самой. */
+function touchAll(dir, when) {
+  for (const rel of readdirSync(dir, { recursive: true })) {
+    utimesSync(path.join(dir, rel), when, when);
+  }
+  utimesSync(dir, when, when);
 }
 
 const SITE = {
@@ -49,6 +57,31 @@ describe('pack', () => {
     const sha = createHash('sha256').update(readFileSync(path.join(dest, 'pion-site.tar.gz'))).digest('hex');
     expect(info.site.sha256).toBe(sha);
     expect(info.site.file).toBe('pion-site.tar.gz');
+    const paySha = createHash('sha256').update(readFileSync(path.join(dest, 'pion-pay.tar.gz'))).digest('hex');
+    expect(info.pay.sha256).toBe(paySha);
+    expect(info.pay.file).toBe('pion-pay.tar.gz');
+  });
+
+  // По sha256 /pay/ deploy.php решает, перекладывать ли платёжную часть. Обычный
+  // tar пишет в архив время файлов, а git checkout ставит им время клонирования, —
+  // хэш был бы новым при каждой сборке. Нормализует только GNU tar (CI), не bsdtar.
+  it.skipIf(!GNU_TAR)('архивы те же, если изменилось только время файлов, и другие, если содержимое', () => {
+    const outDir = tree(SITE);
+    const payDir = tree({ 'init.php': '<?php', 'config.php': '<?php // secret', '.htaccess': 'deny' });
+    const run = () => pack({ outDir, payDir, dest: path.join(tree({}), 'build'), commit: 'x' });
+
+    const first = run();
+    touchAll(outDir, new Date('2031-02-03T04:05:06Z'));
+    touchAll(payDir, new Date('2031-02-03T04:05:06Z'));
+    const later = run();
+    expect(later.site.sha256).toBe(first.site.sha256);
+    expect(later.pay.sha256).toBe(first.pay.sha256);
+
+    writeFileSync(path.join(outDir, 'index.html'), 'home 2');
+    writeFileSync(path.join(payDir, 'init.php'), '<?php echo 2;');
+    const changed = run();
+    expect(changed.site.sha256).not.toBe(first.site.sha256);
+    expect(changed.pay.sha256).not.toBe(first.pay.sha256);
   });
 
   it('не пакует сборку без обязательных файлов', () => {

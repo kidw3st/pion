@@ -25,8 +25,13 @@ const DEPLOY_PROTECTED = [
     '.well-known/',
 ];
 
-/** Внутри защищённых путей сборке принадлежит только тема блога. */
-const DEPLOY_OWNED_IN_PROTECTED = ['blog/wp-content/themes/pion/'];
+/**
+ * Внутри защищённых путей сборке принадлежат только тема блога и файлы для
+ * ИИ-ассистентов (.well-known/agent-skills/, их пишет каждая сборка). Остальное
+ * в .well-known/ остаётся защищённым — например, проверка Let's Encrypt
+ * в .well-known/acme-challenge/.
+ */
+const DEPLOY_OWNED_IN_PROTECTED = ['blog/wp-content/themes/pion/', '.well-known/agent-skills/'];
 
 /** Без этих файлов сайт не работает — такую сборку не выкладываем. */
 const DEPLOY_REQUIRED = ['index.html', '404.html', '.htaccess', 'sitemap.xml', 'robots.txt'];
