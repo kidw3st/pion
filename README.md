@@ -41,17 +41,15 @@ SCRAPE_BROWSER_CHANNEL=chrome node scripts/scrape.mjs
 Some categories (e.g. `korziny`, `balloons`, `wedding`) are genuinely empty on the live site —
 that's expected, not a scrape failure.
 
-## Deploying to GitHub Pages
+## Deploying
 
-Every push to `master` runs `.github/workflows/deploy-pages.yml`: tests, static
-build, publish. The site is served from `https://kidw3st.github.io/pion/`.
+Every push to `master` is deployed to pionperm.ru automatically: GitHub Actions
+builds and tests it, and the server picks the build up within about 20 minutes.
+How it works and what to do when it fails: [`docs/deploy.md`](docs/deploy.md)
+(in Russian).
 
-Pages has to be switched on once by the repo owner before the first deploy —
-**Settings → Pages → Build and deployment → Source: "GitHub Actions"**. The
-default workflow token can't do this itself.
-
-The `/pion` base path is only applied in CI (via `GITHUB_PAGES=true`); local
-`npm run dev` and `npm run build` still serve the site from the root.
+GitHub Pages is intentionally off: a github.io copy competed with pionperm.ru in
+search results. No workflow sets `GITHUB_PAGES`.
 
 ## Agent discovery
 
