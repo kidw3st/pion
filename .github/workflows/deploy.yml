@@ -1,0 +1,68 @@
+name: Сборка и выкладка
+
+# Каждый коммит в master собирается здесь и кладётся в ветку server-build:
+# pion-site.tar.gz, pion-pay.tar.gz и build-info.json с их sha256. Сервер
+# (pay/deploy.php по расписанию раз в 15 минут) сам забирает новую сборку.
+# master — это то, что на сайте: незаконченная работа живёт в ветках.
+#
+# Публикации на GitHub Pages здесь нет и не будет: копия на github.io уже
+# отбирала у pionperm.ru позиции в поиске. Прав pages у workflow нет.
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Два коммита подряд — собирается последний: в нём есть всё.
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
+jobs:
+  build:
+    # Ручной «Run workflow» из другой ветки иначе выложил бы эту ветку на боевой сайт.
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      # PHP — та же версия, что на хостинге.
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          coverage: none
+
+      - run: npm ci
+      - run: npm test
+      - run: find server-pay wp-theme -name '*.php' -print0 | xargs -0 -n1 php -l
+      - run: php tests/php/run.php
+
+      # Боевая сборка. postbuild проверяет, что canonical, og, Schema и
+      # sitemap указывают на pionperm.ru, и роняет сборку, если нет.
+      - run: npm run build
+        env:
+          SITE_URL: https://pionperm.ru
+
+      - run: node scripts/pack-build.mjs
+
+      # Ветка хранит только последнюю сборку: история архивов на мегабайты
+      # в git никому не нужна.
+      - name: Выложить в server-build
+        working-directory: build
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git init -q -b server-build
+          git add pion-site.tar.gz pion-pay.tar.gz build-info.json
+          git -c user.name='github-actions[bot]' \
+              -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+              commit -q -m "Сборка ${GITHUB_SHA::7}"
+          git push -q --force "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" server-build

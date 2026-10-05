@@ -5,9 +5,10 @@ name: Проверка сборки
 # остался только прогон тестов и сборки — чтобы сломанный код было видно сразу,
 # а не при выкладке на боевой сервер.
 
+# master проверяет и выкладывает deploy.yml — здесь ветки и pull request.
 on:
   push:
-    branches: [master]
+    branches-ignore: [master, server-build]
   pull_request:
   workflow_dispatch:
 
