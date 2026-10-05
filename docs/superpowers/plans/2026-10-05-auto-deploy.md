@@ -1119,7 +1119,10 @@ Expected: FAIL — `Call to undefined function deploy_empty_state()`.
 
 /** Сколько прошлых сборок хранится для отката (плюс текущая). */
 const DEPLOY_KEEP_PREVIOUS = 2;
-/** Сбой сети — пишем, если он не прошёл за час: GitHub иногда моргает. */
+/**
+ * Временный сбой (сеть, GitHub, не запустился tar или php -l) — пишем, если
+ * он не прошёл за час: такое обычно проходит само.
+ */
 const DEPLOY_TRANSIENT_ALERT_AFTER = 3600;
 /** Коммит в master 90 минут не стал сборкой — видимо, сборка падает. */
 const DEPLOY_LAG_ALERT_AFTER = 5400;
@@ -1272,7 +1275,7 @@ function deploy_alert_text(string $kind, array $state): string
     $master = substr((string)($state['master']['sha'] ?? ''), 0, 7);
     return match ($kind) {
         'fatal' => "Выкладка pionperm.ru остановлена: сборка $build не прошла проверку — $message. Сайт работает на прежней сборке.",
-        'transient' => "Выкладка pionperm.ru: больше часа не получается забрать сборку с GitHub — $message.",
+        'transient' => "Выкладка pionperm.ru: больше часа не получается выложить новую сборку — $message.",
         'lag' => "Выкладка pionperm.ru: коммит $master в master больше 90 минут не превращается в сборку. Проверьте GitHub Actions.",
         default => "Выкладка pionperm.ru: $kind",
     };
@@ -1674,7 +1677,7 @@ function deploy_status(string $home): int
     if (is_array($failure)) {
         printf(
             'Сбой (%s) с %s: %s%s',
-            $failure['kind'] === 'fatal' ? 'сборка испорчена' : 'сеть',
+            $failure['kind'] === 'fatal' ? 'сборка испорчена' : 'временный',
             date('d.m.Y H:i', $failure['since']),
             $failure['message'],
             PHP_EOL,
@@ -2295,8 +2298,9 @@ Expected: `No syntax errors detected`, `1`, `отправлено`. У влад�
   новый коммит в `master`.
 - **Пересобрать без изменений кода** — GitHub → Actions → «Сборка и выкладка»
   → «Run workflow».
-- **«больше часа не получается забрать сборку»** — недоступен GitHub или
-  сеть хостинга. Обычно проходит само; сервер пробует каждые 15 минут.
+- **«больше часа не получается выложить новую сборку»** — недоступен GitHub,
+  сеть хостинга, или на сервере не запустились tar либо php -l (причина — в
+  конце сообщения). Обычно проходит само; сервер пробует каждые 15 минут.
 - **«коммит … больше 90 минут не превращается в сборку»** — проверить
   GitHub Actions: запуск упал или не начался.
 
