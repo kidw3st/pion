@@ -296,7 +296,10 @@ function deploy_rollback(string $home, string $webroot): int
             false,
         );
     } catch (RuntimeException $e) {
-        echo 'Откат не удался, сайт не менялся: ', $e->getMessage(), PHP_EOL;
+        // Отказать может и на распаковке (сайт цел), и посреди копирования
+        // (часть файлов уже новая), поэтому «сайт не менялся» не обещаем.
+        deploy_log($home, 'Откат не удался: ' . $e->getMessage()
+            . '. Если копирование уже началось, сайт мог измениться частично — запустите откат ещё раз.');
         return 1;
     }
     deploy_save_release_files($home, $previous['sha'], $report['files']);
@@ -407,8 +410,14 @@ if ($mode === '--test-alert') {
 
 // Выкладка и откат — по одному: расписание не должно запустить вторую
 // выкладку, пока первая ещё копирует файлы.
-$lock = fopen($home . '/deploy.lock', 'c');
-if ($lock === false || !flock($lock, LOCK_EX | LOCK_NB)) {
+$lockFile = $home . '/deploy.lock';
+$lock = @fopen($lockFile, 'c');
+if ($lock === false) {
+    // Это не «занято»: замок не открывается, и каждый запуск кончится так же.
+    fwrite(STDERR, "Не открыть $lockFile — проверьте права на папку pion-deploy." . PHP_EOL);
+    exit(2);
+}
+if (!flock($lock, LOCK_EX | LOCK_NB)) {
     echo 'Другая выкладка ещё идёт.', PHP_EOL;
     exit(0);
 }
@@ -422,10 +431,17 @@ try {
     });
 } catch (Throwable $e) {
     // Под расписанием вывод никто не читает, поэтому о падении — в лог и в
-    // служебный чат. Без ограничения частоты: если не сохраняется состояние,
-    // разработчик должен узнать об этом сразу, а не через 3 часа.
+    // служебный чат.
     $why = get_class($e) . ': ' . $e->getMessage();
     deploy_log($home, 'deploy.php упал: ' . $why);
-    deploy_log($home, 'сообщение о падении: ' . deploy_telegram('Выкладка pionperm.ru: deploy.php упал — ' . $why));
+    // Служебный чат — личный чат владельца, куда приходят и заказы: если
+    // deploy.php падает при каждом запуске, он не должен писать туда каждые
+    // 15 минут. Расписание — :00, :15, :30, :45, так что «только в первую
+    // четверть часа» значит «не чаще раза в час».
+    if ((int)date('i') < 15) {
+        deploy_log($home, 'сообщение о падении: ' . deploy_telegram('Выкладка pionperm.ru: deploy.php упал — ' . $why));
+    } else {
+        deploy_log($home, 'сообщение о падении пропущено до начала часа');
+    }
     exit(1);
 }
