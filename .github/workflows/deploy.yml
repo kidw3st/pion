@@ -5,6 +5,11 @@ name: Сборка и выкладка
 # (pay/deploy.php по расписанию раз в 15 минут) сам забирает новую сборку.
 # master — это то, что на сайте: незаконченная работа живёт в ветках.
 #
+# Работа разделена на две задачи. build собирает и проверяет: там запускаются
+# npm, setup-php и весь чужой код, поэтому права на запись у неё нет. publish
+# только забирает готовые файлы и кладёт их в server-build: токен с правом
+# записи есть лишь в ней, а чужой код там не запускается.
+#
 # Публикации на GitHub Pages здесь нет и не будет: копия на github.io уже
 # отбирала у pionperm.ru позиции в поиске. Прав pages у workflow нет.
 
@@ -14,11 +19,12 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
-# Два коммита подряд — собирается последний: в нём есть всё.
+# Два коммита подряд — собирается последний: в нём есть всё. Группа своя у
+# каждой ветки: ручной запуск из другой ветки не должен отменить сборку master.
 concurrency:
-  group: deploy
+  group: deploy-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -28,6 +34,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Токен не остаётся в .git/config, и скрипты npm его не найдут.
+          persist-credentials: false
 
       - uses: actions/setup-node@v4
         with:
@@ -55,6 +64,32 @@ jobs:
 
       # Те же проверки, что у сервера: расхождение останавливает публикацию здесь.
       - run: php scripts/check-server-build.php build/pion-site.tar.gz build/pion-pay.tar.gz
+
+      # Готовые файлы для publish. Нужны только до его запуска, поэтому через
+      # три дня GitHub удалит их сам. overwrite — чтобы «Re-run all jobs» не
+      # упиралась в артефакт прошлой попытки.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: server-build
+          path: |
+            build/pion-site.tar.gz
+            build/pion-pay.tar.gz
+            build/build-info.json
+          if-no-files-found: error
+          retention-days: 3
+          overwrite: true
+
+  publish:
+    # Если build пропущен или красный, publish не запускается.
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: server-build
+          path: build
 
       # Ветка хранит только последнюю сборку: история архивов на мегабайты
       # в git никому не нужна.

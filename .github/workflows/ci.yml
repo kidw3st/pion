@@ -12,11 +12,18 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Здесь только проверки и ничего не публикуется, так что токену хватает чтения.
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Токен не остаётся в .git/config, и скрипты npm его не найдут.
+          persist-credentials: false
 
       - uses: actions/setup-node@v4
         with:
