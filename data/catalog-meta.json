@@ -21,9 +21,9 @@
       "image": "/images/site/catalog-tiles/tile-3.webp"
     },
     {
-      "label": "Комплимент",
-      "href": "/valentinesday",
-      "image": "/images/site/catalog-tiles/tile-4.webp"
+      "label": "Букеты до 5000",
+      "href": "/bukety-do-5000",
+      "image": "/images/site/catalog-tiles/tile-budget.webp"
     },
     {
       "label": "Свадебные букеты",

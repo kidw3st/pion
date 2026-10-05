@@ -15,6 +15,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/catalog/', priority: 0.9 },
     // Витрина меняется каждый день, поэтому стоит высоко.
     { path: '/v-nalichii/', priority: 0.9 },
+    // Подборка по цене: ищут «букеты до 5000» и «недорогие букеты».
+    { path: '/bukety-do-5000/', priority: 0.8 },
     ...CATEGORY_SLUGS.map((slug) => ({ path: `/${slug}/`, priority: 0.8 })),
     ...PAGE_SLUGS.map((slug) => ({ path: `/${slug}/`, priority: 0.6 })),
     { path: '/checkout/', priority: 0.3 },

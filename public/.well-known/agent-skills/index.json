@@ -7,7 +7,7 @@
       "type": "skill",
       "description": "Каталог, цены и контакты салона цветов «Пион» в машиночитаемом виде",
       "url": "https://pionperm.ru/.well-known/agent-skills/pion-catalog/SKILL.md",
-      "sha256": "dcd66d6f633acb03e4149ec72a5a2a3f03a01abbbf015c10742793274742f35f"
+      "sha256": "aebef58b877b3f3f08a24802e736e74400ed32b034d641f6b01cf8ba1906fd74"
     }
   ]
 }

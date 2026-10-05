@@ -27,9 +27,13 @@ type ShowcaseFile = {
 export function ShowcaseSection({
   variant = 'home',
   limit,
+  maxPrice,
 }: {
-  variant?: 'home' | 'page';
+  /** home — блок на главной, page — вся витрина, budget — подборка по цене. */
+  variant?: 'home' | 'page' | 'budget';
   limit?: number;
+  /** Только букеты не дороже этой суммы — по той цене, что видит покупатель. */
+  maxPrice?: number;
 }) {
   const [products, setProducts] = useState<Product[] | null>(null);
   const eveningActive = useEveningDiscount();
@@ -60,8 +64,16 @@ export function ShowcaseSection({
   // Пока грузим — ничего не рисуем, чтобы страница не «прыгала».
   if (products === null) return null;
 
-  if (products.length === 0) {
-    if (variant === 'home') return null;
+  // Вечером витрина на 15% дешевле, и букет за 5 400 ₽ на карточке стоит
+  // 4 590 ₽. В подборку «до 5 000» он попадает по той цене, которую видно.
+  const visiblePrice = (p: Product) =>
+    eveningActive ? p.price - Math.round((p.price * EVENING_PERCENT) / 100) : p.price;
+  const fitting = maxPrice ? products.filter((p) => visiblePrice(p) <= maxPrice) : products;
+
+  if (fitting.length === 0) {
+    // На главной и в подборке пустой витрине место не нужно: рядом есть
+    // что показать. Сообщение — только на странице самой витрины.
+    if (variant !== 'page') return null;
     return (
       <section className={styles.section}>
         <p className={styles.empty}>
@@ -74,7 +86,7 @@ export function ShowcaseSection({
     );
   }
 
-  const shown = limit ? products.slice(0, limit) : products;
+  const shown = limit ? fitting.slice(0, limit) : fitting;
 
   return (
     <section className={styles.section}>
@@ -84,6 +96,14 @@ export function ShowcaseSection({
           <h2 className={styles.heading}>Букеты в наличии</h2>
           <p className={styles.subheading}>
             Собраны сегодня и ждут вас в салоне — можно забрать или заказать доставку
+          </p>
+        </>
+      )}
+      {variant === 'budget' && (
+        <>
+          <h2 className={styles.heading}>Собраны сегодня</h2>
+          <p className={styles.subheading}>
+            Стоят в салоне прямо сейчас — заберите сами или закажите доставку
           </p>
         </>
       )}
@@ -101,7 +121,7 @@ export function ShowcaseSection({
         ))}
       </div>
 
-      {variant === 'home' && products.length > shown.length && (
+      {variant === 'home' && fitting.length > shown.length && (
         <div className={styles.more}>
           <Link href="/v-nalichii" className={styles.moreBtn}>
             Смотреть всю витрину

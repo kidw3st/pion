@@ -85,6 +85,33 @@ await write(
   ].join('\n'),
 );
 
+// ------------------------------------------------------ как заказать (для ИИ)
+// Раньше здесь было «заказ — заявка, оплата по телефону»: так работала Tilda.
+// С сентября сайт принимает оплату картой, а ассистенты продолжали пересказывать
+// старое. Условия теперь собираются из тех же данных, что видит корзина:
+// доставка — из site.json, вечерняя скидка — из src/lib/promo.ts.
+const promoSrc = await readFile(path.join(ROOT, 'src/lib/promo.ts'), 'utf-8');
+const promoNum = (name) => {
+  const v = Number(promoSrc.match(new RegExp(`export const ${name} = ([0-9]+)`))?.[1]);
+  if (!Number.isFinite(v)) throw new Error(`promo.ts: не нашёл ${name} — проверьте генератор`);
+  return v;
+};
+const evening = {
+  percent: promoNum('EVENING_PERCENT'),
+  from: promoNum('EVENING_FROM_HOUR'),
+  to: promoNum('EVENING_TO_HOUR'),
+};
+const rub = (n) => `${n.toLocaleString('ru-RU')} ₽`;
+const deliveryLines = site.delivery.options.map((o) => {
+  const price = o.priceRub === 0 ? 'бесплатно' : rub(o.priceRub);
+  const extra = [
+    o.freeFromRub ? `бесплатно от ${rub(o.freeFromRub)}` : null,
+    o.discountPercent ? `скидка ${o.discountPercent}% на заказ` : null,
+  ].filter(Boolean).join(', ');
+  return `- ${o.label} — ${price}${extra ? ` (${extra})` : ''}`;
+});
+const ORDER_NOTE = 'Заказ оформляется на сайте: оплата картой онлайн или при получении.';
+
 // ------------------------------------------------------------------ llms.txt
 const categoryLines = meta.tiles
   .filter((t) => !t.href.startsWith('#'))
@@ -97,7 +124,14 @@ await write(
     '',
     `> Цветочный салон в Перми: букеты, композиции, декор и подарки. ${site.address}, тел. ${site.phone}.`,
     '',
-    'Заказы через сайт оформляются как заявка — оплата и доставка согласуются по телефону.',
+    ORDER_NOTE,
+    '',
+    '## Доставка и самовывоз',
+    ...deliveryLines,
+    '',
+    '## Что важно знать',
+    `- С ${evening.from}:00 до ${evening.to}:00 по пермскому времени букеты с витрины на ${evening.percent}% дешевле — скидка считается в корзине сама.`,
+    `- Букеты, которые собраны сегодня и стоят в салоне, — на странице [Букеты в наличии](${SITE_URL}/v-nalichii/). Список обновляется каждые 15 минут.`,
     '',
     '## Разделы каталога',
     ...categoryLines,
@@ -106,6 +140,8 @@ await write(
     `- [О нас](${SITE_URL}/about/)`,
     `- [Доставка и оплата](${SITE_URL}/delivery-and-payment/)`,
     `- [Акции](${SITE_URL}/stock/)`,
+    `- [Букеты в наличии](${SITE_URL}/v-nalichii/)`,
+    `- [Блог](${SITE_URL}/blog/)`,
     `- [Контакты](${SITE_URL}/contacts/)`,
     '',
     '## Машиночитаемые данные',
@@ -184,7 +220,10 @@ await write(
       openingHours: site.footer.hours,
       social: site.social,
       categories,
-      note: 'Статические файлы, не HTTP API. Заказ оформляется заявкой на сайте, оплата согласуется отдельно.',
+      delivery: site.delivery.options,
+      // Витрину пишет сервер из CRM каждые 15 минут, в сборке сайта её нет.
+      showcase: `${SITE_URL}/api/showcase.json`,
+      note: `Статические файлы, не HTTP API. ${ORDER_NOTE}`,
     },
     null,
     2,
@@ -213,7 +252,8 @@ const skillBody = [
   '',
   '- Цены в рублях, поле `priceRub` — целое число.',
   '- Часть категорий сейчас пуста (`productCount: 0`) — это соответствует состоянию салона, а не ошибке.',
-  '- Оформление заказа на сайте создаёт заявку; оплата и доставка согласуются по телефону.',
+  `- ${ORDER_NOTE}`,
+  `- Букеты в наличии — \`${SITE_URL}/api/showcase.json\`, обновляется каждые 15 минут из CRM салона.`,
   '',
 ].join('\n');
 
