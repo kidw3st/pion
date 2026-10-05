@@ -34,29 +34,45 @@ $amount = (int)($input['Amount'] ?? 0) / 100;
 
 if ($status === 'CONFIRMED') {
     // Деньги пришли — только теперь списываем баллы и начисляем кешбэк.
-    // Если UDS недоступен, на заказ это не влияет: в уведомлении будет
-    // строчка, и флорист проведёт операцию вручную.
+    // На сам заказ UDS не влияет. Строчка в уведомлении флористу появляется,
+    // только если покупатель списал баллы, а операцию провести не удалось.
     $udsNote = '';
     $pending = uds_pending_take($orderId);
     if ($pending !== null) {
+        $who = (array)$pending['who'];
+        // Только начисление по телефону, без кода из приложения: баллы не
+        // списывались, поэтому неудача здесь ничего не стоит салону.
+        $byPhone = isset($who['phone']) && !isset($who['uid']);
+        $logNote = '';
         try {
-            uds_purchase(
-                (array)$pending['who'],
-                (int)$pending['total'],
-                (int)$pending['points'],
-                (int)$pending['cash'],
-                (string)$pending['nonce'],
-                $orderId,
-            );
-            $udsNote = (int)$pending['points'] > 0
-                ? PHP_EOL . 'UDS: списано ' . (int)$pending['points'] . ' баллов, кешбэк начислен.'
-                : PHP_EOL . 'UDS: кешбэк начислен.';
+            if ($byPhone && !uds_is_member_phone((string)$who['phone'])) {
+                $logNote = 'UDS: покупатель не в программе, кешбэк не начислен';
+            } else {
+                uds_purchase(
+                    $who,
+                    (int)$pending['total'],
+                    (int)$pending['points'],
+                    (int)$pending['cash'],
+                    (string)$pending['nonce'],
+                    $orderId,
+                );
+                $udsNote = (int)$pending['points'] > 0
+                    ? PHP_EOL . 'UDS: списано ' . (int)$pending['points'] . ' баллов, кешбэк начислен.'
+                    : PHP_EOL . 'UDS: кешбэк начислен.';
+                $logNote = trim($udsNote);
+            }
         } catch (Throwable $e) {
-            $udsNote = PHP_EOL . 'UDS: НЕ ПРОВЕДЕНО (' . $e->getMessage() . ') — проведите вручную.';
+            // Человек списал баллы по коду, а UDS операцию не принял: скидку
+            // салон уже дал, а баллы у покупателя остались. Это флорист должен
+            // провести вручную — поэтому только здесь строчка в уведомлении.
+            $udsNote = $byPhone
+                ? ''
+                : PHP_EOL . 'UDS: НЕ ПРОВЕДЕНО (' . $e->getMessage() . ') — проведите вручную.';
+            $logNote = 'UDS: ошибка (' . $e->getMessage() . ')';
         }
         @file_put_contents(
             __DIR__ . '/orders.log',
-            date('Y-m-d H:i:s') . ' | ' . $orderId . ' |' . str_replace(PHP_EOL, ' ', $udsNote) . PHP_EOL,
+            date('Y-m-d H:i:s') . ' | ' . $orderId . ' | ' . $logNote . PHP_EOL,
             FILE_APPEND | LOCK_EX,
         );
     }

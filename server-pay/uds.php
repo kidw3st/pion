@@ -283,3 +283,21 @@ function uds_pending_take(string $orderId): ?array
 
     return is_array($data) ? $data : null;
 }
+
+/**
+ * Есть ли у этого телефона карта в программе.
+ *
+ * Кешбэк по телефону начисляем только участникам: человеку без карты UDS
+ * начислять некуда, а сбой на каждом таком заказе засорял бы уведомления.
+ * Любая ошибка здесь означает «не начисляем» — денег при этом не теряется.
+ */
+function uds_is_member_phone(string $phone): bool
+{
+    try {
+        $found = uds_request('GET', 'customers/find?phone=' . rawurlencode($phone));
+
+        return !empty($found['user']['uid']);
+    } catch (Throwable $e) {
+        return false;
+    }
+}
