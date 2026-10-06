@@ -1,13 +1,16 @@
 /**
  * Товарный фид в формате YML (Yandex Market Language) — по нему 2ГИС и
  * Яндекс Карты сами забирают букеты салона: название, цену, состав, фото.
+ * Тот же фид в CSV по образцу 2ГИС — для загрузки в их кабинет файлом.
  *
  * Требования 2ГИС, под которые здесь всё подогнано
- * (account.2gis.com/public/assets/faq/2gis-price-instruction.pdf):
+ * (account.2gis.com/public/assets/faq/2gis-price-instruction.pdf и
+ * 2gis-rules-for-adding-products.pdf там же):
  * - фото только JPG, PNG или GIF — наши WebP отдаются JPG-копиями по адресу
  *   /feed/img/<раздел>/<имя>.jpg, их делает сервер (pay/feed-img.php);
+ * - в названии нельзя слов, набранных заглавными буквами;
  * - в описании нельзя «скидка», «акция», «подарок», «новинка», «заказ», «хит»
- *   и подобное, переносы строк и длиннее 5000 знаков.
+ *   и подобное, переносы строк и длиннее 500 знаков.
  */
 
 const SHOP_NAME = 'Пион';
@@ -45,10 +48,11 @@ const FORBIDDEN = new RegExp(
   'iu',
 );
 
-const MAX_DESCRIPTION = 5000;
+const MAX_DESCRIPTION = 500;
 
 /**
- * Описание для 2ГИС: одной строкой, без предложений с запрещёнными словами.
+ * Описание для 2ГИС: одной строкой, без предложений с запрещёнными словами,
+ * целыми предложениями в пределах 500 знаков.
  * «Заказ от 7 шт» у поштучных цветов — полезное условие, поэтому оно
  * переписывается в «От 7 шт», а не выбрасывается.
  */
@@ -58,12 +62,39 @@ export function cleanDescription(text) {
     .trim()
     .replace(/Заказ от (\d+)\s*шт/gu, 'От $1 шт')
     .replace(/заказ от (\d+)\s*шт/gu, 'от $1 шт');
-  return flat
+  const sentences = flat
     .split(/(?<=[.!?])\s+/u)
-    .filter((sentence) => sentence !== '' && !FORBIDDEN.test(sentence))
-    .join(' ')
-    .trim()
-    .slice(0, MAX_DESCRIPTION);
+    .filter((sentence) => sentence !== '' && !FORBIDDEN.test(sentence));
+  let description = '';
+  for (const sentence of sentences) {
+    const longer = description ? `${description} ${sentence}` : sentence;
+    if (longer.length > MAX_DESCRIPTION) break;
+    description = longer;
+  }
+  // Уже первое предложение длиннее предела — остаётся только обрезать его.
+  return description || (sentences[0] ?? '').slice(0, MAX_DESCRIPTION);
+}
+
+/**
+ * Название для 2ГИС: слов, набранных заглавными, они не принимают —
+ * «ВАЗА ДЕКОРАТИВНАЯ FLORA» становится «Ваза декоративная Flora». На сайте
+ * названия остаются как есть, меняется только фид. Короткие латинские
+ * слова вроде «XL» не трогаются: это размеры и обозначения.
+ */
+export function feedName(title) {
+  const name = String(title).replace(/\s+/g, ' ').trim();
+  const letters = name.match(/\p{L}/gu) ?? [];
+  // Название набрано капсом целиком — тогда строчными становятся и предлоги вроде «С».
+  const shouting = letters.filter((ch) => ch !== ch.toLowerCase()).length * 2 > letters.length;
+  return name.replace(/\p{L}+/gu, (word, offset) => {
+    if (word !== word.toUpperCase() || word === word.toLowerCase()) return word;
+    const latin = /\p{Script=Latin}/u.test(word);
+    if (word.length < 3 && (latin || !shouting)) return word;
+    const capitalized = word[0] + word.slice(1).toLowerCase();
+    if (latin) return capitalized;
+    // С заглавной — первое слово и название в кавычках: «Ваза "Ягуар"».
+    return /^\P{L}*$|[«"„“]$/u.test(name.slice(0, offset)) ? capitalized : word.toLowerCase();
+  });
 }
 
 const slugOf = (href) => /^\/([a-z0-9-]+)$/.exec(href)?.[1] ?? null;
@@ -113,12 +144,40 @@ function pictureUrl(base, image) {
 }
 
 /**
- * @param {{siteUrl: string, date: string, categories: ReturnType<typeof feedCategories>, products: {uid: string, title: string, description?: string, price: number, images?: string[], slug: string, section: string}[]}} input
+ * @typedef {{uid: string, title: string, description?: string, price: number, images?: string[], slug: string, section: string}} FeedProduct
+ */
+
+/**
+ * Предложения фида — общие для YML и CSV. Товары без цены и из разделов вне
+ * навигации (архивные сезонные коллекции) пропускаются.
+ *
+ * @param {{base: string, categories: ReturnType<typeof feedCategories>, products: FeedProduct[]}} input
+ */
+function feedOffers({ base, categories, products }) {
+  const categoryOf = new Map(categories.filter((c) => c.section).map((c) => [c.section, c]));
+  return products.flatMap((product) => {
+    const category = categoryOf.get(product.section);
+    if (category === undefined || !(product.price > 0)) return [];
+    return [
+      {
+        id: product.uid,
+        url: `${base}/${product.section}/${product.slug}/`,
+        price: Math.round(product.price),
+        category,
+        picture: pictureUrl(base, product.images?.[0]),
+        name: feedName(product.title),
+        description: cleanDescription(product.description ?? ''),
+      },
+    ];
+  });
+}
+
+/**
+ * @param {{siteUrl: string, date: string, categories: ReturnType<typeof feedCategories>, products: FeedProduct[]}} input
  * @returns {string} YML-документ
  */
 export function buildYml({ siteUrl, date, categories, products }) {
   const base = siteUrl.replace(/\/$/, '');
-  const categoryOf = new Map(categories.filter((c) => c.section).map((c) => [c.section, c.id]));
   const lines = [
     '<?xml version="1.0" encoding="UTF-8"?>',
     `<yml_catalog date="${escapeXml(date)}">`,
@@ -136,23 +195,43 @@ export function buildYml({ siteUrl, date, categories, products }) {
     '    </categories>',
     '    <offers>',
   ];
-  for (const product of products) {
-    const categoryId = categoryOf.get(product.section);
-    if (categoryId === undefined || !(product.price > 0)) continue;
-    const picture = pictureUrl(base, product.images?.[0]);
-    const description = cleanDescription(product.description ?? '');
+  for (const offer of feedOffers({ base, categories, products })) {
     lines.push(
-      `      <offer id="${escapeXml(product.uid)}" available="true">`,
-      `        <url>${escapeXml(`${base}/${product.section}/${product.slug}/`)}</url>`,
-      `        <price>${Math.round(product.price)}</price>`,
+      `      <offer id="${escapeXml(offer.id)}" available="true">`,
+      `        <url>${escapeXml(offer.url)}</url>`,
+      `        <price>${offer.price}</price>`,
       '        <currencyId>RUB</currencyId>',
-      `        <categoryId>${categoryId}</categoryId>`,
-      ...(picture ? [`        <picture>${escapeXml(picture)}</picture>`] : []),
-      `        <name>${escapeXml(product.title)}</name>`,
-      ...(description ? [`        <description>${escapeXml(description)}</description>`] : []),
+      `        <categoryId>${offer.category.id}</categoryId>`,
+      ...(offer.picture ? [`        <picture>${escapeXml(offer.picture)}</picture>`] : []),
+      `        <name>${escapeXml(offer.name)}</name>`,
+      ...(offer.description ? [`        <description>${escapeXml(offer.description)}</description>`] : []),
       '      </offer>',
     );
   }
   lines.push('    </offers>', '  </shop>', '</yml_catalog>', '');
   return lines.join('\n');
+}
+
+/** Ячейка CSV: с точкой с запятой или кавычками — в кавычках, кавычки внутри удваиваются. */
+const csvCell = (value) => {
+  const text = String(value);
+  return /[;"]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+};
+
+/**
+ * Тот же фид в CSV по образцу из инструкции 2ГИС: для кнопки «Загрузить
+ * файл» в их кабинете. Категория в CSV у 2ГИС одноуровневая, поэтому у роз
+ * она «Розы», без «Цветов».
+ *
+ * @param {{siteUrl: string, categories: ReturnType<typeof feedCategories>, products: FeedProduct[]}} input
+ * @returns {string} CSV в UTF-8, разделитель — точка с запятой
+ */
+export function buildCsv({ siteUrl, categories, products }) {
+  const base = siteUrl.replace(/\/$/, '');
+  const rows = feedOffers({ base, categories, products }).map((offer) =>
+    [offer.name, offer.price, 'RUB', offer.category.name, offer.url, offer.picture ?? '', offer.id, offer.description]
+      .map(csvCell)
+      .join(';'),
+  );
+  return ['name;price;currencyId;category;url;picture;id;description', ...rows, ''].join('\n');
 }

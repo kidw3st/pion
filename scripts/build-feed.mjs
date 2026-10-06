@@ -1,7 +1,9 @@
 /**
- * Собирает товарный фид public/feed/products.xml для 2ГИС и Яндекс Карт из
- * тех же данных, что и страницы каталога. Запускается в prebuild, поэтому
- * фид обновляется при каждой выкладке сайта; 2ГИС перечитывает его сам.
+ * Собирает товарный фид для 2ГИС и Яндекс Карт из тех же данных, что и
+ * страницы каталога: public/feed/products.xml (YML) и public/feed/products.csv
+ * (тот же список по образцу 2ГИС — для загрузки файлом). Запускается в
+ * prebuild, поэтому фид обновляется при каждой выкладке сайта; 2ГИС
+ * перечитывает его сам.
  *
  *   node scripts/build-feed.mjs
  *
@@ -11,13 +13,13 @@ import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { dedupeProducts } from './lib/dedupeProducts.mjs';
-import { buildYml, feedCategories } from './lib/yml-feed.mjs';
+import { buildCsv, buildYml, feedCategories } from './lib/yml-feed.mjs';
 
 const readJson = (file) => JSON.parse(readFileSync(file, 'utf8'));
 
 /**
  * @param {{root: string, siteUrl: string, date: string}} input
- * @returns {string} YML-документ
+ * @returns {{yml: string, csv: string}} YML-документ и CSV-файл
  */
 export function buildFeed({ root, siteUrl, date }) {
   const catalogDir = path.join(root, 'data', 'catalog');
@@ -40,18 +42,30 @@ export function buildFeed({ root, siteUrl, date }) {
         section: category.section,
       })),
     );
-  return buildYml({ siteUrl, date, categories, products });
+  return {
+    yml: buildYml({ siteUrl, date, categories, products }),
+    csv: buildCsv({ siteUrl, categories, products }),
+  };
 }
 
-/** Время по Перми (UTC+5, без перехода на летнее) в формате YML: 2026-10-05T20:00+05:00. */
-function nowInPerm() {
-  return new Date(Date.now() + 5 * 3600 * 1000).toISOString().slice(0, 16) + '+05:00';
+/**
+ * Время по Перми (UTC+5, без перехода на летнее) в классическом виде YML:
+ * 2026-10-05 20:00. Вариант с «T» и поясом стандарт тоже допускает, но
+ * классический понимает любой разборщик фидов.
+ */
+export function feedDate(now) {
+  return new Date(now.getTime() + 5 * 3600 * 1000).toISOString().slice(0, 16).replace('T', ' ');
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-  const yml = buildFeed({ root, siteUrl: process.env.SITE_URL || 'https://pionperm.ru', date: nowInPerm() });
+  const { yml, csv } = buildFeed({
+    root,
+    siteUrl: process.env.SITE_URL || 'https://pionperm.ru',
+    date: feedDate(new Date()),
+  });
   mkdirSync(path.join(root, 'public', 'feed'), { recursive: true });
   writeFileSync(path.join(root, 'public', 'feed', 'products.xml'), yml);
-  console.log(`[feed] public/feed/products.xml: товаров ${(yml.match(/<offer /g) ?? []).length}`);
+  writeFileSync(path.join(root, 'public', 'feed', 'products.csv'), csv);
+  console.log(`[feed] public/feed/products.xml и products.csv: товаров ${(yml.match(/<offer /g) ?? []).length}`);
 }

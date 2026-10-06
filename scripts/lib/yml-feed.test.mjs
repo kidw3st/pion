@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildYml, cleanDescription, feedCategories } from './yml-feed.mjs';
+import { buildCsv, buildYml, cleanDescription, feedCategories, feedName } from './yml-feed.mjs';
 
 describe('cleanDescription', () => {
   it('оставляет обычный состав как есть', () => {
@@ -23,8 +23,37 @@ describe('cleanDescription', () => {
     expect(cleanDescription('Розы,\n  пионы\r\nи эвкалипт')).toBe('Розы, пионы и эвкалипт');
   });
 
-  it('не длиннее 5000 знаков', () => {
-    expect(cleanDescription('а'.repeat(6000))).toHaveLength(5000);
+  it('не длиннее 500 знаков — по правилам 2ГИС — и обрезает по концу предложения', () => {
+    const sentence = 'Розы и пионы.';
+    expect(cleanDescription(Array(50).fill(sentence).join(' '))).toBe(Array(35).fill(sentence).join(' '));
+  });
+
+  it('одно предложение длиннее 500 знаков обрезает по длине', () => {
+    expect(cleanDescription('а'.repeat(6000))).toBe('а'.repeat(500));
+  });
+});
+
+describe('feedName', () => {
+  it.each([
+    ['ВАЗА ДЕКОРАТИВНАЯ С КРЫШКОЙ "ЯГУАР"', 'Ваза декоративная с крышкой "Ягуар"'],
+    ['ВАЗА МЕТАЛЛИЧЕСКАЯ СЕРЕБРО/ШАМПАНЬ', 'Ваза металлическая серебро/шампань'],
+    ['ВАЗА ДЕКОРАТИВНАЯ СТЕКЛЯННАЯ FLORA', 'Ваза декоративная стеклянная Flora'],
+    ['КАНДЕЛЯБР НА 5 СВЕЧЕЙ ЗОЛОТО ЧЕРНЫЙ', 'Канделябр на 5 свечей золото черный'],
+    ['Букет «RED STAR»', 'Букет «Red Star»'],
+    ['Кустовая роза MIX', 'Кустовая роза Mix'],
+  ])('2ГИС не принимает слова заглавными буквами: %s', (title, name) => {
+    expect(feedName(title)).toBe(name);
+  });
+
+  it.each(['Пион Sara Bernhardt', 'Букет «Я тебя люблю»', 'Шар XL', 'Соль для ванной Beatrice 70 гр'])(
+    'обычное название оставляет как есть: %s',
+    (title) => {
+      expect(feedName(title)).toBe(title);
+    },
+  );
+
+  it('склеивает переносы строк и лишние пробелы', () => {
+    expect(feedName(' Букет  «Нежность»\n')).toBe('Букет «Нежность»');
   });
 });
 
@@ -70,18 +99,18 @@ describe('buildYml', () => {
   };
   const yml = buildYml({
     siteUrl: 'https://pionperm.ru',
-    date: '2026-10-05T20:00+05:00',
+    date: '2026-10-05 20:00',
     categories,
     products: [
       product,
       { ...product, uid: '1', price: 0 },
       { ...product, uid: '2', section: 'new-year-2025' },
-      { ...product, uid: '3', section: 'roses', slug: 'roza', title: 'Роза', description: 'Акция!' },
+      { ...product, uid: '3', section: 'roses', slug: 'roza', title: 'РОЗА MIX', description: 'Акция!' },
     ],
   });
 
   it('оформлен как YML-каталог с магазином и рублями', () => {
-    expect(yml.startsWith('<?xml version="1.0" encoding="UTF-8"?>\n<yml_catalog date="2026-10-05T20:00+05:00">')).toBe(true);
+    expect(yml.startsWith('<?xml version="1.0" encoding="UTF-8"?>\n<yml_catalog date="2026-10-05 20:00">')).toBe(true);
     expect(yml).toContain('<url>https://pionperm.ru/</url>');
     expect(yml).toContain('<currency id="RUB" rate="1"/>');
     expect(yml.trimEnd().endsWith('</yml_catalog>')).toBe(true);
@@ -114,8 +143,50 @@ describe('buildYml', () => {
     expect(yml).not.toContain('offer id="2"');
   });
 
+  it('пишет название без слов заглавными буквами', () => {
+    expect(yml).toContain('<name>Роза Mix</name>');
+  });
+
   it('не выводит пустое описание', () => {
     const roza = yml.slice(yml.indexOf('<offer id="3"'));
     expect(roza.slice(0, roza.indexOf('</offer>'))).not.toContain('<description>');
+  });
+});
+
+describe('buildCsv', () => {
+  const categories = [
+    { id: '1', name: 'Цветы' },
+    { id: '2', name: 'Розы', parentId: '1', section: 'roses' },
+    { id: '3', name: 'Букеты', section: 'bukety' },
+  ];
+  const product = {
+    uid: '553645466981',
+    title: 'Букет «Сад & Огород»',
+    description: 'Состав: розы. Скидка 5%.',
+    price: 6380.4,
+    images: ['/images/catalog/bukety/buket-sad-553645466981.webp'],
+    slug: 'buket-sad',
+    section: 'bukety',
+  };
+
+  it('пишет товары по образцу CSV из инструкции 2ГИС, с экранированием кавычек и точки с запятой', () => {
+    const csv = buildCsv({
+      siteUrl: 'https://pionperm.ru/',
+      categories,
+      products: [
+        product,
+        { ...product, uid: '1', price: 0 },
+        { ...product, uid: '2', section: 'new-year-2025' },
+        { ...product, uid: '3', section: 'roses', slug: 'roza', title: 'РОЗА "ЭКСПЛОРЕР"; 60 см', description: 'Акция!', images: [] },
+      ],
+    });
+    expect(csv).toBe(
+      [
+        'name;price;currencyId;category;url;picture;id;description',
+        'Букет «Сад & Огород»;6380;RUB;Букеты;https://pionperm.ru/bukety/buket-sad/;https://pionperm.ru/feed/img/bukety/buket-sad-553645466981.jpg;553645466981;Состав: розы.',
+        '"Роза ""Эксплорер""; 60 см";6380;RUB;Розы;https://pionperm.ru/roses/roza/;;3;',
+        '',
+      ].join('\n'),
+    );
   });
 });

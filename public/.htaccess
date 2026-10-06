@@ -119,8 +119,8 @@ Options -Indexes
   # чужими именами незачем.
   Header always set Strict-Transport-Security "max-age=31536000"
 
-  # Фид — для 2ГИС и Яндекс Карт, в поиске ему делать нечего.
-  <Files "products.xml">
+  # Фид (YML и CSV) — для 2ГИС и Яндекс Карт, в поиске ему делать нечего.
+  <FilesMatch "^products\.(xml|csv)$">
     Header set X-Robots-Tag "noindex"
-  </Files>
+  </FilesMatch>
 </IfModule>

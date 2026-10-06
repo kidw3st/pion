@@ -56,9 +56,14 @@ search results. No workflow sets `GITHUB_PAGES`.
 `scripts/build-feed.mjs` runs in `prebuild` and writes the catalogue as a YML
 feed: https://pionperm.ru/feed/products.xml — the link for the «Товары и
 услуги → Указать URL» setting in 2GIS (Yandex Business accepts the same feed).
+The same list goes to https://pionperm.ru/feed/products.csv in the CSV layout
+from the 2GIS instructions, for their «upload a file» option.
 It carries the sections shown in the site navigation. 2GIS takes only JPG/PNG/GIF
 photos, so pictures point to `/feed/img/<section>/<name>.jpg`; the server makes
 these JPG copies of the WebP photos on first request (`server-pay/feed-img.php`).
+2GIS also rejects names typed in capitals and descriptions over 500 characters:
+the feed rewrites «ВАЗА СТЕКЛО» as «Ваза стекло» (the site keeps the original)
+and keeps whole sentences up to 500 characters.
 
 ## Agent discovery
 
