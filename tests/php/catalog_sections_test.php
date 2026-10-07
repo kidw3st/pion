@@ -60,6 +60,34 @@ t_case('карточка раздела', function (): void {
     t_throws(fn () => catalog_update_section($db, 'anna', 'nope', ['label' => 'Х'], t_now()), CatalogError::class, 'нет такого раздела');
 });
 
+t_case('картинки раздела строго по форме', function (): void {
+    $db = t_catalog_with_sections();
+    $bad = [
+        'перевод строки в конце обложки' => ['covers' => ["/images/site/category-covers/roses-0.webp\n"]],
+        'плитка с «..» — выход из /images/' => ['tileImage' => '/images/../pay/x.webp'],
+        'обложка с «..» в середине пути' => ['covers' => ['/images/site/../../pay/x.webp']],
+    ];
+    foreach ($bad as $what => $fields) {
+        t_throws(fn () => catalog_update_section($db, 'anna', 'roses', $fields, t_now()), CatalogError::class, "не сохраняется: $what");
+    }
+    $roses = catalog_export_data($db)['sections'][2];
+    t_equal([$roses['tileImage'], $roses['covers']], ['', []], 'ничего из этого не записано');
+    // У плитки пробелы и перевод строки срезает trim() ещё до проверки пути: в базе — чистый путь.
+    catalog_update_section($db, 'anna', 'roses', ['tileImage' => "/images/site/catalog-tiles/tile-1.webp\n"], t_now());
+    t_equal(catalog_export_data($db)['sections'][2]['tileImage'], '/images/site/catalog-tiles/tile-1.webp', 'перевод строки в базу не попадает');
+    // Настоящие пути сайта принимаются: обложки лежат и в /images/site/, и в /images/pages/<страница>/.
+    catalog_update_section($db, 'anna', 'roses', [
+        'tileImage' => '/images/site/catalog-tiles/tile-2.webp',
+        'covers' => ['/images/site/category-covers/roses-0.webp', '/images/pages/valentinesday/img-0.webp'],
+    ], t_now());
+    $roses = catalog_export_data($db)['sections'][2];
+    t_equal(
+        [$roses['tileImage'], $roses['covers']],
+        ['/images/site/catalog-tiles/tile-2.webp', ['/images/site/category-covers/roses-0.webp', '/images/pages/valentinesday/img-0.webp']],
+        'пути из /images/site/ и /images/pages/ — в порядке',
+    );
+});
+
 t_case('порядок плиток', function (): void {
     $db = t_catalog_with_sections();
     $ids = array_map('intval', $db->query('SELECT id FROM tiles ORDER BY position')->fetchAll(PDO::FETCH_COLUMN));

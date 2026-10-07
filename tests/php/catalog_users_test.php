@@ -29,6 +29,12 @@ t_case('учётная запись', function (): void {
     t_equal(catalog_users($db), [['login' => 'anna', 'name' => 'Анна', 'must_change' => 1]], 'список учётных записей');
 });
 
+t_case('логин без перевода строки в конце', function (): void {
+    $db = t_catalog_db();
+    t_throws(fn () => catalog_user_add($db, "anna\n", 'Анна', t_now()), CatalogError::class, 'логин «anna» с переводом строки не принимается');
+    t_equal(catalog_users($db), [], 'учётная запись не создана');
+});
+
 t_case('user-cli.php', function (): void {
     $scripts = t_catalog_scripts();
     $home = t_tmpdir();

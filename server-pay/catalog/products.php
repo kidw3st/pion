@@ -22,8 +22,12 @@ const CATALOG_DESCRIPTION_MAX = 1000;
 const CATALOG_PRICE_MIN = 100;
 const CATALOG_PRICE_MAX = 300000;
 const CATALOG_IMAGES_MAX = 4;
-/** Фото — только файлы каталога: их кладёт админка (план 2Б) или перенос каталога. */
-const CATALOG_IMAGE_PATH = '~^/images/catalog/[a-z0-9_-]+/[A-Za-z0-9._-]+\.webp$~';
+/**
+ * Фото — только файлы каталога: их кладёт админка (план 2Б) или перенос каталога.
+ * Конец — \z, а не $: «$» пропускает перевод строки в конце. Сегмента «..» тут
+ * быть не может: папка — только [a-z0-9_-], а имя файла кончается на .webp.
+ */
+const CATALOG_IMAGE_PATH = '~^/images/catalog/[a-z0-9_-]+/[A-Za-z0-9._-]+\.webp\z~';
 
 /** Сколько дней удалённый букет можно восстановить. */
 const CATALOG_RESTORE_DAYS = 90;

@@ -13,8 +13,13 @@ require_once __DIR__ . '/export.php';
 const CATALOG_SECTION_LABEL_MAX = 60;
 const CATALOG_SECTION_TEXT_MAX = 300;
 const CATALOG_COVERS_MAX = 3;
-/** Картинки разделов — файлы сайта: плитки и обложки лежат в /images/site/, фото каталога — в /images/catalog/. */
-const CATALOG_SITE_IMAGE = '~^/images/[A-Za-z0-9/._-]+\.webp$~';
+/**
+ * Картинки разделов — любые .webp под /images/: плитки лежат в
+ * /images/site/catalog-tiles/, обложки — в /images/site/category-covers/ и
+ * /images/pages/<страница>/. Две точки подряд не допускаются нигде: путь не
+ * должен выйти из /images/. Конец — \z, а не $: «$» пропускает перевод строки.
+ */
+const CATALOG_SITE_IMAGE = '~^/images/(?!.*\.\.)[A-Za-z0-9/._-]+\.webp\z~';
 
 /** Поля карточки раздела: имя в выгрузке => колонка в базе. */
 const CATALOG_SECTION_COLUMNS = [

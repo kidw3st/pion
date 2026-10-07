@@ -26,7 +26,8 @@ function catalog_new_password(): string
 function catalog_user_add(PDO $db, string $login, string $name, DateTimeImmutable $now): string
 {
     return catalog_tx($db, function () use ($db, $login, $name, $now): string {
-        if (!preg_match('/^[a-z0-9._-]{2,32}$/', $login)) {
+        // \z, а не $: «$» пропустил бы логин с переводом строки в конце.
+        if (!preg_match('/^[a-z0-9._-]{2,32}\z/', $login)) {
             throw new CatalogError('Логин — строчная латиница, цифры, точка, дефис, подчёркивание; от 2 до 32 знаков.');
         }
         $name = trim($name);

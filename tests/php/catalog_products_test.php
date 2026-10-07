@@ -59,6 +59,22 @@ t_case('проверка полей', function (): void {
     t_equal($e?->getMessage(), 'Цена — целое число рублей, от 100 до 300 000.', 'ошибка понятна без разработчика');
 });
 
+t_case('пути фото строго по форме', function (): void {
+    $db = t_catalog_with_sections();
+    $bad = [
+        'перевод строки в конце' => "/images/catalog/bukety/a.webp\n",
+        'выход из папки каталога через «..»' => '/images/catalog/../pay/x.webp',
+    ];
+    foreach ($bad as $what => $path) {
+        t_throws(
+            fn () => catalog_create_product($db, 'anna', t_fields(['images' => [$path]]), t_now()),
+            CatalogError::class,
+            "фото не принимается: $what",
+        );
+    }
+    t_equal((int)$db->query('SELECT COUNT(*) FROM products')->fetchColumn(), 0, 'ничего из этого не записано');
+});
+
 t_case('главный раздел по умолчанию', function (): void {
     $db = t_catalog_with_sections();
     $uid = catalog_create_product($db, 'anna', t_fields(['sections' => ['novinki', 'roses']]), t_now());
