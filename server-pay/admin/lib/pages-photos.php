@@ -43,5 +43,10 @@ function admin_page_photo(array $req, array $ctx): array
         return admin_json(['ok' => true, 'path' => $path]);
     } catch (CatalogError $e) {
         return admin_json(['ok' => false, 'error' => $e->getMessage()], 422);
+    } catch (Throwable $e) {
+        // Сбой записи или GD: подробности — в журнал сервера, сотруднице — короткий текст. Страница ошибки
+        // здесь была бы HTML, а скрипт ждёт JSON и принял бы её за «сессия закончилась».
+        error_log('admin: photo: ' . get_class($e) . ': ' . $e->getMessage());
+        return admin_json(['ok' => false, 'error' => 'Не получилось сохранить фото. Попробуйте ещё раз.'], 500);
     }
 }

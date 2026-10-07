@@ -15,22 +15,48 @@ require_once __DIR__ . '/view.php';
 require_once __DIR__ . '/../../catalog/db.php';
 
 const ADMIN_PHOTO_MAX_BYTES = 20971520;
+// Снимок, развёрнутый в памяти, занимает 4 байта на точку: сверх этого предела GD упёрся бы
+// в лимит памяти PHP, а это не исключение, а обрыв запроса. Браузер присылает до 2000 px (4 Мпикс).
+const ADMIN_PHOTO_MAX_PIXELS = 40000000;
+// Формат WebP не бывает больше 16383 точек по любой стороне.
+const ADMIN_WEBP_MAX_SIDE = 16383;
 const ADMIN_PHOTO_WIDTH = 900;
 const ADMIN_COVER_WIDTH = 1600;
 const ADMIN_WEBP_QUALITY = 82;
+
+/** Хватит ли памяти развернуть снимок: сам снимок (4 байта на точку), его уменьшенная копия и запас на кодирование. */
+function admin_photo_fits_memory(int $pixels): bool
+{
+    $limit = ini_parse_quantity((string)ini_get('memory_limit'));
+    return $limit <= 0 || memory_get_usage() + $pixels * 5 < $limit;
+}
 
 function admin_photo_webp(string $bytes, int $maxWidth): string
 {
     if ($bytes === '' || strlen($bytes) > ADMIN_PHOTO_MAX_BYTES) {
         throw new CatalogError('Фото пустое или слишком большое — попробуйте другое.');
     }
+    // Размеры читаются из заголовка, снимок при этом не разворачивается: огромный файл отсекаем до GD.
+    $info = @getimagesizefromstring($bytes);
+    if ($info === false) {
+        throw new CatalogError('Файл не открылся как изображение — пришлите фото в JPEG или PNG.');
+    }
+    [$width, $height] = $info;
+    if ($width < 1 || $height < 1 || $width * $height > ADMIN_PHOTO_MAX_PIXELS || !admin_photo_fits_memory($width * $height)) {
+        throw new CatalogError('Снимок слишком большой — уменьшите его и попробуйте снова.');
+    }
+    $newWidth = min($width, $maxWidth);
+    // Очень тонкая полоса при уменьшении округлилась бы до нулевой высоты.
+    $newHeight = max(1, (int)round($height * $newWidth / $width));
+    if ($newHeight > ADMIN_WEBP_MAX_SIDE) {
+        throw new CatalogError('Снимок слишком вытянутый — обрежьте его и попробуйте снова.');
+    }
     $image = @imagecreatefromstring($bytes);
     if ($image === false) {
         throw new CatalogError('Файл не открылся как изображение — пришлите фото в JPEG или PNG.');
     }
-    $width = imagesx($image);
-    if ($width > $maxWidth) {
-        $scaled = imagescale($image, $maxWidth, (int)round(imagesy($image) * $maxWidth / $width), IMG_BICUBIC);
+    if ($newWidth < $width) {
+        $scaled = imagescale($image, $newWidth, $newHeight, IMG_BICUBIC);
         if ($scaled === false) {
             throw new RuntimeException('Не удалось уменьшить фото');
         }
@@ -38,26 +64,33 @@ function admin_photo_webp(string $bytes, int $maxWidth): string
     }
     // GIF и PNG с палитрой: WebP пишется только из полноцветной картинки.
     imagepalettetotruecolor($image);
+    // Предупреждения GD не должны попасть в файл, если на сервере включён вывод ошибок: поэтому «@» и проверка самого результата.
     ob_start();
-    $ok = imagewebp($image, null, ADMIN_WEBP_QUALITY);
-    $webp = (string)ob_get_clean();
-    if (!$ok || $webp === '') {
+    try {
+        $ok = @imagewebp($image, null, ADMIN_WEBP_QUALITY);
+    } finally {
+        $webp = (string)ob_get_clean();
+    }
+    if (!$ok || substr($webp, 0, 4) !== 'RIFF' || substr($webp, 8, 4) !== 'WEBP') {
         throw new RuntimeException('Не удалось сохранить WebP');
     }
     return $webp;
 }
 
-/** Файл пишется во временный и получает своё имя только целым. */
+/**
+ * Файл пишется во временный и получает своё имя только целым. Временное имя у
+ * каждой записи своё: два одинаковых снимка, присланных разом, не портят друг друга.
+ */
 function admin_write_file(string $path, string $bytes): void
 {
     $dir = dirname($path);
-    if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+    if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) {
         throw new RuntimeException("Не создать папку: $dir");
     }
-    $part = $path . '.part';
-    if (file_put_contents($part, $bytes) !== strlen($bytes) || !rename($part, $path)) {
+    $part = $path . '.' . bin2hex(random_bytes(4)) . '.part';
+    if (@file_put_contents($part, $bytes) !== strlen($bytes) || !@rename($part, $path)) {
         if (is_file($part)) {
-            unlink($part);
+            @unlink($part);
         }
         throw new RuntimeException("Не записать файл: $path");
     }

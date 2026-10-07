@@ -27,6 +27,41 @@ t_case('пересохранение в WebP', function (): void {
     t_throws(fn () => admin_photo_webp('', ADMIN_PHOTO_WIDTH), CatalogError::class, 'пустой файл — отказ');
 });
 
+/** Только заголовок PNG с заявленными размерами: GD картинку не откроет, а размеры прочитать можно. */
+function t_png_header(int $width, int $height): string
+{
+    return "\x89PNG\r\n\x1a\n" . pack('N', 13) . 'IHDR' . pack('NN', $width, $height) . "\x08\x02\x00\x00\x00";
+}
+
+t_case('слишком большие и вытянутые снимки', function (): void {
+    $big = t_throws(fn () => admin_photo_webp(t_png_header(20000, 20000), ADMIN_PHOTO_WIDTH), CatalogError::class, '400 мегапикселей — отказ');
+    t_true($big !== null && str_contains($big->getMessage(), 'слишком большой'), 'отказ до открытия снимка и с понятным объяснением');
+    $tall = t_throws(fn () => admin_photo_webp(t_png_header(900, 20000), ADMIN_PHOTO_WIDTH), CatalogError::class, 'выше предела WebP — отказ');
+    t_true($tall !== null && str_contains($tall->getMessage(), 'слишком вытянутый'), 'про вытянутый снимок говорим отдельно');
+    $real = t_throws(fn () => admin_photo_webp(t_jpeg(100, 17000), ADMIN_PHOTO_WIDTH), CatalogError::class, 'настоящий узкий снимок выше 16383 px — отказ');
+    t_true($real !== null && str_contains($real->getMessage(), 'слишком вытянутый'), 'плохой файл вместо него не появляется');
+    // Снимок меньше 40 мегапикселей, но в память при нынешнем лимите не влезет — отказ, а не фатальная ошибка PHP.
+    $limit = (string)ini_get('memory_limit');
+    ini_set('memory_limit', (string)(memory_get_usage() + 40 * 1024 * 1024));
+    $heavy = t_throws(fn () => admin_photo_webp(t_png_header(6000, 6000), ADMIN_PHOTO_WIDTH), CatalogError::class, 'не хватит памяти — отказ');
+    ini_set('memory_limit', $limit);
+    t_true($heavy !== null && str_contains($heavy->getMessage(), 'слишком большой'), 'и это понятно сказано');
+    $thin = imagecreatefromstring(admin_photo_webp(t_jpeg(20000, 5), ADMIN_PHOTO_WIDTH));
+    t_equal([imagesx($thin), imagesy($thin)], [900, 1], 'очень тонкая полоса: высота не обнуляется');
+});
+
+t_case('запись файла', function (): void {
+    $dir = t_tmpdir();
+    admin_write_file($dir . '/a/b.webp', 'x');
+    admin_write_file($dir . '/a/b.webp', 'x');
+    t_equal(array_map('basename', glob($dir . '/a/*') ?: []), ['b.webp'], 'временных файлов не остаётся');
+    // Временное имя не фиксированное: одинаковые снимки, присланные разом, не пишут в один и тот же файл.
+    mkdir($dir . '/c');
+    mkdir($dir . '/c/d.webp.part');
+    admin_write_file($dir . '/c/d.webp', 'y');
+    t_equal(file_get_contents($dir . '/c/d.webp'), 'y', 'занятое имя «.part» записи не мешает');
+});
+
 t_case('фото букета на диске', function (): void {
     $ctx = t_admin_ctx();
     $uid = catalog_create_product($ctx['db'], 'anna', t_fields(), t_now());
@@ -55,6 +90,27 @@ t_case('приём фото', function (): void {
     catalog_publish($ctx['db'], 'anna', $uid, 1, t_now());
     catalog_delete($ctx['db'], 'anna', $uid, 2, t_now());
     t_equal(json_decode(t_photo_call($ctx, ['uid' => $uid], ['photo' => t_upload(t_jpeg(10, 10))])['body'], true)['ok'], false, 'удалённому букету фото не добавить');
+});
+
+t_case('сбои при приёме фото', function (): void {
+    $ctx = t_admin_ctx();
+    $big = json_decode(t_photo_call($ctx, ['section' => 'roses', 'kind' => 'tile'], ['photo' => t_upload(t_png_header(20000, 20000))])['body'], true);
+    t_true($big['ok'] === false && str_contains($big['error'], 'слишком большой'), 'огромный снимок — понятная ошибка, а не 500');
+
+    // На месте папки разделов лежит файл — папку не создать. Подробности уходят в журнал сервера, не в ответ.
+    mkdir($ctx['webroot'] . '/images/catalog', 0777, true);
+    file_put_contents($ctx['webroot'] . '/images/catalog/_sections', 'занято');
+    $log = t_tmpdir() . '/php-errors.log';
+    $before = ini_set('error_log', $log);
+    $r = t_photo_call($ctx, ['section' => 'roses', 'kind' => 'tile'], ['photo' => t_upload(t_jpeg(300, 300))]);
+    ini_set('error_log', (string)$before);
+    $data = json_decode($r['body'], true);
+    t_equal($r['status'], 500, 'сбой записи — ответ 500');
+    t_equal($r['headers']['Content-Type'], 'application/json; charset=utf-8', 'но тоже JSON: страница покажет текст, а не «сессия закончилась»');
+    t_true(is_array($data) && $data['ok'] === false && str_contains($data['error'], 'Не получилось сохранить фото'), 'по-русски и без технических слов');
+    t_true(!str_contains($r['body'], $ctx['webroot']) && !str_contains($r['body'], 'RuntimeException') && !str_contains($r['body'], '#0'), 'в ответе нет путей и следа ошибки');
+    t_true(str_contains((string)@file_get_contents($log), 'RuntimeException'), 'подробности записаны в журнал сервера');
+    t_equal(glob($ctx['webroot'] . '/images/catalog/*.part') ?: [], [], 'недописанных файлов нет');
 });
 
 t_case('фото раздела', function (): void {
