@@ -158,41 +158,60 @@ function admin_csrf_ok(array $session, array $req): bool
 }
 
 /**
- * Смена пароля: null — сменён, иначе текст ошибки. Другие сессии этого
- * сотрудника закрываются: пароль могли сменить из-за утечки.
+ * Смена пароля: null — сменён, иначе текст ошибки. Текущий пароль подбирать нельзя
+ * так же, как пароль при входе: неверный текущий пароль — это те же пять попыток
+ * за десять минут на адрес и на логин, и счётчик общий со входом. Иначе чужая или
+ * украденная сессия превращалась бы в подбор пароля — и в способ запереть хозяина.
+ * Другие сессии этого сотрудника закрываются: пароль могли сменить из-за утечки.
  */
 function admin_change_password(
     PDO $db,
     array $session,
+    string $ip,
     string $current,
     string $new,
     string $repeat,
     ?string $keepToken,
     DateTimeImmutable $now,
 ): ?string {
+    $login = $session['login'];
+    // Попытка занимается заранее и одним действием с проверкой предела — как при входе. Записывать
+    // только после неверной проверки нельзя: одновременные запросы снова обошли бы предел.
+    $attempt = admin_attempt_reserve($db, $ip, $login, $now->getTimestamp());
+    if ($attempt === null) {
+        return ADMIN_LOCKED_ERROR;
+    }
     $q = $db->prepare('SELECT password_hash FROM users WHERE login = ?');
-    $q->execute([$session['login']]);
+    $q->execute([$login]);
     $hash = (string)$q->fetchColumn();
-    // Закрываем чтение до транзакции ниже: открытое, оно отменяет ожидание записи.
+    // Закрываем чтение до записи ниже: открытое, оно отменяет ожидание записи.
     $q->closeCursor();
     if (!password_verify($current, $hash)) {
+        // Занятая попытка остаётся записанной: считается именно неверный текущий пароль.
         return 'Текущий пароль введён неверно.';
     }
-    if (mb_strlen($new) < ADMIN_PASSWORD_MIN) {
-        return 'Новый пароль — не короче 8 знаков.';
+    // Порядок ошибок прежний (про текущий пароль — первым). Текущий пароль верен, значит, это не подбор:
+    // ошибка в новом пароле попытки не тратит, занятую запись снимаем.
+    $error = match (true) {
+        mb_strlen($new) < ADMIN_PASSWORD_MIN => 'Новый пароль — не короче 8 знаков.',
+        $new !== $repeat => 'Новый пароль и повтор не совпадают.',
+        $new === $current => 'Новый пароль совпадает с текущим — придумайте другой.',
+        default => null,
+    };
+    if ($error !== null) {
+        $db->prepare('DELETE FROM login_attempts WHERE id = ?')->execute([$attempt]);
+        return $error;
     }
-    if ($new !== $repeat) {
-        return 'Новый пароль и повтор не совпадают.';
-    }
-    if ($new === $current) {
-        return 'Новый пароль совпадает с текущим — придумайте другой.';
-    }
-    catalog_tx($db, function () use ($db, $session, $new, $keepToken, $now): void {
+    // Хэш считаем до транзакции: запись не должна ждать полсотни миллисекунд вычислений.
+    $newHash = password_hash($new, PASSWORD_DEFAULT);
+    catalog_tx($db, function () use ($db, $login, $newHash, $keepToken, $now): void {
         $db->prepare('UPDATE users SET password_hash = ?, must_change = 0, updated_at = ? WHERE login = ?')
-            ->execute([password_hash($new, PASSWORD_DEFAULT), catalog_iso($now), $session['login']]);
+            ->execute([$newHash, catalog_iso($now), $login]);
         $db->prepare('DELETE FROM sessions WHERE login = ? AND token_hash <> ?')
-            ->execute([$session['login'], hash('sha256', (string)$keepToken)]);
-        catalog_audit($db, $session['login'], $now, 'user', $session['login'], 'password', null, 'сменён');
+            ->execute([$login, hash('sha256', (string)$keepToken)]);
+        // Верный текущий пароль стирает счётчик, как удачный вход.
+        $db->prepare('DELETE FROM login_attempts WHERE login = ?')->execute([$login]);
+        catalog_audit($db, $login, $now, 'user', $login, 'password', null, 'сменён');
     });
     return null;
 }

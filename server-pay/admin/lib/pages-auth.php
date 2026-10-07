@@ -56,6 +56,7 @@ function admin_page_password(array $req, array $ctx): array
         $error = admin_change_password(
             $ctx['db'],
             $user,
+            $req['ip'],
             admin_str($req['post'], 'current'),
             admin_str($req['post'], 'new'),
             admin_str($req['post'], 'repeat'),

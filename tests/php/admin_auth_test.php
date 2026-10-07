@@ -234,6 +234,76 @@ t_case('первый вход и смена пароля', function (): void {
     t_true(!str_contains($log, 'новый-пароль'), 'пароль в журнал не попадает');
 });
 
+t_case('смена пароля: текущий пароль нельзя подбирать', function (): void {
+    // Чужая или украденная сессия не должна превращаться в подбор пароля (и в способ запереть хозяина):
+    // неверный текущий пароль считается теми же пятью попытками за десять минут, что и неверный пароль при входе.
+    $ctx = t_admin_ctx();
+    $db = $ctx['db'];
+    $now = $ctx['now']->getTimestamp();
+    $cookies = t_admin_login($ctx);
+    $csrf = admin_session($db, $cookies[ADMIN_COOKIE], $now)['csrf'];
+    $change = fn (array $at, string $current, string $ip = '127.0.0.1'): array => admin_handle(
+        admin_request('POST', post: ['csrf' => $csrf, 'current' => $current, 'new' => 'новый-пароль', 'repeat' => 'новый-пароль'], cookies: $cookies, ip: $ip),
+        $at, 'password', 'admin_page_password');
+    for ($i = 1; $i <= 5; $i++) {
+        t_true(str_contains($change($ctx, "не тот $i")['body'], 'Текущий пароль введён неверно'), "неверный текущий пароль, попытка $i");
+    }
+    $sixth = $change($ctx, 'секрет-анны');
+    t_true($sixth['status'] === 200 && str_contains($sixth['body'], 'Слишком много неудачных попыток'), 'шестая попытка закрыта, даже с верным текущим паролем');
+    t_true(password_verify('секрет-анны', (string)$db->query("SELECT password_hash FROM users WHERE login = 'anna'")->fetchColumn()), 'пароль остался прежним');
+    t_true(str_contains($change($ctx, 'секрет-анны', '10.9.9.9')['body'], 'Слишком много неудачных попыток'), 'с другого адреса тоже закрыто: предел — на логин');
+    $login = admin_login($db, 'anna', 'секрет-анны', '10.0.0.7', $now);
+    t_true($login['ok'] === false && str_contains($login['error'], 'Слишком много неудачных попыток'), 'вход этого логина тоже закрыт: счётчики общие');
+    $later = ['now' => $ctx['now']->modify('+601 seconds')] + $ctx;
+    $done = $change($later, 'секрет-анны');
+    t_equal([$done['status'], $done['headers']['Location'] ?? null], [303, '/pay/admin/?notice=password'], 'через десять минут смена снова открыта');
+});
+
+t_case('смена пароля: что считается попыткой', function (): void {
+    $ctx = t_admin_ctx();
+    $db = $ctx['db'];
+    $now = $ctx['now']->getTimestamp();
+    $cookies = t_admin_login($ctx);
+    $csrf = admin_session($db, $cookies[ADMIN_COOKIE], $now)['csrf'];
+    $post = fn (array $fields): array => admin_handle(
+        admin_request('POST', post: $fields + ['csrf' => $csrf], cookies: $cookies), $ctx, 'password', 'admin_page_password');
+    $attempts = fn (): int => (int)$db->query("SELECT COUNT(*) FROM login_attempts WHERE login = 'anna'")->fetchColumn();
+
+    // Верный текущий пароль — не подбор: ошибки в новом пароле попыток не тратят, сколько ни повторяй.
+    for ($i = 0; $i < 7; $i++) {
+        $short = $post(['current' => 'секрет-анны', 'new' => 'коротко', 'repeat' => 'коротко']);
+    }
+    t_true(str_contains($short['body'], 'не короче 8'), 'слишком короткий новый пароль — ошибка, а не блокировка');
+    t_true(str_contains($post(['current' => 'секрет-анны', 'new' => 'новый-пароль', 'repeat' => 'другой-пароль'])['body'], 'не совпадают'), 'повтор не совпал');
+    t_true(str_contains($post(['current' => 'секрет-анны', 'new' => 'секрет-анны', 'repeat' => 'секрет-анны'])['body'], 'совпадает с текущим'), 'новый пароль равен текущему');
+    t_equal($attempts(), 0, 'ни одна из этих ошибок не записана как попытка');
+
+    // Неверный текущий пароль считается, удачная смена стирает счётчик.
+    for ($i = 1; $i <= 4; $i++) {
+        $post(['current' => "не тот $i", 'new' => 'новый-пароль', 'repeat' => 'новый-пароль']);
+    }
+    t_equal($attempts(), 4, 'каждый неверный текущий пароль — одна попытка');
+    $done = $post(['current' => 'секрет-анны', 'new' => 'новый-пароль', 'repeat' => 'новый-пароль']);
+    t_equal([$done['status'], $attempts()], [303, 0], 'смена проходит и после четырёх неверных; счётчик стёрт');
+});
+
+t_case('смена пароля: счётчики общие с входом в обе стороны', function (): void {
+    $ctx = t_admin_ctx();
+    $db = $ctx['db'];
+    $now = $ctx['now']->getTimestamp();
+    $cookies = t_admin_login($ctx);
+    $csrf = admin_session($db, $cookies[ADMIN_COOKIE], $now)['csrf'];
+    for ($i = 0; $i < 3; $i++) {
+        admin_login($db, 'anna', 'не тот', '10.0.0.5', $now);
+    }
+    $post = fn (string $current): array => admin_handle(
+        admin_request('POST', post: ['csrf' => $csrf, 'current' => $current, 'new' => 'новый-пароль', 'repeat' => 'новый-пароль'], cookies: $cookies),
+        $ctx, 'password', 'admin_page_password');
+    $post('не тот 1');
+    $post('не тот 2');
+    t_true(str_contains($post('секрет-анны')['body'], 'Слишком много неудачных попыток'), 'три неверных пароля при входе и два в форме — это уже пять');
+});
+
 t_case('выход', function (): void {
     $ctx = t_admin_ctx();
     $cookies = t_admin_login($ctx);
