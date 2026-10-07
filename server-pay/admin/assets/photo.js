@@ -1,7 +1,8 @@
 /*
  * Фото в карточках букетов и разделов. Браузер сам уменьшает снимок до
  * 2000 px по длинной стороне и отправляет JPEG — по одному снимку за запрос,
- * так он быстро уходит и с мобильного интернета. Остальное делает сервер
+ * так он быстро уходит и с мобильного интернета. Тяжелее 1,9 МБ не отправляет:
+ * сначала снижает качество, потом уменьшает ещё. Остальное делает сервер
  * (pay/admin/photo.php): пересохраняет в WebP и возвращает путь к файлу,
  * а путь попадает в форму и сохраняется вместе с ней. Порядок меняют
  * стрелками; первое фото — главное.
@@ -12,6 +13,12 @@
 (function () {
   'use strict';
   var MAX_SIDE = 2000;
+  // Предел загрузки в PHP по умолчанию — 2 МБ: снимок тяжелее может не дойти. Берём с запасом.
+  var MAX_BYTES = 1.9 * 1024 * 1024;
+  // Качество JPEG: сначала лучшее, при тяжёлом файле — хуже. Не помогло — уменьшаем сторону и повторяем.
+  var QUALITIES = [0.9, 0.8, 0.7];
+  var MAX_SHRINKS = 4;
+  var SHRINK_FACTOR = 0.8;
   var GENERIC = 'Фото не загрузилось. Попробуйте ещё раз или выберите другое.';
   var SESSION = 'Сессия закончилась — обновите страницу и войдите заново.';
   var UNREADABLE = 'Не получилось открыть снимок — выберите другой файл.';
@@ -32,6 +39,41 @@
     return error;
   }
 
+  function encode(canvas, quality) {
+    return new Promise(function (resolve, reject) {
+      canvas.toBlob(function (blob) {
+        if (blob) { resolve(blob); } else { reject(new Error('')); }
+      }, 'image/jpeg', quality);
+    });
+  }
+
+  // Та же картинка, но с длинной стороной на пятую часть короче. Берём её с готового холста,
+  // а не со снимка: снимок уже закрыт и память освобождена.
+  function scaled(canvas) {
+    var smaller = document.createElement('canvas');
+    smaller.width = Math.max(1, Math.round(canvas.width * SHRINK_FACTOR));
+    smaller.height = Math.max(1, Math.round(canvas.height * SHRINK_FACTOR));
+    var context = smaller.getContext('2d');
+    context.imageSmoothingQuality = 'high';
+    context.drawImage(canvas, 0, 0, smaller.width, smaller.height);
+    return smaller;
+  }
+
+  // Первый вариант, который уложился в предел по весу. Обычный снимок проходит с первой попытки.
+  function fit(canvas, shrinks) {
+    var index = 0;
+    function next() {
+      return encode(canvas, QUALITIES[index]).then(function (blob) {
+        if (blob.size <= MAX_BYTES) { return blob; }
+        index += 1;
+        if (index < QUALITIES.length) { return next(); }
+        if (shrinks >= MAX_SHRINKS) { throw shown(TOO_HEAVY); }
+        return fit(scaled(canvas), shrinks + 1);
+      });
+    }
+    return next();
+  }
+
   function shrink(file) {
     return createImageBitmap(file).then(function (bitmap) {
       var scale = Math.min(1, MAX_SIDE / Math.max(bitmap.width, bitmap.height));
@@ -44,11 +86,7 @@
       context.fillRect(0, 0, canvas.width, canvas.height);
       context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
       if (bitmap.close) { bitmap.close(); }
-      return new Promise(function (resolve, reject) {
-        canvas.toBlob(function (blob) {
-          if (blob) { resolve(blob); } else { reject(new Error('')); }
-        }, 'image/jpeg', 0.9);
-      });
+      return fit(canvas, 0);
     }, function () {
       throw shown(UNREADABLE);
     });

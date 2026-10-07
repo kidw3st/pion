@@ -92,6 +92,25 @@ t_case('приём фото', function (): void {
     t_equal(json_decode(t_photo_call($ctx, ['uid' => $uid], ['photo' => t_upload(t_jpeg(10, 10))])['body'], true)['ok'], false, 'удалённому букету фото не добавить');
 });
 
+t_case('снимок тяжелее предела загрузки', function (): void {
+    // Если файл больше upload_max_filesize, PHP не кладёт его на диск и возвращает только код ошибки.
+    // Сотрудница должна услышать про вес снимка, а не «не дошло — попробуйте ещё раз»: повтор не поможет.
+    $ctx = t_admin_ctx();
+    $failed = static fn (int $code): array => ['name' => 'photo.jpg', 'type' => '', 'tmp_name' => '', 'error' => $code, 'size' => 0];
+    foreach (['INI_SIZE' => UPLOAD_ERR_INI_SIZE, 'FORM_SIZE' => UPLOAD_ERR_FORM_SIZE] as $name => $code) {
+        $r = t_photo_call($ctx, ['section' => 'roses', 'kind' => 'tile'], ['photo' => $failed($code)]);
+        $data = json_decode($r['body'], true);
+        t_equal(
+            [$r['status'], $data['ok'] ?? null, $data['error'] ?? null],
+            [422, false, 'Снимок слишком тяжёлый — выберите другой или уменьшите его.'],
+            "UPLOAD_ERR_$name: ответ про вес снимка",
+        );
+    }
+    // Остальные сбои передачи по-прежнему «не дошло»: тут повтор может помочь.
+    $partial = json_decode(t_photo_call($ctx, ['section' => 'roses', 'kind' => 'tile'], ['photo' => $failed(UPLOAD_ERR_PARTIAL)])['body'], true);
+    t_equal($partial['error'] ?? null, 'Фото не дошло — попробуйте ещё раз.', 'оборванная передача — прежнее сообщение');
+});
+
 t_case('сбои при приёме фото', function (): void {
     $ctx = t_admin_ctx();
     $big = json_decode(t_photo_call($ctx, ['section' => 'roses', 'kind' => 'tile'], ['photo' => t_upload(t_png_header(20000, 20000))])['body'], true);

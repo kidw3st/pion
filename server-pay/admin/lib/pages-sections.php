@@ -148,6 +148,9 @@ function admin_page_section(array $req, array $ctx): array
     $q = $ctx['db']->prepare('SELECT * FROM sections WHERE slug = ?');
     $q->execute([$slug]);
     $row = $q->fetch();
+    // Закрываем чтение до записи ниже: открытое, оно отменяет ожидание записи, и при занятой базе
+    // сохранение падало бы сразу («database is locked»), не дожидаясь busy_timeout.
+    $q->closeCursor();
     if ($row === false) {
         return admin_not_found($ctx, 'Такого раздела нет', 'sections.php');
     }

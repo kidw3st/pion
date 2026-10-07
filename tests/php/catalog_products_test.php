@@ -64,6 +64,9 @@ t_case('пути фото строго по форме', function (): void {
     $bad = [
         'перевод строки в конце' => "/images/catalog/bukety/a.webp\n",
         'выход из папки каталога через «..»' => '/images/catalog/../pay/x.webp',
+        // Корзина — не каталог: путь оттуда, сохранённый в карточке, через 90 дней остался бы без файла.
+        'файл прямо в корзине' => '/images/catalog/_deleted/a.webp',
+        'файл в папке раздела внутри корзины' => '/images/catalog/_deleted/bukety/a.webp',
     ];
     foreach ($bad as $what => $path) {
         t_throws(

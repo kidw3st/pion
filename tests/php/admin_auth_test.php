@@ -7,6 +7,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/admin_fixture.php';
 require_once __DIR__ . '/../../server-pay/admin/lib/pages-auth.php';
+require_once __DIR__ . '/../../server-pay/admin/lib/pages-sections.php';
 
 /** Страница-заглушка: показывает, что до неё дошли, и кто вошёл. */
 function t_admin_probe(array $req, array $ctx): array
@@ -34,6 +35,36 @@ t_case('вход', function (): void {
     t_equal($ctx['db']->query('SELECT token_hash FROM sessions')->fetchAll(PDO::FETCH_COLUMN), [hash('sha256', $token)], 'в базе — только хэш токена');
     $again = admin_login($ctx['db'], 'anna', 'секрет-анны', '127.0.0.1', $ctx['now']->getTimestamp());
     t_true($again['token'] !== $token, 'каждый вход — новый идентификатор сессии');
+});
+
+t_case('вход: форма с чужого сайта', function (): void {
+    // У формы входа нет CSRF-токена (токен живёт в сессии, а её ещё нет). Вместо него — заголовок браузера
+    // Sec-Fetch-Site: страница чужого сайта не должна ни войти за сотрудницу, ни тратить её попытки.
+    $ctx = t_admin_ctx();
+    $creds = ['login' => 'anna', 'password' => 'секрет-анны'];
+    $login = fn (string $fetchSite) => admin_handle(admin_request('POST', post: $creds, fetchSite: $fetchSite), $ctx, 'login', 'admin_page_login');
+
+    $foreign = $login('cross-site');
+    t_true($foreign['status'] === 400 && str_contains($foreign['body'], 'Форма устарела') && $foreign['cookies'] === [], 'с чужого сайта — 400 без куки, даже с верным паролем');
+    t_equal((int)$ctx['db']->query('SELECT COUNT(*) FROM sessions')->fetchColumn(), 0, 'сессия не заведена');
+    $wrong = admin_handle(admin_request('POST', post: ['login' => 'anna', 'password' => 'не тот'], fetchSite: 'cross-site'), $ctx, 'login', 'admin_page_login');
+    t_equal([$wrong['status'], (int)$ctx['db']->query('SELECT COUNT(*) FROM login_attempts')->fetchColumn()], [400, 0], 'и попытки сотрудницы не расходуются');
+
+    foreach (['same-origin', 'same-site', 'none', ''] as $site) {
+        t_equal($login($site)['status'], 303, 'заголовок «' . ($site === '' ? 'нет' : $site) . '» — вход разрешён (пустой: старые браузеры)');
+    }
+    t_equal(admin_handle(admin_request(fetchSite: 'cross-site'), $ctx, 'login', 'admin_page_login')['status'], 200, 'страницу входа (GET) с чужого сайта можно открыть');
+
+    // Заголовок из настоящего запроса попадает в массив запроса (в нижнем регистре, как его сравнивают).
+    $saved = $_SERVER['HTTP_SEC_FETCH_SITE'] ?? null;
+    $_SERVER['HTTP_SEC_FETCH_SITE'] = 'Cross-Site';
+    $fromGlobals = admin_request_from_globals()['fetchSite'];
+    unset($_SERVER['HTTP_SEC_FETCH_SITE']);
+    $missing = admin_request_from_globals()['fetchSite'];
+    if ($saved !== null) {
+        $_SERVER['HTTP_SEC_FETCH_SITE'] = $saved;
+    }
+    t_equal([$fromGlobals, $missing], ['cross-site', ''], 'из окружения веб-сервера: есть — читается, нет — пусто');
 });
 
 t_case('подбор пароля', function (): void {
@@ -156,7 +187,7 @@ t_case('занята запись: ожидание, а не мгновенны�
     // не дожидаясь, — иначе два таких соединения зашли бы в тупик. Поэтому чтение закрывается до любой
     // записи. Ожидание сокращено до 0,3 с, чтобы проверка не тянулась.
     $file = t_tmpdir() . '/catalog.sqlite';
-    $ctx = t_admin_ctx(t_catalog_db($file));
+    $ctx = t_admin_ctx(t_catalog_with_sections(t_catalog_db($file)));
     $a = $ctx['db'];
     $a->exec('PRAGMA busy_timeout = 300');
     $now = $ctx['now']->getTimestamp();
@@ -183,6 +214,11 @@ t_case('занята запись: ожидание, а не мгновенны�
         // Оба входа обязаны вести себя одинаково: иначе по отказам «database is locked» видно, какие логины есть.
         'вход несуществующего' => fn () => admin_login($a, 'olga', 'не тот', '10.0.0.1', $now),
         'смена пароля' => fn () => admin_handle(admin_request('POST', post: $change, cookies: $cookies), $ctx, 'password', 'admin_page_password'),
+        // Карточка раздела сначала читает раздел, потом пишет: прочитанное нужно закрыть до записи, иначе тут
+        // тоже «database is locked» наступал сразу (в форме нет исходных значений — поля считаются изменёнными).
+        'сохранение карточки раздела' => fn () => admin_handle(
+            admin_request('POST', post: ['csrf' => $csrf, 'slug' => 'roses', 'label' => 'Розы поштучно'], cookies: $cookies),
+            $ctx, 'section', 'admin_page_section'),
     ];
     foreach ($calls as $what => $call) {
         [$took, $error] = $wait($call);

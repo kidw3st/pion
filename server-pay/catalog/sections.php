@@ -18,8 +18,10 @@ const CATALOG_COVERS_MAX = 3;
  * /images/site/catalog-tiles/, обложки — в /images/site/category-covers/ и
  * /images/pages/<страница>/. Две точки подряд не допускаются нигде: путь не
  * должен выйти из /images/. Конец — \z, а не $: «$» пропускает перевод строки.
+ * Папка _deleted/ (корзина фото) не допускается на любой глубине: файл оттуда
+ * стирается через 90 дней, а страница на него ссылалась бы.
  */
-const CATALOG_SITE_IMAGE = '~^/images/(?!.*\.\.)[A-Za-z0-9/._-]+\.webp\z~';
+const CATALOG_SITE_IMAGE = '~^/images/(?!.*\.\.)(?!(?:.*/)?_deleted/)[A-Za-z0-9/._-]+\.webp\z~';
 
 /** Поля карточки раздела: имя в выгрузке => колонка в базе. */
 const CATALOG_SECTION_COLUMNS = [

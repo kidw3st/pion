@@ -105,7 +105,7 @@ function t_e2e_stop(array $server): void
 }
 
 /** @return array{status: int, headers: array<string, list<string>>, body: string} */
-function t_http(int $port, string $method, string $path, array $fields = [], string $cookie = '', ?string $jpeg = null): array
+function t_http(int $port, string $method, string $path, array $fields = [], string $cookie = '', ?string $jpeg = null, array $extraHeaders = []): array
 {
     $headers = [];
     $content = '';
@@ -124,6 +124,7 @@ function t_http(int $port, string $method, string $path, array $fields = [], str
     if ($cookie !== '') {
         $headers[] = 'Cookie: ' . $cookie;
     }
+    array_push($headers, ...$extraHeaders);
     $context = stream_context_create(['http' => [
         'method' => $method, 'header' => implode("\r\n", $headers), 'content' => $content,
         'ignore_errors' => true, 'follow_location' => 0, 'timeout' => 10,
@@ -169,7 +170,12 @@ t_case('админка по HTTP', function (): void {
         $r = t_http($port, 'POST', '/pay/admin/login.php', ['login' => 'olga', 'password' => 'не тот']);
         t_true($r['status'] === 200 && str_contains($r['body'], 'Неверный логин или пароль'), 'неверный пароль — отказ');
 
-        $r = t_http($port, 'POST', '/pay/admin/login.php', ['login' => 'Olga', 'password' => $password]);
+        // Браузер сам ставит Sec-Fetch-Site: форма со страницы чужого сайта не входит, даже с верным паролем.
+        $r = t_http($port, 'POST', '/pay/admin/login.php', ['login' => 'Olga', 'password' => $password], '', null, ['Sec-Fetch-Site: cross-site']);
+        t_true($r['status'] === 400 && !isset($r['headers']['set-cookie']) && str_contains($r['body'], 'Форма устарела'), 'вход с чужого сайта — 400 без куки');
+
+        $r = t_http($port, 'POST', '/pay/admin/login.php', ['login' => 'Olga', 'password' => $password], '', null, ['Sec-Fetch-Site: same-origin']);
+        t_equal($r['status'], 303, 'вход со своего сайта проходит');
         $setCookie = $r['headers']['set-cookie'][0] ?? '';
         t_true($r['status'] === 303 && str_contains($setCookie, 'HttpOnly') && str_contains($setCookie, 'Secure') && str_contains($setCookie, 'SameSite=Strict'),
             'вход — кука сессии с защитными флагами');

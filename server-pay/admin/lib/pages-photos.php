@@ -17,7 +17,12 @@ function admin_page_photo(array $req, array $ctx): array
         return admin_json(['ok' => false, 'error' => 'Фото принимаются только из формы.'], 405);
     }
     $file = $req['files']['photo'] ?? null;
-    $bytes = is_array($file) && ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK && is_string($file['tmp_name'] ?? null)
+    // Файл больше предела загрузки PHP на диск не попадает, остаётся только код ошибки. Повтор тут не поможет,
+    // поэтому говорим про вес снимка, а не «не дошло» (браузер обычно ужимает снимок сам — это запасной случай).
+    if (is_array($file) && in_array($file['error'] ?? null, [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true)) {
+        return admin_json(['ok' => false, 'error' => 'Снимок слишком тяжёлый — выберите другой или уменьшите его.'], 422);
+    }
+    $bytes =is_array($file) && ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK && is_string($file['tmp_name'] ?? null)
         ? (string)@file_get_contents($file['tmp_name'])
         : '';
     if ($bytes === '') {

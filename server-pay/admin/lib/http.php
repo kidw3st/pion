@@ -4,7 +4,8 @@
  * ответ»: её можно проверить без веб-сервера, а настоящие $_POST, куки и
  * заголовки трогают только admin_request_from_globals() и admin_emit().
  *
- * Запрос: method, path, query, post, cookies, files, ip.
+ * Запрос: method, path, query, post, cookies, files, ip, fetchSite (заголовок
+ * Sec-Fetch-Site: откуда браузер послал запрос; пусто — заголовка нет).
  * Ответ: status, headers (имя => значение), cookies (строки Set-Cookie), body.
  */
 
@@ -37,6 +38,7 @@ function admin_request_from_globals(): array
         'cookies' => $_COOKIE,
         'files' => $_FILES,
         'ip' => (string)($_SERVER['REMOTE_ADDR'] ?? ''),
+        'fetchSite' => strtolower((string)($_SERVER['HTTP_SEC_FETCH_SITE'] ?? '')),
     ];
 }
 
@@ -48,10 +50,11 @@ function admin_request(
     array $cookies = [],
     array $files = [],
     string $ip = '127.0.0.1',
+    string $fetchSite = '',
 ): array {
     return [
         'method' => $method, 'path' => ADMIN_BASE, 'query' => $query, 'post' => $post,
-        'cookies' => $cookies, 'files' => $files, 'ip' => $ip,
+        'cookies' => $cookies, 'files' => $files, 'ip' => $ip, 'fetchSite' => $fetchSite,
     ];
 }
 

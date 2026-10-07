@@ -14,6 +14,13 @@ function admin_page_login(array $req, array $ctx): array
     }
     $error = '';
     if ($req['method'] === 'POST') {
+        // У формы входа нет CSRF-токена: токен лежит в сессии, а её ещё нет. Защита здесь — кука SameSite=Strict
+        // и заголовок браузера: форма, отправленная со страницы чужого сайта, не входит и попыток не тратит.
+        // Нет заголовка (старый браузер) — пропускаем: иначе такие браузеры не смогли бы войти.
+        if ($req['fetchSite'] === 'cross-site') {
+            return admin_html(admin_layout('Форма устарела', '<h1>Форма устарела</h1>'
+                . '<p>Обновите страницу входа и повторите.</p>'), 400);
+        }
         $result = admin_login(
             $ctx['db'],
             admin_str($req['post'], 'login'),

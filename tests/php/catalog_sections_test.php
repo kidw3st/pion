@@ -66,6 +66,11 @@ t_case('картинки раздела строго по форме', function 
         'перевод строки в конце обложки' => ['covers' => ["/images/site/category-covers/roses-0.webp\n"]],
         'плитка с «..» — выход из /images/' => ['tileImage' => '/images/../pay/x.webp'],
         'обложка с «..» в середине пути' => ['covers' => ['/images/site/../../pay/x.webp']],
+        // Корзина фото — /images/catalog/_deleted/: стёртый через 90 дней файл оставил бы на сайте пустое место.
+        'плитка из корзины' => ['tileImage' => '/images/catalog/_deleted/bukety/a.webp'],
+        'плитка из корзины, папка разделов' => ['tileImage' => '/images/catalog/_deleted/_sections/roses-tile-abc.webp'],
+        'обложка из корзины' => ['covers' => ['/images/catalog/_deleted/_sections/roses-cover-abc.webp']],
+        'корзина глубже по пути' => ['covers' => ['/images/pages/_deleted/x.webp']],
     ];
     foreach ($bad as $what => $fields) {
         t_throws(fn () => catalog_update_section($db, 'anna', 'roses', $fields, t_now()), CatalogError::class, "не сохраняется: $what");
