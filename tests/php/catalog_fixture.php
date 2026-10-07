@@ -48,3 +48,56 @@ function t_catalog_with_sections(?PDO $db = null): PDO
         VALUES (2, 'section', 'bukety'), (3, 'section', 'roses'), (4, 'section', 'novinki')");
     return $db;
 }
+
+/** Букет прямо в базу, мимо правил админки; $positions — раздел => место в нём. */
+function t_put_product(PDO $db, string $uid, string $status, string $main, array $positions, ?string $slug = null): void
+{
+    $slug ??= "buket-$uid";
+    $at = '2026-10-01T10:00:00+05:00';
+    $db->prepare("INSERT INTO products (uid, slug, slug_pinned, title, description, price, images, main_section,
+            status, status_changed_at, created_at, updated_at)
+        VALUES (?, ?, 1, ?, 'Розы, эвкалипт', 4400, ?, ?, ?, ?, ?, ?)")
+        ->execute([$uid, $slug, "Букет $uid", json_encode(["/images/catalog/$main/$slug.webp"]), $main, $status, $at, $at, $at]);
+    $member = $db->prepare('INSERT INTO product_sections (uid, section, position) VALUES (?, ?, ?)');
+    foreach ($positions as $section => $position) {
+        $member->execute([$uid, $section, $position]);
+    }
+}
+
+/**
+ * Копия server-pay/catalog-export.php и server-pay/catalog/*.php во временной
+ * папке: путь без кириллицы — так скрипты надёжно запускаются отдельным
+ * процессом и на Windows.
+ */
+function t_catalog_scripts(): string
+{
+    $root = t_tmpdir();
+    mkdir("$root/catalog");
+    $src = dirname(__DIR__, 2) . '/server-pay';
+    copy("$src/catalog-export.php", "$root/catalog-export.php");
+    foreach (glob("$src/catalog/*.php") ?: [] as $file) {
+        copy($file, "$root/catalog/" . basename($file));
+    }
+    return $root;
+}
+
+/**
+ * Запускает PHP-скрипт отдельным процессом, как cron или веб-сервер; папку
+ * базы получает через PION_CATALOG_HOME.
+ *
+ * @return array{0: int, 1: string} код выхода и вывод (stdout и stderr вместе)
+ */
+function t_catalog_cli(string $script, string $home, array $args = []): array
+{
+    putenv('PION_CATALOG_HOME=' . $home);
+    try {
+        $cmd = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($script);
+        foreach ($args as $arg) {
+            $cmd .= ' ' . escapeshellarg($arg);
+        }
+        exec($cmd . ' 2>&1', $out, $code);
+    } finally {
+        putenv('PION_CATALOG_HOME');
+    }
+    return [$code, implode("\n", $out)];
+}
