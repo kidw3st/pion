@@ -41,6 +41,8 @@ h2 { font-size: 18px; margin: 28px 0 8px; }
   font: inherit; border: 1px solid var(--border); border-radius: 8px; background: #fff;
 }
 .form textarea { min-height: 110px; resize: vertical; }
+/* заголовки и подзаголовки разделов: две строки, а не пол-экрана */
+.form textarea.short { min-height: 0; }
 fieldset { margin: 0 0 14px; padding: 0; border: 0; }
 legend { padding: 0; font-weight: 600; }
 .check, .form .check { display: flex; align-items: center; gap: 8px; font-weight: 400; min-height: 44px; margin: 0 0 14px; }
@@ -91,6 +93,8 @@ summary { display: list-item; min-height: 44px; padding: 12px 0; font-weight: 60
 .tiles li { padding: 8px 0; border-bottom: 1px solid var(--border); }
 .tile-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .tile-row form { display: inline; margin: 0; }
+/* ссылка на раздел и «← Все разделы» — не ниже 44 px, как кнопки */
+.tile-row a, .back { display: inline-flex; align-items: center; min-height: 44px; }
 
 .log { margin: 0; padding: 0; list-style: none; }
 .log li { padding: 10px 0; border-bottom: 1px solid var(--border); }

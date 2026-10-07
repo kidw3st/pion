@@ -17,7 +17,11 @@ function t_section(PDO $db, string $slug): array
     return $q->fetch();
 }
 
-/** POST карточки раздела: поля формы как есть в базе, плюс изменения. */
+/**
+ * POST карточки раздела: поля формы как есть в базе, плюс изменения. Как браузер:
+ * многострочное поле (textarea) присылает переводы строк как \r\n, а однострочное
+ * (input) теряет их совсем. Исходные значения (orig) остаются как в базе.
+ */
 function t_section_post(PDO $db, string $slug, array $changes): array
 {
     $row = t_section($db, $slug);
@@ -28,12 +32,17 @@ function t_section_post(PDO $db, string $slug, array $changes): array
         'seoTitle' => (string)$row['seo_title'], 'seoDescription' => (string)$row['seo_description'],
         'covers' => json_encode(json_decode($row['covers'], true), CATALOG_JSON),
     ];
-    $post = ['action' => 'save', 'slug' => $slug, 'orig' => $form];
+    // Браузер при отправке заменяет переводы строк на \r\n в любых значениях, и в скрытых полях orig тоже.
+    $post = ['action' => 'save', 'slug' => $slug, 'orig' => array_map(fn (string $v): string => str_replace("\n", "\r\n", $v), $form)];
     foreach ($form as $field => $value) {
         if ($field === 'covers') {
             $post['covers'] = json_decode($value, true);
         } elseif (($field === 'visible' || $field === 'hasNotFound') && $value === '0') {
             continue; // снятая галочка в форму не приходит
+        } elseif (in_array($field, ['coverTitle', 'coverSub', 'heading', 'headingSub'], true)) {
+            $post[$field] = str_replace("\n", "\r\n", $value);
+        } elseif (in_array($field, ['label', 'tileImage', 'seoTitle', 'seoDescription'], true)) {
+            $post[$field] = str_replace(["\r", "\n"], '', $value);
         } else {
             $post[$field] = $value;
         }
@@ -122,6 +131,81 @@ t_case('фото в карточке раздела', function (): void {
     // Ошибка: форма возвращается с тем, что ввела сотрудница, и с прежними исходными значениями.
     $long = str_repeat('я', 301);
     $bad = t_admin_call($ctx, 'section', 'admin_page_section', 'POST', post: t_section_post($db, 'roses', ['heading' => $long]));
-    t_true($bad['status'] === 422 && str_contains($bad['body'], 'длиннее 300') && str_contains($bad['body'], 'value="' . $long . '"')
+    t_true($bad['status'] === 422 && str_contains($bad['body'], 'длиннее 300') && str_contains($bad['body'], '>' . $long . '</textarea>')
         && str_contains($bad['body'], 'name="orig[heading]" value="РОЗЫ"'), 'ошибка: введённое осталось, исходное — прежнее');
+});
+
+t_case('переводы строк в полях карточки', function (): void {
+    $ctx = t_admin_ctx();
+    $db = $ctx['db'];
+    // Настоящие данные: подзаголовок обложки с переносом (сайт показывает его с white-space: pre-line).
+    catalog_update_section($db, 'olga', 'roses', ['coverSub' => "a\nb", 'seoTitle' => "x\ny"], t_now());
+    $audit = (int)$db->query('SELECT COUNT(*) FROM audit')->fetchColumn();
+
+    $card = t_admin_call($ctx, 'section', 'admin_page_section', query: ['slug' => 'roses'])['body'];
+    t_true(str_contains($card, '<textarea') && str_contains($card, 'name="coverSub"') && str_contains($card, "a\nb</textarea>"), 'многострочное поле — textarea, перенос на месте');
+    t_true(str_contains($card, "name=\"orig[coverSub]\" value=\"a\nb\""), 'исходное значение с переносом');
+
+    $post = t_section_post($db, 'roses', []);
+    t_equal([$post['coverSub'], $post['seoTitle'], $post['orig']['coverSub'], $post['orig']['seoTitle']], ["a\r\nb", 'xy', "a\r\nb", "x\r\ny"], 'форма прислана, как это делает браузер');
+    t_admin_call($ctx, 'section', 'admin_page_section', 'POST', post: $post);
+    $row = t_section($db, 'roses');
+    t_equal([$row['cover_sub'], $row['seo_title']], ["a\nb", "x\ny"], 'ничего не меняли — переносы целы');
+    t_equal((int)$db->query('SELECT COUNT(*) FROM audit')->fetchColumn(), $audit, 'в журнал ничего не попало');
+
+    t_admin_call($ctx, 'section', 'admin_page_section', 'POST', post: t_section_post($db, 'roses', ['coverSub' => "c\r\nd"]));
+    t_equal(t_section($db, 'roses')['cover_sub'], "c\nd", 'правка с \r\n хранится с \n');
+    t_equal(t_section($db, 'roses')['seo_title'], "x\ny", 'соседнее поле не тронуто');
+
+    // Однострочное поле: исходное с переносом, пришло без него — это то же значение; а вот правка — правка.
+    $same = admin_section_changes(['orig' => ['seoTitle' => "x\ny"], 'seoTitle' => 'xy']);
+    t_true(!array_key_exists('seoTitle', $same), 'однострочное поле без переноса — не изменено');
+    $edited = admin_section_changes(['orig' => ['seoTitle' => "x\ny"], 'seoTitle' => 'xz']);
+    t_equal($edited['seoTitle'] ?? null, 'xz', 'однострочное поле действительно поправили');
+    $crlf = admin_section_changes(['orig' => ['heading' => "a\nb"], 'heading' => "a\r\nb"]);
+    t_true(!array_key_exists('heading', $crlf), 'textarea: \r\n и \n — одно и то же');
+    $old = admin_section_changes(['orig' => ['heading' => "a\r\nb"], 'heading' => "a\r\nb"]);
+    t_true(!array_key_exists('heading', $old), 'и если в исходном значении был \r\n');
+});
+
+t_case('карточка раздела: подделанный запрос', function (): void {
+    $ctx = t_admin_ctx();
+    $db = $ctx['db'];
+    // Лишний ключ в orig и ошибка в форме: страница ошибки не должна падать.
+    $post = t_section_post($db, 'roses', ['label' => '']);
+    $post['orig'][0] = 'x';
+    $post['orig']['coverSub'] = ['не', 'строка'];
+    $bad = t_admin_call($ctx, 'section', 'admin_page_section', 'POST', post: $post);
+    t_true($bad['status'] === 422 && str_contains($bad['body'], 'Название раздела'), 'лишний ключ в orig — всё равно понятная ошибка');
+    t_equal(substr_count($bad['body'], 'name="orig['), 11, 'исходных значений ровно по числу полей');
+    t_true(!str_contains($bad['body'], 'orig[0]'), 'чужих ключей в форме нет');
+
+    // Путь обложки с недопустимыми байтами: раньше json_encode бросал исключение — страница ошибки.
+    $json = t_admin_call($ctx, 'section', 'admin_page_section', 'POST', post: t_section_post($db, 'roses', ['covers' => ["/images/x\xff.webp"]]));
+    t_true($json['status'] === 422 && str_contains($json['body'], 'Не получилось сохранить фото обложки'), 'сломанный путь обложки — понятное сообщение');
+    t_equal(json_decode(t_section($db, 'roses')['covers'], true), [], 'обложки в базе не тронуты');
+});
+
+t_case('плитки: направление и тексты', function (): void {
+    $ctx = t_admin_ctx();
+    $db = $ctx['db'];
+    $roses = (int)$db->query("SELECT id FROM tiles WHERE section = 'roses'")->fetchColumn();
+    $order = fn (): array => array_column(admin_tiles($db), 'section');
+    $before = $order();
+    $r = t_admin_call($ctx, 'sections', 'admin_page_sections', 'POST', post: ['action' => 'move', 'tile' => (string)$roses, 'dir' => 'sideways']);
+    t_equal([$r['status'], $r['headers']['Location'], $order()], [303, '/pay/admin/sections.php', $before], 'неизвестное направление — ничего не двигается');
+    t_admin_call($ctx, 'sections', 'admin_page_sections', 'POST', post: ['action' => 'move', 'tile' => (string)$roses, 'dir' => 'down']);
+    t_equal($order(), [null, 'bukety', 'novinki', 'roses'], 'вниз — роза встала после «Новинок»');
+
+    $card = t_admin_call($ctx, 'section', 'admin_page_section', query: ['slug' => 'roses'])['body'];
+    t_true(!str_contains($card, '<details open>') && str_contains($card, '<details>'), 'без ошибки «Дополнительно» свёрнуто');
+    t_true(str_contains($card, 'Заголовок для поиска') && str_contains($card, 'Описание для поиска')
+        && str_contains($card, 'название раздела на сайте') && !str_contains($card, 'SEO') && !str_contains($card, 'хлебные'), 'без технических слов');
+    $bad = t_admin_call($ctx, 'section', 'admin_page_section', 'POST', post: t_section_post($db, 'roses', ['heading' => str_repeat('я', 301)]));
+    t_true(str_contains($bad['body'], '<details open>'), 'после ошибки «Дополнительно» раскрыто');
+    $list = t_admin_call($ctx, 'sections', 'admin_page_sections')['body'];
+    t_true(str_contains($list, 'class="tile-row"'), 'список плиток на месте');
+    $css = (string)file_get_contents(__DIR__ . '/../../server-pay/admin/assets/admin.css');
+    t_true((bool)preg_match('/\.tile-row a[^{]*\{[^}]*min-height:\s*44px/', $css), 'ссылка на раздел в списке — не ниже 44 px');
+    t_true(str_contains($card, 'class="back"') && (bool)preg_match('/\.back\s*\{[^}]*min-height:\s*44px/', $css), 'ссылка «← Все разделы» — не ниже 44 px');
 });
