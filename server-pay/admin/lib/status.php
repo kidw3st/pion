@@ -52,12 +52,22 @@ function admin_status_line(array $status): string
     return '<p class="status status-' . h($status['kind']) . '">' . h($status['text']) . '</p>';
 }
 
-/** Отметка у изменения в журнале и карточке: true — на сайте, false — ждёт выкладки, null — неизвестно. */
-function admin_change_on_site(string $at, ?array $deployed): ?bool
+/**
+ * Отметка у изменения в журнале и карточке: true — на сайте, false — ждёт выкладки, null — неизвестно.
+ * $inSync — версия каталога в базе совпадает с выложенной: при совпадении версий все правки
+ * (включая те, что не меняют выгрузку: черновики, пароли, смены сотрудников) уже на сайте.
+ */
+function admin_change_on_site(string $at, ?array $deployed, bool $inSync = false): ?bool
 {
-    if ($deployed === null || $deployed['changedAt'] === '') {
+    if ($deployed === null) {
         return null;
     }
-    // Время в базе и в выгрузке — одной формы и одного пояса (catalog_iso), строки сравниваются как время.
-    return $at <= $deployed['changedAt'];
+    if ($inSync) {
+        return true;
+    }
+    if ($deployed['changedAt'] === '') {
+        return null;
+    }
+    // Сравнение временных меток как моментов: они в одном формате и поясе (catalog_iso).
+    return (new DateTimeImmutable($at))->getTimestamp() <= (new DateTimeImmutable($deployed['changedAt']))->getTimestamp();
 }

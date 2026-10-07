@@ -36,6 +36,8 @@ function admin_handle(array $req, array $ctx, string $name, callable $page): arr
 {
     $ctx['user'] = null;
     $ctx['status'] = '';
+    $ctx['deployed'] = null;
+    $ctx['inSync'] = false;
     if ($ctx['db'] === null) {
         return admin_html(admin_layout('Админка', '<h1>Админка ещё не подключена</h1>'
             . '<p>Базы каталога на сервере пока нет. Обратитесь к разработчику.</p>'), 503);
@@ -56,8 +58,10 @@ function admin_handle(array $req, array $ctx, string $name, callable $page): arr
     }
     $ctx['user'] = $user;
     if ($user !== null) {
-        $deployed = admin_deployed_catalog($ctx['deployHome']);
-        $ctx['status'] = admin_status_line(admin_deploy_status(catalog_meta($ctx['db']), $deployed, $ctx['now']));
+        $ctx['deployed'] = admin_deployed_catalog($ctx['deployHome']);
+        $status = admin_deploy_status(catalog_meta($ctx['db']), $ctx['deployed'], $ctx['now']);
+        $ctx['inSync'] = $status['kind'] === 'synced';
+        $ctx['status'] = admin_status_line($status);
     }
     return $page($req, $ctx);
 }
