@@ -30,7 +30,9 @@ function catalog_backup(PDO $db, string $dir, DateTimeImmutable $now): string
         }
         try {
             $db->prepare('VACUUM INTO ?')->execute([$part]);
-            rename($part, $file);
+            if (!rename($part, $file)) {
+                throw new RuntimeException("Не переименовать копию базы: $part");
+            }
         } catch (Throwable $e) {
             if (is_file($part)) {
                 unlink($part);
