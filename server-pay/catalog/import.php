@@ -96,6 +96,12 @@ function catalog_import(PDO $db, array $export, DateTimeImmutable $now): array
         }
 
         catalog_audit($db, 'import', $now, 'catalog', '', 'imported', null, count($export['products']) . ' букетов');
+        // Версия в файле сверена выше с самим файлом, а не с базой. Файл не по форме выгрузки (разделы не
+        // по алфавиту, лишнее поле) сошёлся бы сам с собой, а база выгрузила бы другое — и повторить
+        // загрузку в уже непустую базу нельзя. Поэтому сверяем ещё и с тем, что выгрузит загруженная база.
+        if (isset($export['version']) && $export['version'] !== catalog_export_version(catalog_export_data($db))) {
+            throw new CatalogError('Загруженная база выгружается с другой версией, чем в файле — загрузка отменена.');
+        }
         catalog_touch($db, $now);
         return [
             'sections' => count($export['sections']),

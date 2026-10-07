@@ -64,6 +64,42 @@ t_case('проверки загрузки', function (): void {
     t_equal((int)$empty->query('SELECT COUNT(*) FROM sections')->fetchColumn(), 0, 'после отказа база осталась пустой');
 });
 
+t_case('файл не по форме выгрузки', function (): void {
+    $source = catalog_export(t_rich_catalog());
+    // Данные верные, а версия пересчитана по самому файлу — поэтому «сходится». Но база выгрузит
+    // свой порядок и свои поля, и версия станет другой. Без проверки такая загрузка проходила бы,
+    // а повторить её в непустую базу уже нельзя — пришлось бы удалять базу руками.
+    $bent = [
+        'разделы не по алфавиту' => function (array $file): array {
+            $file['sections'] = array_reverse($file['sections']);
+            return $file;
+        },
+        'лишнее поле у букета' => function (array $file): array {
+            $file['products'][0]['note'] = 'лишнее';
+            return $file;
+        },
+    ];
+    foreach ($bent as $what => $bend) {
+        $file = $bend($source);
+        $file['version'] = catalog_export_version($file);
+        $db = t_catalog_db();
+        $e = t_throws(fn () => catalog_import($db, $file, t_now()), CatalogError::class, "не загружается: $what");
+        t_true(str_contains((string)$e?->getMessage(), 'с другой версией'), "причина названа: $what");
+        t_equal(
+            [(int)$db->query('SELECT COUNT(*) FROM sections')->fetchColumn(), (int)$db->query('SELECT COUNT(*) FROM products')->fetchColumn()],
+            [0, 0],
+            "после отказа база пуста: $what",
+        );
+    }
+    $loaded = true;
+    try {
+        catalog_import($db, $source, t_now());
+    } catch (CatalogError) {
+        $loaded = false;
+    }
+    t_true($loaded, 'после отказа исправленный файл загружается — базу удалять не нужно');
+});
+
 t_case('import-cli.php', function (): void {
     $scripts = t_catalog_scripts();
     $home = t_tmpdir();
