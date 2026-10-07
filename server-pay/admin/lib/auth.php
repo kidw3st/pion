@@ -59,6 +59,9 @@ function admin_login(PDO $db, string $login, string $password, string $ip, int $
     $q = $db->prepare('SELECT password_hash FROM users WHERE login = ?');
     $q->execute([$login]);
     $hash = $q->fetchColumn();
+    // Чтение закрываем до записи ниже: пока оно открыто, при занятой записи SQLite отвечает
+    // «database is locked» сразу, не дожидаясь busy_timeout, — и только у существующих логинов.
+    $q->closeCursor();
     $ok = password_verify($password, is_string($hash) ? $hash : ADMIN_DUMMY_HASH) && is_string($hash);
     if (!$ok) {
         $db->prepare('INSERT INTO login_attempts (ip, login, at) VALUES (?, ?, ?)')->execute([$ip, $login, $now]);
@@ -87,6 +90,8 @@ function admin_session(PDO $db, ?string $token, int $now): ?array
         FROM sessions s JOIN users u ON u.login = s.login WHERE s.token_hash = ?');
     $q->execute([$hash]);
     $row = $q->fetch();
+    // Закрываем чтение до записи ниже (удаление и продление): открытое, оно отменяет ожидание записи.
+    $q->closeCursor();
     if ($row === false) {
         return null;
     }
@@ -139,7 +144,10 @@ function admin_change_password(
 ): ?string {
     $q = $db->prepare('SELECT password_hash FROM users WHERE login = ?');
     $q->execute([$session['login']]);
-    if (!password_verify($current, (string)$q->fetchColumn())) {
+    $hash = (string)$q->fetchColumn();
+    // Закрываем чтение до транзакции ниже: открытое, оно отменяет ожидание записи.
+    $q->closeCursor();
+    if (!password_verify($current, $hash)) {
         return 'Текущий пароль введён неверно.';
     }
     if (mb_strlen($new) < ADMIN_PASSWORD_MIN) {

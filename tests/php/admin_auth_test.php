@@ -76,6 +76,47 @@ t_case('сессия: 12 часов без действий', function (): void 
     t_equal(admin_session($ctx['db'], 'не токен', $now), null, 'мусор вместо токена — не вошли');
 });
 
+t_case('занята запись: ожидание, а не мгновенный отказ', function (): void {
+    // Пока другое соединение держит запись, наше обязано подождать busy_timeout. Но если в нём самом
+    // ещё открыто чтение (запрос вернул строку и не закрыт), SQLite отвечает «database is locked» сразу,
+    // не дожидаясь, — иначе два таких соединения зашли бы в тупик. Поэтому чтение закрывается до любой
+    // записи. Ожидание сокращено до 0,3 с, чтобы проверка не тянулась.
+    $file = t_tmpdir() . '/catalog.sqlite';
+    $ctx = t_admin_ctx(t_catalog_db($file));
+    $a = $ctx['db'];
+    $a->exec('PRAGMA busy_timeout = 300');
+    $now = $ctx['now']->getTimestamp();
+    $cookies = [ADMIN_COOKIE => admin_login($a, 'anna', 'секрет-анны', '127.0.0.1', $now)['token']];
+    $csrf = admin_session($a, $cookies[ADMIN_COOKIE], $now)['csrf'];
+
+    $other = new PDO('sqlite:' . $file, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+    $other->exec('BEGIN IMMEDIATE');
+    /** @return array{0: float, 1: string} сколько секунд вызов ждал и чем кончил */
+    $wait = static function (callable $call): array {
+        $start = microtime(true);
+        $error = '';
+        try {
+            $call();
+        } catch (PDOException $e) {
+            $error = $e->getMessage();
+        }
+        return [microtime(true) - $start, $error];
+    };
+    $change = ['csrf' => $csrf, 'current' => 'секрет-анны', 'new' => 'новый-пароль', 'repeat' => 'новый-пароль'];
+    $calls = [
+        'продление сессии' => fn () => admin_session($a, $cookies[ADMIN_COOKIE], $now + 120),
+        'вход существующего сотрудника' => fn () => admin_login($a, 'anna', 'не тот', '10.0.0.1', $now),
+        // Оба входа обязаны вести себя одинаково: иначе по отказам «database is locked» видно, какие логины есть.
+        'вход несуществующего' => fn () => admin_login($a, 'olga', 'не тот', '10.0.0.1', $now),
+        'смена пароля' => fn () => admin_handle(admin_request('POST', post: $change, cookies: $cookies), $ctx, 'password', 'admin_page_password'),
+    ];
+    foreach ($calls as $what => $call) {
+        [$took, $error] = $wait($call);
+        t_true($took >= 0.25 && str_contains($error, 'locked'), "$what: ждёт, пока запись освободится, и только потом отказывает (ждали " . round($took, 3) . ' с)');
+    }
+    $other->exec('ROLLBACK');
+});
+
 t_case('пропуск на страницы', function (): void {
     $ctx = t_admin_ctx();
     $anon = admin_handle(admin_request(), $ctx, 'products', 't_admin_probe');
