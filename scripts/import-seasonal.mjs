@@ -10,6 +10,7 @@ import { readFile, writeFile, mkdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
 import { parseCsvRecords } from './lib/parseCsv.mjs';
+import { slugify } from './lib/slugify.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const [, , fullPath, publishedPath] = process.argv;
@@ -27,23 +28,6 @@ const SEASONS = [
 const MAX_PHOTOS = 4;
 const PHOTO_BUDGET = 150 * 1024;
 const DISCLAIMER = /не все цветы из состава сейчас в наличии/i;
-
-function slugify(title) {
-  const map = {
-    а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i',
-    й: 'i', к: 'k', л: 'l', м: 'm', н: 'n', о: 'o', п: 'p', р: 'r', с: 's', т: 't',
-    у: 'u', ф: 'f', х: 'h', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'sch', ъ: '', ы: 'y',
-    ь: '', э: 'e', ю: 'yu', я: 'ya',
-  };
-  return title
-    .toLowerCase()
-    .split('')
-    .map((ch) => map[ch] ?? ch)
-    .join('')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 60) || 'tovar';
-}
 
 async function savePhoto(url, dest) {
   try {
