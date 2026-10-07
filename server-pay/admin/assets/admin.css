@@ -99,6 +99,9 @@ summary { display: list-item; min-height: 44px; padding: 12px 0; font-weight: 60
 .log { margin: 0; padding: 0; list-style: none; }
 .log li { padding: 10px 0; border-bottom: 1px solid var(--border); }
 .log-head { font-size: 14px; color: var(--muted); }
+/* что изменено — отдельной строкой; ссылка на букет или раздел не ниже 44 px, как кнопки */
+.log-object { font-weight: 600; }
+.log-object a { display: inline-flex; align-items: center; min-height: 44px; }
 .on-site { color: var(--ok); }
 .waiting { color: #8a6d00; }
 
