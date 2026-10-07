@@ -58,10 +58,14 @@ t_case('версия схемы', function (): void {
 
 t_case('база без отметки версии', function (): void {
     $file = t_tmpdir() . '/catalog.sqlite';
-    $old = catalog_db_open($file);
-    $old->exec("INSERT INTO meta (key, value) VALUES ('probe', '1')");
     // Как база, созданная до учёта версий: таблицы и данные есть, отметки нет.
-    $old->exec('PRAGMA user_version = 0');
+    // Строим её на замёрзшей CATALOG_SCHEMA, не применяя миграции.
+    $old = new PDO('sqlite:' . $file, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+    foreach (CATALOG_SCHEMA as $sql) {
+        $old->exec($sql);
+    }
+    $old->exec("INSERT INTO meta (key, value) VALUES ('probe', '1')");
+    // user_version остаётся 0: база как создана до версионирования.
     $old = null;
     $db = catalog_db_open($file);
     t_equal(t_schema_version($db), 2, 'такая база — схема версии 1: отметка ставится, следующие шаги проходят');
@@ -180,7 +184,7 @@ t_case('папка базы', function (): void {
 
 t_case('сессии — схема 2', function (): void {
     $file = t_tmpdir() . '/catalog.sqlite';
-    // База версии 1, как на сервере после этапа 2А: таблиц сессий ещё нет.
+    // База версии 1, как создал бы код этапа 2А: таблиц сессий ещё нет.
     $v1 = new PDO('sqlite:' . $file, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
     foreach (CATALOG_SCHEMA as $sql) {
         $v1->exec($sql);
@@ -193,6 +197,7 @@ t_case('сессии — схема 2', function (): void {
     $db = catalog_db_open($file);
     t_equal(t_schema_version($db), 2, 'база переведена на версию 2');
     t_true(t_has_table($db, 'sessions'), 'таблица сессий создана');
+    t_equal((int)$db->query("SELECT COUNT(*) FROM sqlite_master WHERE type = 'index' AND name = 'sessions_login'")->fetchColumn(), 1, 'индекс sessions_login создан');
     t_equal($db->query('SELECT login FROM users')->fetchAll(PDO::FETCH_COLUMN), ['anna'], 'учётные записи на месте');
     $db->exec("INSERT INTO sessions (token_hash, login, csrf, created_at, seen_at) VALUES ('h', 'anna', 'c', 1, 1)");
     $db->exec("DELETE FROM users WHERE login = 'anna'");

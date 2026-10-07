@@ -143,14 +143,14 @@ const CATALOG_MIGRATIONS = [
     // sha256: копия базы не даёт войти. Удалили учётную запись — её сессии
     // уходят вместе с ней.
     2 => [
-        "CREATE TABLE IF NOT EXISTS sessions (
+        "CREATE TABLE sessions (
             token_hash TEXT PRIMARY KEY,
             login TEXT NOT NULL REFERENCES users(login) ON DELETE CASCADE,
             csrf TEXT NOT NULL,
             created_at INTEGER NOT NULL,
             seen_at INTEGER NOT NULL
         )",
-        'CREATE INDEX IF NOT EXISTS sessions_login ON sessions (login)',
+        'CREATE INDEX sessions_login ON sessions (login)',
     ],
 ];
 
