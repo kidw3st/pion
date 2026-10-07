@@ -1563,8 +1563,8 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - `admin_deployed_catalog(string $deployHome): ?array{version: string, changedAt: string}` — из `state.json`: `current.catalogVersion`, `current.catalogChangedAt`; полей нет — `null`
   - `admin_deploy_status(array $meta, ?array $deployed, DateTimeImmutable $now): array{kind: 'synced'|'pending'|'late'|'offline', text: string}`
   - `admin_status_line(array $status): string` — `<p class="status status-<kind>">…</p>`
-  - `admin_change_on_site(string $at, ?array $deployed): ?bool` — `true` на сайте, `false` ждёт выкладки, `null` неизвестно
-  - `admin_handle` кладёт в `$ctx['status']` готовую строку для вошедшего сотрудника
+  - `admin_change_on_site(string $at, ?array $deployed, bool $inSync = false): ?bool` — `true` на сайте, `false` ждёт выкладки, `null` неизвестно; версии совпали (`$inSync`) — на сайте всё (уточнено при выполнении: черновики и смена пароля на сайт не попадают и не должны висеть как «ждёт выкладки»)
+  - `admin_handle` кладёт в `$ctx` для вошедшего сотрудника: `status` — готовую строку, `deployed` — что выложено (`?array`), `inSync` — версии совпали (bool); без входа — `''`, `null`, `false`
 
 Статус сравнивает **версию** каталога в базе с выложенной, а не время: правка V1→V2→V1 оставляет новое время при том же содержимом (замечание из 2А). Контракт для этапа 3: выкладка пишет в `state.json` → `current.catalogVersion` (версия выгрузки, по которой собран сайт) и `current.catalogChangedAt` (её `changedAt` строкой, как в выгрузке).
 
@@ -3561,12 +3561,12 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Test: `tests/php/admin_log_test.php`
 
 **Interfaces:**
-- Consumes: таблица `audit` (2А); `admin_deployed_catalog`, `admin_change_on_site` (Task 5); `admin_sections` (Task 6).
+- Consumes: таблица `audit` (2А); `admin_change_on_site` и `$ctx['deployed']`, `$ctx['inSync']` (Task 5); `admin_sections` (Task 6).
 - Produces:
   - `const ADMIN_FIELD_LABELS` (поле журнала => подпись)
   - `admin_audit_value(string $field, ?string $value, array $sectionLabels): string`
   - `admin_audit_rows(PDO $db, ?string $productUid = null, int $limit = 500): list<array>` (строки `audit` + `name` сотрудника)
-  - `admin_audit_list(PDO $db, array $rows, ?array $deployed, bool $withObject): string`
+  - `admin_audit_list(PDO $db, array $rows, ?array $deployed, bool $inSync, bool $withObject): string` — `$deployed` и `$inSync` берутся из `$ctx` (Task 5), `state.json` второй раз не читается
   - `admin_page_log(array $req, array $ctx): array`
 
 Спецификация: «Журнал. Кто, когда и что поменял: было → стало. Последние 500 изменений.» «В журнале и в карточке букета у каждого изменения своя отметка: «на сайте» или «ждёт выкладки».»
@@ -3694,7 +3694,7 @@ function admin_audit_rows(PDO $db, ?string $productUid = null, int $limit = 500)
     return $q->fetchAll();
 }
 
-function admin_audit_list(PDO $db, array $rows, ?array $deployed, bool $withObject): string
+function admin_audit_list(PDO $db, array $rows, ?array $deployed, bool $inSync, bool $withObject): string
 {
     $sectionLabels = array_column(admin_sections($db), 'label', 'slug');
     $titles = $db->query('SELECT uid, title FROM products')->fetchAll(PDO::FETCH_KEY_PAIR);
@@ -3714,7 +3714,7 @@ function admin_audit_list(PDO $db, array $rows, ?array $deployed, bool $withObje
             ? h($field)
             : h($field) . ': ' . h(admin_audit_value($r['field'], $r['old_value'], $sectionLabels))
                 . ' → ' . h(admin_audit_value($r['field'], $r['new_value'], $sectionLabels));
-        $mark = match (admin_change_on_site($r['at'], $deployed)) {
+        $mark = match (admin_change_on_site($r['at'], $deployed, $inSync)) {
             true => ' · <span class="on-site">на сайте</span>',
             false => ' · <span class="waiting">ждёт выкладки</span>',
             null => '',
@@ -3728,7 +3728,7 @@ function admin_audit_list(PDO $db, array $rows, ?array $deployed, bool $withObje
 function admin_page_log(array $req, array $ctx): array
 {
     $html = '<h1>Журнал</h1><p class="hint">Последние 500 изменений: кто, когда и что поменял.</p>'
-        . admin_audit_list($ctx['db'], admin_audit_rows($ctx['db']), admin_deployed_catalog($ctx['deployHome']), true);
+        . admin_audit_list($ctx['db'], admin_audit_rows($ctx['db']), $ctx['deployed'], $ctx['inSync'], true);
     return admin_html(admin_layout('Журнал', $html, $ctx['user'], $ctx['status']));
 }
 ```
@@ -3768,7 +3768,7 @@ with
         . ($p['status'] !== 'deleted' ? '<p class="hint">Несохранённые правки в карточке выше при этом не сохранятся.</p>' : '')
         . '<div class="buttons">' . $forms . '</div>'
         . '<h2>История</h2>'
-        . admin_audit_list($ctx['db'], admin_audit_rows($ctx['db'], $p['uid'], 10), admin_deployed_catalog($ctx['deployHome']), false);
+        . admin_audit_list($ctx['db'], admin_audit_rows($ctx['db'], $p['uid'], 10), $ctx['deployed'], $ctx['inSync'], false);
 ```
 
 - [ ] **Step 4: Убедиться, что проходит**
