@@ -20,10 +20,17 @@ const ADMIN_PASSWORD_MIN = 8;
 /** Хэш, с которым сверяется пароль несуществующего логина: по времени ответа не узнать, есть ли такой сотрудник. */
 const ADMIN_DUMMY_HASH = '$2y$10$ef.4cizNGuT6y4ghb/RglOGG0W4blm0loaBE.4b5hvYtCjRM88MZi';
 
+/**
+ * Дольше любого настоящего логина (до 32 знаков). Страница входа открыта всем, а
+ * каждая неверная попытка пишется в таблицу: без предела на длину один адрес мог
+ * бы набить базу (и её ежедневную копию) мегабайтами логина.
+ */
+const ADMIN_LOGIN_KEY_MAX = 64;
+
 /** Логин без учёта регистра и пробелов: «Anna» и «anna» — одна запись и один счётчик попыток. */
 function admin_login_key(string $login): string
 {
-    return mb_strtolower(trim($login));
+    return mb_substr(mb_strtolower(trim($login)), 0, ADMIN_LOGIN_KEY_MAX);
 }
 
 function admin_login_blocked(PDO $db, string $ip, string $login, int $now): bool

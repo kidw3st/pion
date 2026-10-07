@@ -54,6 +54,17 @@ t_case('подбор пароля', function (): void {
     t_equal(admin_login($db, 'anna', 'секрет-анны', '10.0.0.3', $now + 700)['ok'], true, 'с другого адреса этот логин входит');
 });
 
+t_case('длинный логин из запроса не раздувает базу', function (): void {
+    $ctx = t_admin_ctx();
+    $db = $ctx['db'];
+    $now = $ctx['now']->getTimestamp();
+    t_equal(admin_login($db, str_repeat('я', 200000), 'не тот', '10.0.0.1', $now)['ok'], false, 'логин в 200 000 знаков — просто отказ');
+    t_equal((int)$db->query('SELECT MAX(LENGTH(login)) FROM login_attempts')->fetchColumn(), ADMIN_LOGIN_KEY_MAX, 'в таблицу попыток пишется не больше ' . ADMIN_LOGIN_KEY_MAX . ' знаков');
+    t_equal(admin_login_key('  ' . str_repeat('Ab', 100)), str_repeat('ab', 32), 'ключ — обрезанный, без регистра и пробелов');
+    t_equal(admin_login($db, 'anna' . str_repeat(' ', 100) . 'x', 'секрет-анны', '10.0.0.1', $now)['ok'], false, 'логин, похожий на настоящий только началом, не входит');
+    t_equal(admin_login($db, 'ANNA', 'секрет-анны', '10.0.0.1', $now)['ok'], true, 'обычный логин работает как раньше');
+});
+
 t_case('сессия: 12 часов без действий', function (): void {
     $ctx = t_admin_ctx();
     $now = $ctx['now']->getTimestamp();
