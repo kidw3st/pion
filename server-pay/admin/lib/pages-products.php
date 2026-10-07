@@ -11,6 +11,7 @@ require_once __DIR__ . '/../../catalog/products.php';
 require_once __DIR__ . '/forms.php';
 require_once __DIR__ . '/photos.php';
 require_once __DIR__ . '/../../catalog/photo-files.php';
+require_once __DIR__ . '/pages-log.php';
 
 /** Фильтр «Статус»: значение => подпись. Пустое значение — все, кроме удалённых. */
 const ADMIN_STATUS_FILTER = ['' => 'Все, кроме удалённых', 'active' => 'В продаже', 'hidden' => 'Сняты с продажи', 'draft' => 'Черновики', 'deleted' => 'Удалённые'];
@@ -339,5 +340,7 @@ function admin_product_extras(array $ctx, array $p): string
     }
     return '<h2>Действия</h2>'
         . ($p['status'] !== 'deleted' ? '<p class="hint">Несохранённые правки в карточке выше при этом не сохранятся.</p>' : '')
-        . '<div class="buttons">' . $forms . '</div>';
+        . '<div class="buttons">' . $forms . '</div>'
+        . '<h2>История</h2>'
+        . admin_audit_list($ctx['db'], admin_audit_rows($ctx['db'], $p['uid'], 10), $ctx['deployed'], $ctx['inSync'], false);
 }
