@@ -9,6 +9,8 @@ require_once __DIR__ . '/app.php';
 require_once __DIR__ . '/queries.php';
 require_once __DIR__ . '/../../catalog/products.php';
 require_once __DIR__ . '/forms.php';
+require_once __DIR__ . '/photos.php';
+require_once __DIR__ . '/../../catalog/photo-files.php';
 
 /** Фильтр «Статус»: значение => подпись. Пустое значение — все, кроме удалённых. */
 const ADMIN_STATUS_FILTER = ['' => 'Все, кроме удалённых', 'active' => 'В продаже', 'hidden' => 'Сняты с продажи', 'draft' => 'Черновики', 'deleted' => 'Удалённые'];
@@ -181,7 +183,8 @@ function admin_product_form(array $ctx, array $p, ?array $post, string $error, s
         . '<label>Название<input name="title" maxlength="120" required value="' . h($value('title')) . '"></label>'
         . '<label>Цена, ₽<input name="price" inputmode="numeric" required value="' . h($value('price')) . '"></label>'
         . '<label>Состав<textarea name="description" maxlength="1000">' . h($value('description')) . '</textarea></label>'
-        . '<fieldset class="form"><legend>Фото</legend><p class="hint">До четырёх. Первое — главное.</p>' . admin_photo_list($images) . '</fieldset>'
+        . '<fieldset class="form"><legend>Фото</legend><p class="hint">До четырёх. Первое — главное.</p>'
+        . admin_photo_widget($ctx['user'], 'images[]', $images, CATALOG_IMAGES_MAX, ['uid' => $p['uid']]) . '</fieldset>'
         . admin_sections_picker(admin_sections($db), $checked, $main)
         . '<p class="buttons">' . $buttons . '</p></form>';
 }
@@ -276,6 +279,12 @@ function admin_product_action(array $req, array $ctx, string $action): array
         $fresh = admin_find_product($db, $p['uid']) ?? $p;
         $html = admin_product_form($ctx, $fresh, null, $e->getMessage(), '') . admin_product_extras($ctx, $fresh);
         return admin_html(admin_layout($fresh['title'], $html, $ctx['user'], $ctx['status']), $e instanceof CatalogConflict ? 409 : 422);
+    }
+    if ($action === 'restore') {
+        // Уборка могла унести фото удалённого букета в корзину — возвращаем их на место.
+        foreach (json_decode($p['images'], true) ?: [] as $path) {
+            catalog_photo_untrash($ctx['webroot'], $path);
+        }
     }
     if ($action === 'delete' && $p['status'] === 'draft') {
         return admin_redirect('', ['notice' => 'removed']);

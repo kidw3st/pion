@@ -49,3 +49,21 @@ function t_admin_call(
     }
     return admin_handle(admin_request($method, $query, $post, $cookies, $files), $ctx, $name, $page);
 }
+
+/** JPEG заданного размера — как присылает браузер. */
+function t_jpeg(int $width, int $height): string
+{
+    $image = imagecreatetruecolor($width, $height);
+    imagefilledrectangle($image, 0, 0, $width - 1, $height - 1, imagecolorallocate($image, 176, 141, 122));
+    ob_start();
+    imagejpeg($image, null, 85);
+    return (string)ob_get_clean();
+}
+
+/** Загруженный файл — как элемент $_FILES. */
+function t_upload(string $bytes): array
+{
+    $tmp = t_tmpdir() . '/upload';
+    file_put_contents($tmp, $bytes);
+    return ['name' => 'photo.jpg', 'type' => 'image/jpeg', 'tmp_name' => $tmp, 'error' => UPLOAD_ERR_OK, 'size' => strlen($bytes)];
+}
