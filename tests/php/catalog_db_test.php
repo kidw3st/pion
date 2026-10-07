@@ -51,6 +51,21 @@ t_case('транзакция', function (): void {
     t_equal(catalog_tx($db, fn () => 42), 42, 'транзакция возвращает результат функции');
 });
 
+t_case('откат не заслоняет ошибку', function (): void {
+    $db = t_catalog_db();
+    // Функция сама завершила транзакцию, а потом упала: откатывать уже нечего.
+    $e = t_throws(function () use ($db): void {
+        catalog_tx($db, function () use ($db): void {
+            $db->exec("INSERT INTO meta (key, value) VALUES ('a', '1')");
+            $db->exec('ROLLBACK');
+            throw new CatalogError('исходная ошибка');
+        });
+    }, CatalogError::class, 'наружу выходит исходная ошибка, а не «нет транзакции»');
+    t_equal($e?->getMessage(), 'исходная ошибка', 'и с прежним текстом');
+    t_equal(catalog_meta($db), [], 'ничего не записано');
+    t_equal(catalog_tx($db, fn () => 7), 7, 'после этого база работает: новая транзакция открывается');
+});
+
 t_case('журнал', function (): void {
     $db = t_catalog_db();
     catalog_audit($db, 'anna', t_now(), 'product', '553645466981', 'price', '4400', '4800');

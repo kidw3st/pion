@@ -172,7 +172,15 @@ function catalog_tx(PDO $db, callable $fn): mixed
         $db->exec('COMMIT');
         return $result;
     } catch (Throwable $e) {
-        $db->exec('ROLLBACK');
+        // SQLite мог откатить транзакцию сам, или функция её уже завершила: тогда
+        // ROLLBACK ответит «нет транзакции» и заслонит настоящую ошибку. Поэтому
+        // откат — отдельно, а наружу всегда уходит исходное исключение. Через
+        // inTransaction() не проверить: после голого BEGIN IMMEDIATE он врёт.
+        try {
+            $db->exec('ROLLBACK');
+        } catch (PDOException) {
+            // Откатывать нечего — это и нужно.
+        }
         throw $e;
     }
 }
