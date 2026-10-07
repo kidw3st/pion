@@ -74,7 +74,7 @@ function admin_page_product(array $req, array $ctx): array
         if ($action === 'save' || $action === 'publish') {
             return admin_product_save($req, $ctx, $action);
         }
-        return admin_html(admin_layout('Ошибка', admin_error('Неизвестное действие — обновите страницу.'), $ctx['user'], $ctx['status']), 400);
+        return admin_product_action($req, $ctx, $action);
     }
     if (admin_str($req['query'], 'new') !== '') {
         return admin_html(admin_layout('Новый букет', admin_new_form($ctx, [], '', null), $ctx['user'], $ctx['status']));
@@ -83,7 +83,8 @@ function admin_page_product(array $req, array $ctx): array
     if ($p === null) {
         return admin_not_found($ctx);
     }
-    return admin_html(admin_layout($p['title'], admin_product_form($ctx, $p, null, '', ''), $ctx['user'], $ctx['status'], admin_notice($req)));
+    return admin_html(admin_layout($p['title'], admin_product_form($ctx, $p, null, '', '') . admin_product_extras($ctx, $p),
+        $ctx['user'], $ctx['status'], admin_notice($req)));
 }
 
 function admin_find_product(PDO $db, string $uid): ?array
@@ -230,6 +231,11 @@ function admin_product_save(array $req, array $ctx, string $action): array
             return $show('', 'Цена была ' . admin_rub((int)$p['price']) . ', станет ' . admin_rub($fields['price']) . '. Всё верно?', $fields['price'], 200);
         }
         catalog_update_product($ctx['db'], $ctx['user']['login'], $p['uid'], $version, $fields, $ctx['now']);
+        if ($action === 'publish') {
+            // «Опубликовать» из карточки черновика: сначала правки, потом публикация — версия уже на один больше.
+            catalog_publish($ctx['db'], $ctx['user']['login'], $p['uid'], $version + 1, $ctx['now']);
+            return admin_redirect('product.php', ['uid' => $p['uid'], 'notice' => 'published']);
+        }
         return admin_redirect('product.php', ['uid' => $p['uid'], 'notice' => 'saved']);
     } catch (CatalogConflict $e) {
         $html = admin_product_form($ctx, $p, $post, $e->getMessage(), '', 0)
@@ -238,4 +244,91 @@ function admin_product_save(array $req, array $ctx, string $action): array
     } catch (CatalogError $e) {
         return $show($e->getMessage(), '', 0, 422);
     }
+}
+
+const ADMIN_ACTION_NOTICES = ['hide' => 'hidden', 'unhide' => 'unhidden', 'delete' => 'deleted', 'restore' => 'restored'];
+
+/** Снять, вернуть, удалить, восстановить. Снять и удалить — только после подтверждения. */
+function admin_product_action(array $req, array $ctx, string $action): array
+{
+    $post = $req['post'];
+    $p = admin_find_product($ctx['db'], admin_str($post, 'uid'));
+    if ($p === null) {
+        return admin_not_found($ctx);
+    }
+    if (!isset(ADMIN_ACTION_NOTICES[$action])) {
+        return admin_html(admin_layout('Ошибка', admin_error('Неизвестное действие — обновите страницу.'), $ctx['user'], $ctx['status']), 400);
+    }
+    $version = (int)admin_str($post, 'version');
+    if (in_array($action, ['hide', 'delete'], true) && admin_str($post, 'confirm') !== '1') {
+        return admin_html(admin_layout($p['title'], admin_confirm_page($ctx, $p, $action, $version), $ctx['user'], $ctx['status']));
+    }
+    $db = $ctx['db'];
+    $login = $ctx['user']['login'];
+    try {
+        match ($action) {
+            'hide' => catalog_hide($db, $login, $p['uid'], $version, $ctx['now']),
+            'unhide' => catalog_unhide($db, $login, $p['uid'], $version, $ctx['now']),
+            'delete' => catalog_delete($db, $login, $p['uid'], $version, $ctx['now']),
+            'restore' => catalog_restore($db, $login, $p['uid'], $version, $ctx['now']),
+        };
+    } catch (CatalogConflict|CatalogError $e) {
+        $fresh = admin_find_product($db, $p['uid']) ?? $p;
+        $html = admin_product_form($ctx, $fresh, null, $e->getMessage(), '') . admin_product_extras($ctx, $fresh);
+        return admin_html(admin_layout($fresh['title'], $html, $ctx['user'], $ctx['status']), $e instanceof CatalogConflict ? 409 : 422);
+    }
+    if ($action === 'delete' && $p['status'] === 'draft') {
+        return admin_redirect('', ['notice' => 'removed']);
+    }
+    return admin_redirect('product.php', ['uid' => $p['uid'], 'notice' => ADMIN_ACTION_NOTICES[$action]]);
+}
+
+function admin_confirm_page(array $ctx, array $p, string $action, int $version): string
+{
+    $name = '«' . $p['title'] . '»';
+    [$question, $explain, $button] = match (true) {
+        $action === 'hide' => [
+            'Снять ' . $name . ' с продажи?',
+            'Страница останется на сайте с пометкой «Сейчас нет в продаже», заказать букет будет нельзя. Вернуть его в продажу можно в любой момент — на прежнее место.',
+            'Снять с продажи',
+        ],
+        $p['status'] === 'draft' => ['Удалить черновик ' . $name . '?', 'Он исчезнет совсем — на сайте его не было.', 'Удалить черновик'],
+        default => [
+            'Удалить ' . $name . '?',
+            'Страница исчезнет с сайта, с её адреса будет переадресация в раздел. Восстановить букет можно в течение 90 дней.',
+            'Удалить',
+        ],
+    };
+    return '<h1>' . h($question) . '</h1><p>' . h($explain) . '</p>'
+        . '<form method="post" action="' . ADMIN_BASE . 'product.php" class="buttons">' . admin_csrf_field($ctx['user'])
+        . '<input type="hidden" name="uid" value="' . h($p['uid']) . '">'
+        . '<input type="hidden" name="version" value="' . $version . '">'
+        . '<input type="hidden" name="action" value="' . h($action) . '">'
+        . '<input type="hidden" name="confirm" value="1">'
+        . '<button class="btn-danger" type="submit">' . h($button) . '</button>'
+        . '<a class="btn-quiet" href="' . ADMIN_BASE . 'product.php?uid=' . h($p['uid']) . '">Отмена</a></form>';
+}
+
+/** Блок «Действия» под карточкой — отдельные формы: правки в карточке они не сохраняют. */
+function admin_product_extras(array $ctx, array $p): string
+{
+    if ($p['status'] === 'deleted' && (string)$p['deleted_at'] < catalog_iso($ctx['now']->modify('-' . CATALOG_RESTORE_DAYS . ' days'))) {
+        return '<h2>Действия</h2><p>Букет удалён больше 90 дней назад — восстановить его уже нельзя.</p>';
+    }
+    $actions = match ($p['status']) {
+        'draft' => ['delete' => ['Удалить черновик', 'btn-danger']],
+        'active' => ['hide' => ['Снять с продажи', 'btn-quiet'], 'delete' => ['Удалить', 'btn-danger']],
+        'hidden' => ['unhide' => ['Вернуть в продажу', 'btn'], 'delete' => ['Удалить', 'btn-danger']],
+        default => ['restore' => ['Восстановить', 'btn']],
+    };
+    $forms = '';
+    foreach ($actions as $action => [$label, $class]) {
+        $forms .= '<form method="post" action="' . ADMIN_BASE . 'product.php">' . admin_csrf_field($ctx['user'])
+            . '<input type="hidden" name="uid" value="' . h($p['uid']) . '">'
+            . '<input type="hidden" name="version" value="' . (int)$p['version'] . '">'
+            . '<button class="' . $class . '" type="submit" name="action" value="' . h($action) . '">' . h($label) . '</button></form>';
+    }
+    return '<h2>Действия</h2>'
+        . ($p['status'] !== 'deleted' ? '<p class="hint">Несохранённые правки в карточке выше при этом не сохранятся.</p>' : '')
+        . '<div class="buttons">' . $forms . '</div>';
 }
