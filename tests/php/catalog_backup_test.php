@@ -76,3 +76,25 @@ t_case('копия после прерывания', function (): void {
     t_true(is_file($file) && !is_file($part), 'финальный файл создан, остаток убран');
     t_equal(t_sections_in($file), 3, 'финальный файл — настоящая база с данными');
 });
+
+t_case('копирование некорректного файла', function (): void {
+    $home = t_tmpdir();
+    $junk = "$home/not-a-database";
+    file_put_contents($junk, 'это не база данных');
+    $dir = "$home/backups";
+    mkdir($dir);
+
+    // Копирование некорректного файла должно бросить исключение.
+    t_throws(function () use ($junk, $dir): void {
+        catalog_backup($junk, $dir, t_now());
+    }, Throwable::class, 'копирование некорректного файла бросает исключение');
+
+    // После ошибки в папке резервных копий ничего нет.
+    $files = glob("$dir/*") ?: [];
+    t_equal($files, [], 'файлы копирования удалены при ошибке');
+
+    // А вот копирование корректной базы в эту же папку работает.
+    t_catalog_with_sections(t_catalog_db("$home/catalog.sqlite"));
+    $file = catalog_backup("$home/catalog.sqlite", $dir, t_now());
+    t_equal(t_sections_in($file), 3, 'потом копирование корректного файла успешно');
+});

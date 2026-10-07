@@ -29,12 +29,14 @@ function catalog_backup(string $dbFile, string $dir, DateTimeImmutable $now): st
         $source = null;
         $target = null;
         try {
+            // Открываем для чтения: резервное копирование не должно менять исходный файл.
             $source = new SQLite3($dbFile, SQLITE3_OPEN_READONLY);
+            $source->enableExceptions(true);
+            // Ждём завершения записи: если кто-то сохраняет букет, даём им 5 секунд.
             $source->busyTimeout(5000);
             $target = new SQLite3($part);
-            if (!$source->backup($target)) {
-                throw new RuntimeException('Копирование базы не удалось: ' . $source->lastErrorMsg());
-            }
+            $target->enableExceptions(true);
+            $source->backup($target);
         } catch (Throwable $e) {
             $target?->close();
             $source?->close();
