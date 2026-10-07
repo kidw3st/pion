@@ -5,8 +5,8 @@
  * скачать. Админка меняет базу, pay/catalog-export.php отдаёт из неё
  * выгрузку, по которой GitHub Actions собирает сайт.
  *
- * Здесь — открытие базы со схемой, транзакции, время и журнал. Правила
- * букетов и разделов — в соседних файлах.
+ * Здесь — открытие базы со схемой и её версией, транзакции, время и журнал.
+ * Правила букетов и разделов — в соседних файлах.
  */
 
 declare(strict_types=1);
@@ -29,6 +29,9 @@ class CatalogConflict extends RuntimeException
  * разделов, и постоянных («Цветы», «Создать уникальный букет») — лежат в
  * одной таблице tiles: так порядок всей сетки задаёт одна колонка position.
  * Плитка есть у каждого раздела, видна она или нет — решает sections.visible.
+ *
+ * Это схема версии 1, и она не правится: любое изменение таблиц — шагом в
+ * CATALOG_MIGRATIONS (там же, почему).
  */
 const CATALOG_SCHEMA = [
     "CREATE TABLE IF NOT EXISTS meta (
@@ -117,6 +120,26 @@ const CATALOG_SCHEMA = [
     )",
 ];
 
+/**
+ * Версия схемы, которую знает этот код. Она записана в самой базе (PRAGMA
+ * user_version) и растёт вместе с каждым шагом в CATALOG_MIGRATIONS.
+ */
+const CATALOG_SCHEMA_VERSION = 1;
+
+/**
+ * Изменения схемы после версии 1: номер версии => SQL-команды, которые
+ * переводят базу на неё с предыдущей. Команды идут по порядку, весь шаг — в
+ * одной транзакции вместе с отметкой версии: упала команда — не применилось
+ * ничего. Пример: 2 => ['ALTER TABLE products ADD COLUMN note TEXT'].
+ *
+ * Зачем так: CREATE TABLE IF NOT EXISTS готовую таблицу не меняет. Колонка,
+ * добавленная только в CATALOG_SCHEMA, появилась бы в свежей базе — и проверки
+ * прошли бы, — а в боевой не появилась бы вовсе («no such column»). Поэтому
+ * CATALOG_SCHEMA остаётся схемой версии 1, а свежая база проходит те же шаги,
+ * что и боевая: проверки видят их все.
+ */
+const CATALOG_MIGRATIONS = [];
+
 /** Папка базы: pion-catalog рядом с pion-deploy, вне веб-корня. */
 function catalog_home(): string
 {
@@ -133,7 +156,12 @@ function catalog_db_path(): string
     return catalog_home() . '/catalog.sqlite';
 }
 
-/** Открывает базу (создаёт её и папку, если их нет) и приводит схему к текущей. */
+/**
+ * Открывает базу (создаёт её и папку, если их нет). Недостающие таблицы
+ * создаёт по CATALOG_SCHEMA — это схема версии 1, — затем переводит базу
+ * на CATALOG_SCHEMA_VERSION шагами CATALOG_MIGRATIONS. База новее кода —
+ * RuntimeException: что в ней изменилось, этот код не знает.
+ */
 function catalog_db_open(string $file): PDO
 {
     $dir = dirname($file);
@@ -147,10 +175,54 @@ function catalog_db_open(string $file): PDO
     $db->exec('PRAGMA foreign_keys = ON');
     // Два сотрудника сохраняют одновременно — второй подождёт, а не получит ошибку.
     $db->exec('PRAGMA busy_timeout = 5000');
+    // Отказ — раньше любого CREATE: в чужой, более новой схеме старый код ничего не создаёт и не пишет.
+    $version = catalog_db_version($db);
+    if ($version > CATALOG_SCHEMA_VERSION) {
+        throw new RuntimeException("База каталога новее кода: версия схемы $version, а код знает только версию "
+            . CATALOG_SCHEMA_VERSION . '. Обновите код на сервере.');
+    }
     foreach (CATALOG_SCHEMA as $sql) {
         $db->exec($sql);
     }
+    catalog_db_migrate($db);
     return $db;
+}
+
+/** Версия схемы, записанная в базе. 0 — отметки нет: база новая или заведена до учёта версий. */
+function catalog_db_version(PDO $db): int
+{
+    return (int)$db->query('PRAGMA user_version')->fetchColumn();
+}
+
+/**
+ * Переводит базу на версию $target шагами $migrations — по порядку номеров,
+ * все в одной транзакции вместе с отметкой версии. Версия 0 — это схема 1:
+ * таблицы такой базы только что созданы по CATALOG_SCHEMA, её шаги начинаются
+ * со второго. База, которая уже на нужной версии (или новее), не меняется и
+ * блокировку записи не берёт: сюда заходит каждое открытие базы.
+ *
+ * Параметры нужны проверкам: настоящие шаги и версия — константы выше.
+ *
+ * @param array<int, list<string>> $migrations
+ */
+function catalog_db_migrate(PDO $db, int $target = CATALOG_SCHEMA_VERSION, array $migrations = CATALOG_MIGRATIONS): void
+{
+    if (catalog_db_version($db) >= $target) {
+        return;
+    }
+    catalog_tx($db, function () use ($db, $target, $migrations): void {
+        // Версию читаем уже под блокировкой: пока ждали её, другой процесс мог сам перевести базу.
+        $version = catalog_db_version($db);
+        if ($version >= $target) {
+            return;
+        }
+        for ($step = max($version, 1) + 1; $step <= $target; $step++) {
+            foreach ($migrations[$step] ?? [] as $sql) {
+                $db->exec($sql);
+            }
+        }
+        $db->exec('PRAGMA user_version = ' . $target);
+    });
 }
 
 /** Время в базе и выгрузке: ISO 8601 по Перми. Строки сравниваются как время — пояс у всех один. */
