@@ -129,3 +129,9 @@ function t_section_order(PDO $db, string $section): array
     $q->execute([$section]);
     return $q->fetchAll(PDO::FETCH_COLUMN);
 }
+
+/** Переадресации: откуда => куда. */
+function t_redirects(PDO $db): array
+{
+    return $db->query('SELECT from_path, to_path FROM redirects ORDER BY from_path')->fetchAll(PDO::FETCH_KEY_PAIR);
+}

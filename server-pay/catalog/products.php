@@ -13,6 +13,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/slug.php';
 require_once __DIR__ . '/export.php';
+require_once __DIR__ . '/redirects.php';
 
 /** Раздел «Новинки»: первые три букета в продаже из него — на главной. */
 const CATALOG_NOVINKI = 'novinki';
@@ -23,6 +24,9 @@ const CATALOG_PRICE_MAX = 300000;
 const CATALOG_IMAGES_MAX = 4;
 /** Фото — только файлы каталога: их кладёт админка (план 2Б) или перенос каталога. */
 const CATALOG_IMAGE_PATH = '~^/images/catalog/[a-z0-9_-]+/[A-Za-z0-9._-]+\.webp$~';
+
+/** Сколько дней удалённый букет можно восстановить. */
+const CATALOG_RESTORE_DAYS = 90;
 
 /**
  * Проверяет поля букета и приводит их к виду для базы. Ошибка — CatalogError
@@ -233,4 +237,137 @@ function catalog_update_product(PDO $db, string $login, string $uid, int $versio
             ->execute([$slug, $f['title'], $f['description'], $f['price'], $images, $f['mainSection'], catalog_iso($now), $login, $uid]);
         catalog_touch($db, $now);
     });
+}
+
+/** Адрес страницы букета. */
+function catalog_address(string $section, string $slug): string
+{
+    return "/$section/$slug/";
+}
+
+/** Есть ли по адресу /раздел/slug/ живая страница другого букета — в продаже или снятого. */
+function catalog_address_taken(PDO $db, string $section, string $slug, string $exceptUid = ''): bool
+{
+    $q = $db->prepare("SELECT 1 FROM products
+        WHERE main_section = ? AND slug = ? AND status IN ('active', 'hidden') AND uid <> ?");
+    $q->execute([$section, $slug, $exceptUid]);
+    return $q->fetchColumn() !== false;
+}
+
+/**
+ * Свободный slug для публикации: закреплённый slug уникален среди живых
+ * букетов всего каталога, занятый получает -2, -3 и дальше. Удалённые не в
+ * счёт — их адрес может занять новый букет.
+ */
+function catalog_free_slug(PDO $db, string $base, string $exceptUid): string
+{
+    $taken = $db->prepare("SELECT 1 FROM products WHERE slug = ? AND status IN ('active', 'hidden') AND uid <> ?");
+    for ($n = 1; ; $n++) {
+        $slug = $n === 1 ? $base : "$base-$n";
+        $taken->execute([$slug, $exceptUid]);
+        if ($taken->fetchColumn() === false) {
+            return $slug;
+        }
+    }
+}
+
+/**
+ * Опубликовать черновик: slug закрепляется и больше не меняется, букет
+ * встаёт первым во всех своих разделах.
+ */
+function catalog_publish(PDO $db, string $login, string $uid, int $version, DateTimeImmutable $now): void
+{
+    catalog_tx($db, function () use ($db, $login, $uid, $version, $now): void {
+        $p = catalog_product_for_change($db, $uid, $version);
+        if ($p['status'] !== 'draft') {
+            throw new CatalogError('Опубликовать можно только черновик.');
+        }
+        $slug = catalog_free_slug($db, catalog_slugify($p['title']), $uid);
+        $at = catalog_iso($now);
+        $db->prepare("UPDATE products SET slug = ?, slug_pinned = 1, status = 'active', status_changed_at = ?,
+                published_at = COALESCE(published_at, ?), updated_at = ?, updated_by = ?, version = version + 1
+            WHERE uid = ?")
+            ->execute([$slug, $at, $at, $at, $login, $uid]);
+        foreach (catalog_product_sections($db, $uid) as $section) {
+            catalog_put_first($db, $uid, $section);
+        }
+        catalog_audit($db, $login, $now, 'product', $uid, 'status', 'draft', 'active');
+        if ($slug !== $p['slug']) {
+            catalog_audit($db, $login, $now, 'product', $uid, 'slug', $p['slug'], $slug);
+        }
+        catalog_redirect_clear_live($db);
+        catalog_touch($db, $now);
+    });
+}
+
+/**
+ * Снять с продажи: страница остаётся с пометкой «Сейчас нет в продаже», в
+ * разделах букета не видно, заказать нельзя.
+ */
+function catalog_hide(PDO $db, string $login, string $uid, int $version, DateTimeImmutable $now): void
+{
+    catalog_change_status($db, $login, $uid, $version, 'active', 'hidden', 'Снять с продажи можно только букет в продаже.', $now);
+}
+
+/** Вернуть в продажу — на прежнее место, по тому же адресу. */
+function catalog_unhide(PDO $db, string $login, string $uid, int $version, DateTimeImmutable $now): void
+{
+    catalog_change_status($db, $login, $uid, $version, 'hidden', 'active', 'Вернуть в продажу можно только снятый букет.', $now);
+}
+
+function catalog_change_status(
+    PDO $db,
+    string $login,
+    string $uid,
+    int $version,
+    string $from,
+    string $to,
+    string $error,
+    DateTimeImmutable $now,
+): void {
+    catalog_tx($db, function () use ($db, $login, $uid, $version, $from, $to, $error, $now): void {
+        $p = catalog_product_for_change($db, $uid, $version);
+        if ($p['status'] !== $from) {
+            throw new CatalogError($error);
+        }
+        $at = catalog_iso($now);
+        $db->prepare('UPDATE products SET status = ?, status_changed_at = ?, updated_at = ?, updated_by = ?,
+                version = version + 1
+            WHERE uid = ?')
+            ->execute([$to, $at, $at, $login, $uid]);
+        catalog_audit($db, $login, $now, 'product', $uid, 'status', $from, $to);
+        catalog_touch($db, $now);
+    });
+}
+
+/** Ключ сравнения названий — как в dedupeProducts: без кавычек, регистра и лишних пробелов. */
+function catalog_title_key(string $title): string
+{
+    $plain = mb_strtolower((string)preg_replace('/[«»"\'`]/u', '', $title));
+    return trim((string)preg_replace('/\s+/u', ' ', $plain));
+}
+
+/**
+ * Снятый или удалённый (не раньше чем 90 дней назад) букет с тем же
+ * названием. Админка предлагает вернуть его вместо нового — так на сайте не
+ * появляются две одинаковые страницы.
+ *
+ * @return array{uid: string, title: string, status: string, since: string}|null
+ */
+function catalog_find_namesake(PDO $db, string $title, DateTimeImmutable $now): ?array
+{
+    $key = catalog_title_key($title);
+    $oldest = catalog_iso($now->modify('-' . CATALOG_RESTORE_DAYS . ' days'));
+    $rows = $db->query("SELECT uid, title, status, status_changed_at FROM products
+        WHERE status IN ('hidden', 'deleted') ORDER BY status_changed_at DESC, uid");
+    foreach ($rows as $row) {
+        if (catalog_title_key($row['title']) !== $key) {
+            continue;
+        }
+        if ($row['status'] === 'deleted' && $row['status_changed_at'] < $oldest) {
+            continue;
+        }
+        return ['uid' => $row['uid'], 'title' => $row['title'], 'status' => $row['status'], 'since' => $row['status_changed_at']];
+    }
+    return null;
 }
