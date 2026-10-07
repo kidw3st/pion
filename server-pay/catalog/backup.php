@@ -10,7 +10,11 @@ require_once __DIR__ . '/db.php';
 
 const CATALOG_BACKUP_DAYS = 30;
 
-/** Копия на сегодня (если её ещё нет) и уборка старых; возвращает путь сегодняшней. */
+/**
+ * Копия на сегодня (если её ещё нет) и уборка старых; возвращает путь сегодняшней.
+ * Копия появляется под финальным именем только когда завершена успешно —
+ * VACUUM INTO пишет во временный файл .part, который переименовывается в финальное имя.
+ */
 function catalog_backup(PDO $db, string $dir, DateTimeImmutable $now): string
 {
     if (!is_dir($dir) && !mkdir($dir, 0700, true) && !is_dir($dir)) {
@@ -19,7 +23,20 @@ function catalog_backup(PDO $db, string $dir, DateTimeImmutable $now): string
     $today = $now->setTimezone(new DateTimeZone(CATALOG_TZ));
     $file = $dir . '/catalog-' . $today->format('Y-m-d') . '.sqlite';
     if (!is_file($file)) {
-        $db->prepare('VACUUM INTO ?')->execute([$file]);
+        $part = $file . '.part';
+        // Удаляем остаток от прерванного запуска.
+        if (is_file($part)) {
+            unlink($part);
+        }
+        try {
+            $db->prepare('VACUUM INTO ?')->execute([$part]);
+            rename($part, $file);
+        } catch (Throwable $e) {
+            if (is_file($part)) {
+                unlink($part);
+            }
+            throw $e;
+        }
     }
     $oldest = $today->modify('-' . CATALOG_BACKUP_DAYS . ' days')->format('Y-m-d');
     foreach (glob($dir . '/catalog-*.sqlite') ?: [] as $old) {

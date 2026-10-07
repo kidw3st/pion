@@ -47,3 +47,22 @@ t_case('backup-cli.php', function (): void {
     [$code] = t_catalog_cli("$scripts/catalog/backup-cli.php", $home);
     t_equal([$code, count(glob("$home/backups/catalog-*.sqlite") ?: [])], [0, 1], 'база есть — копия сделана');
 });
+
+t_case('копия после прерывания', function (): void {
+    $home = t_tmpdir();
+    $db = t_catalog_with_sections(t_catalog_db("$home/catalog.sqlite"));
+    $dir = "$home/backups";
+    mkdir($dir);
+    $file = "$dir/catalog-2026-10-05.sqlite";
+    $part = "$file.part";
+
+    // Симулируем остаток от прерванного VACUUM INTO.
+    file_put_contents($part, 'прерванная копия');
+    t_true(is_file($part), 'создан файл .part');
+
+    $result = catalog_backup($db, $dir, t_now());
+    t_equal($result, $file, 'возвращено финальное имя');
+    t_true(is_file($file), 'финальный файл создан');
+    t_true(!is_file($part), 'файл .part удалён');
+    t_equal(t_sections_in($file), 3, 'финальный файл — настоящая база с данными');
+});
