@@ -54,6 +54,80 @@ t_case('подбор пароля', function (): void {
     t_equal(admin_login($db, 'anna', 'секрет-анны', '10.0.0.3', $now + 700)['ok'], true, 'с другого адреса этот логин входит');
 });
 
+t_case('подбор пароля: одновременные запросы не получают лишних попыток', function (): void {
+    // Предел «5 попыток» должен держаться и когда запросы идут одновременно: проверка предела и запись
+    // попытки — одно неделимое действие. Одновременности внутри одного PHP не воспроизвести, поэтому
+    // здесь настоящие процессы: все двенадцать открывают базу, ждут общей команды и разом пробуют войти
+    // с неверным паролем. У хэша стоимость 10, как на сайте: проверка идёт ~50 мс, и именно в это окно
+    // раньше успевали пройти лишние запросы.
+    $root = t_tmpdir();
+    $file = "$root/catalog.sqlite";
+    $ctx = t_admin_ctx(t_catalog_db($file));
+    $db = $ctx['db'];
+    $db->prepare("UPDATE users SET password_hash = ? WHERE login = 'anna'")
+        ->execute([password_hash('секрет-анны', PASSWORD_BCRYPT, ['cost' => 10])]);
+
+    // Копия кода во временной папке: путь без кириллицы, как в t_catalog_scripts() — так отдельные
+    // процессы надёжно запускаются и на Windows.
+    $src = dirname(__DIR__, 2) . '/server-pay';
+    foreach (['admin/lib/auth.php', 'admin/lib/http.php', 'catalog/db.php'] as $rel) {
+        if (!is_dir(dirname("$root/pay/$rel"))) {
+            mkdir(dirname("$root/pay/$rel"), 0777, true);
+        }
+        copy("$src/$rel", "$root/pay/$rel");
+    }
+    file_put_contents("$root/racer.php", <<<'PHP'
+        <?php
+        declare(strict_types=1);
+
+        [, $file, $dir, $n, $now] = $argv;
+        require __DIR__ . '/pay/admin/lib/auth.php';
+        $db = catalog_db_open($file);
+        touch("$dir/ready-$n");
+        $until = microtime(true) + 60;
+        while (!is_file("$dir/go") && microtime(true) < $until) {
+            usleep(500);
+        }
+        $result = admin_login($db, 'anna', 'не тот', '10.0.0.1', (int)$now);
+        echo $result['ok'] ? 'вошёл' : $result['error'];
+        PHP);
+
+    $count = 12;
+    $children = [];
+    $pipes = [];
+    for ($i = 0; $i < $count; $i++) {
+        $process = proc_open(
+            [PHP_BINARY, "$root/racer.php", $file, $root, (string)$i, (string)$ctx['now']->getTimestamp()],
+            [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['redirect', 1]],
+            $pipes[$i],
+        );
+        if ($process !== false) {
+            fclose($pipes[$i][0]);
+            $children[$i] = $process;
+        }
+    }
+    t_equal(count($children), $count, 'все процессы запущены');
+    $deadline = microtime(true) + 60;
+    do {
+        $ready = count(array_filter(array_keys($children), fn (int $i): bool => is_file("$root/ready-$i")));
+        usleep(5000);
+    } while ($ready < count($children) && microtime(true) < $deadline);
+    touch("$root/go");
+    $answers = [];
+    foreach ($children as $i => $process) {
+        $answers[] = trim((string)stream_get_contents($pipes[$i][1]));
+        fclose($pipes[$i][1]);
+        proc_close($process);
+    }
+
+    $counts = array_count_values($answers);
+    ksort($counts);
+    $want = ['Неверный логин или пароль.' => 5, 'Слишком много неудачных попыток. Подождите 10 минут и попробуйте снова.' => 7];
+    ksort($want);
+    t_equal($counts, $want, 'из двенадцати одновременных попыток пароль проверяется пять раз, остальные закрыты сразу');
+    t_equal((int)$db->query('SELECT COUNT(*) FROM login_attempts')->fetchColumn(), 5, 'в таблице — ровно пять попыток');
+});
+
 t_case('длинный логин из запроса не раздувает базу', function (): void {
     $ctx = t_admin_ctx();
     $db = $ctx['db'];

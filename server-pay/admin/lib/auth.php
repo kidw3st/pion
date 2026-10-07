@@ -17,6 +17,7 @@ const ADMIN_IDLE_SECONDS = 43200;
 const ADMIN_LOGIN_LIMIT = 5;
 const ADMIN_LOGIN_WINDOW = 600;
 const ADMIN_PASSWORD_MIN = 8;
+const ADMIN_LOCKED_ERROR = 'Слишком много неудачных попыток. Подождите 10 минут и попробуйте снова.';
 /** Хэш, с которым сверяется пароль несуществующего логина: по времени ответа не узнать, есть ли такой сотрудник. */
 const ADMIN_DUMMY_HASH = '$2y$10$ef.4cizNGuT6y4ghb/RglOGG0W4blm0loaBE.4b5hvYtCjRM88MZi';
 
@@ -45,6 +46,29 @@ function admin_login_blocked(PDO $db, string $ip, string $login, int $now): bool
 }
 
 /**
+ * Занять попытку: под блокировкой записи, одним действием, проверить пределы и
+ * записать попытку — ещё до проверки пароля. Если проверять сначала, а записывать
+ * только неудачу, одновременные запросы успевали бы все пройти проверку раньше,
+ * чем первый из них запишет свою попытку, и получили бы не пять попыток, а столько,
+ * сколько процессов работает сразу. Блокировка записи выстраивает их в очередь.
+ *
+ * @return int|null null — вход закрыт, ничего не записано; иначе номер записи о
+ *                  попытке: удача стирает все попытки этого логина, а ошибку не про
+ *                  пароль вызывающий снимает сам
+ */
+function admin_attempt_reserve(PDO $db, string $ip, string $login, int $now): ?int
+{
+    return catalog_tx($db, function () use ($db, $ip, $login, $now): ?int {
+        $db->prepare('DELETE FROM login_attempts WHERE at < ?')->execute([$now - 86400]);
+        if (admin_login_blocked($db, $ip, $login, $now)) {
+            return null;
+        }
+        $db->prepare('INSERT INTO login_attempts (ip, login, at) VALUES (?, ?, ?)')->execute([$ip, $login, $now]);
+        return (int)$db->lastInsertId();
+    });
+}
+
+/**
  * Попытка входа. Удача — новая сессия: при каждом входе новый токен.
  *
  * @return array{ok: bool, error?: string, token?: string}
@@ -52,25 +76,29 @@ function admin_login_blocked(PDO $db, string $ip, string $login, int $now): bool
 function admin_login(PDO $db, string $login, string $password, string $ip, int $now): array
 {
     $login = admin_login_key($login);
-    $db->prepare('DELETE FROM login_attempts WHERE at < ?')->execute([$now - 86400]);
-    if (admin_login_blocked($db, $ip, $login, $now)) {
-        return ['ok' => false, 'error' => 'Слишком много неудачных попыток. Подождите 10 минут и попробуйте снова.'];
+    if (admin_attempt_reserve($db, $ip, $login, $now) === null) {
+        return ['ok' => false, 'error' => ADMIN_LOCKED_ERROR];
     }
+    // Пароль проверяем вне транзакции: полсотни миллисекунд вычислений не должны держать запись для
+    // остальных. Попытка уже записана, поэтому неверный пароль больше ничего не пишет — и у существующего
+    // логина, и у несуществующего работа с базой одна и та же.
     $q = $db->prepare('SELECT password_hash FROM users WHERE login = ?');
     $q->execute([$login]);
     $hash = $q->fetchColumn();
     // Чтение закрываем до записи ниже: пока оно открыто, при занятой записи SQLite отвечает
-    // «database is locked» сразу, не дожидаясь busy_timeout, — и только у существующих логинов.
+    // «database is locked» сразу, не дожидаясь busy_timeout.
     $q->closeCursor();
     $ok = password_verify($password, is_string($hash) ? $hash : ADMIN_DUMMY_HASH) && is_string($hash);
     if (!$ok) {
-        $db->prepare('INSERT INTO login_attempts (ip, login, at) VALUES (?, ?, ?)')->execute([$ip, $login, $now]);
         return ['ok' => false, 'error' => 'Неверный логин или пароль.'];
     }
-    $db->prepare('DELETE FROM login_attempts WHERE login = ?')->execute([$login]);
     $token = bin2hex(random_bytes(32));
-    $db->prepare('INSERT INTO sessions (token_hash, login, csrf, created_at, seen_at) VALUES (?, ?, ?, ?, ?)')
-        ->execute([hash('sha256', $token), $login, bin2hex(random_bytes(16)), $now, $now]);
+    // Удача стирает попытки этого логина (в том числе только что занятую) и заводит сессию одним действием.
+    catalog_tx($db, function () use ($db, $login, $token, $now): void {
+        $db->prepare('DELETE FROM login_attempts WHERE login = ?')->execute([$login]);
+        $db->prepare('INSERT INTO sessions (token_hash, login, csrf, created_at, seen_at) VALUES (?, ?, ?, ?, ?)')
+            ->execute([hash('sha256', $token), $login, bin2hex(random_bytes(16)), $now, $now]);
+    });
     return ['ok' => true, 'token' => $token];
 }
 
