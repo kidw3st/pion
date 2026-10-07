@@ -124,13 +124,13 @@ const CATALOG_SCHEMA = [
  * Версия схемы, которую знает этот код. Она записана в самой базе (PRAGMA
  * user_version) и растёт вместе с каждым шагом в CATALOG_MIGRATIONS.
  */
-const CATALOG_SCHEMA_VERSION = 1;
+const CATALOG_SCHEMA_VERSION = 2;
 
 /**
  * Изменения схемы после версии 1: номер версии => SQL-команды, которые
  * переводят базу на неё с предыдущей. Команды идут по порядку, весь шаг — в
  * одной транзакции вместе с отметкой версии: упала команда — не применилось
- * ничего. Пример: 2 => ['ALTER TABLE products ADD COLUMN note TEXT'].
+ * ничего. Следующий шаг — 3 => [...], и CATALOG_SCHEMA_VERSION = 3.
  *
  * Зачем так: CREATE TABLE IF NOT EXISTS готовую таблицу не меняет. Колонка,
  * добавленная только в CATALOG_SCHEMA, появилась бы в свежей базе — и проверки
@@ -138,7 +138,21 @@ const CATALOG_SCHEMA_VERSION = 1;
  * CATALOG_SCHEMA остаётся схемой версии 1, а свежая база проходит те же шаги,
  * что и боевая: проверки видят их все.
  */
-const CATALOG_MIGRATIONS = [];
+const CATALOG_MIGRATIONS = [
+    // Сессии админки (этап 2Б). В куке — случайный токен, здесь — только его
+    // sha256: копия базы не даёт войти. Удалили учётную запись — её сессии
+    // уходят вместе с ней.
+    2 => [
+        "CREATE TABLE IF NOT EXISTS sessions (
+            token_hash TEXT PRIMARY KEY,
+            login TEXT NOT NULL REFERENCES users(login) ON DELETE CASCADE,
+            csrf TEXT NOT NULL,
+            created_at INTEGER NOT NULL,
+            seen_at INTEGER NOT NULL
+        )",
+        'CREATE INDEX IF NOT EXISTS sessions_login ON sessions (login)',
+    ],
+];
 
 /** Папка базы: pion-catalog рядом с pion-deploy, вне веб-корня. */
 function catalog_home(): string

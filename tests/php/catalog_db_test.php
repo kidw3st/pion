@@ -27,7 +27,7 @@ t_case('схема', function (): void {
         ->fetchAll(PDO::FETCH_COLUMN);
     t_equal(
         $tables,
-        ['audit', 'login_attempts', 'meta', 'product_sections', 'products', 'redirects', 'sections', 'tiles', 'users'],
+        ['audit', 'login_attempts', 'meta', 'product_sections', 'products', 'redirects', 'sections', 'sessions', 'tiles', 'users'],
         'база создаётся со всеми таблицами спецификации',
     );
     t_throws(
@@ -48,11 +48,11 @@ t_case('повторное открытие', function (): void {
 t_case('версия схемы', function (): void {
     $file = t_tmpdir() . '/catalog.sqlite';
     $db = catalog_db_open($file);
-    t_equal(t_schema_version($db), 1, 'новая база помечена версией схемы 1');
+    t_equal(t_schema_version($db), 2, 'новая база помечена версией схемы 2');
     $db->exec("INSERT INTO meta (key, value) VALUES ('probe', '1')");
     $db = null;
     $again = catalog_db_open($file);
-    t_equal(t_schema_version($again), 1, 'повторное открытие версию не меняет');
+    t_equal(t_schema_version($again), 2, 'повторное открытие версию не меняет');
     t_equal(catalog_meta($again), ['probe' => '1'], 'и данные не трогает');
 });
 
@@ -64,7 +64,8 @@ t_case('база без отметки версии', function (): void {
     $old->exec('PRAGMA user_version = 0');
     $old = null;
     $db = catalog_db_open($file);
-    t_equal(t_schema_version($db), 1, 'такая база — схема версии 1, отметка ставится');
+    t_equal(t_schema_version($db), 2, 'такая база — схема версии 1: отметка ставится, следующие шаги проходят');
+    t_true(t_has_table($db, 'sessions'), 'шаг 2 применён: таблица сессий есть');
     t_equal(catalog_meta($db), ['probe' => '1'], 'данные на месте');
 });
 
@@ -88,6 +89,8 @@ t_case('база новее кода', function (): void {
 
 t_case('миграции схемы', function (): void {
     $db = t_catalog_db();
+    // Как база версии 1: шаги 2 и 3 ниже — проверочные, а не настоящие.
+    $db->exec('PRAGMA user_version = 1');
     $db->exec("INSERT INTO meta (key, value) VALUES ('probe', '1')");
     // Шаги перечислены не по порядку: применяться должны по номерам — третий опирается на второй.
     $steps = [
@@ -173,4 +176,25 @@ t_case('папка базы', function (): void {
     } finally {
         putenv('PION_CATALOG_HOME');
     }
+});
+
+t_case('сессии — схема 2', function (): void {
+    $file = t_tmpdir() . '/catalog.sqlite';
+    // База версии 1, как на сервере после этапа 2А: таблиц сессий ещё нет.
+    $v1 = new PDO('sqlite:' . $file, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+    foreach (CATALOG_SCHEMA as $sql) {
+        $v1->exec($sql);
+    }
+    $v1->exec('PRAGMA user_version = 1');
+    $v1->exec("INSERT INTO users (login, name, password_hash, created_at, updated_at)
+        VALUES ('anna', 'Анна', 'x', '2026-10-01T10:00:00+05:00', '2026-10-01T10:00:00+05:00')");
+    $v1 = null;
+
+    $db = catalog_db_open($file);
+    t_equal(t_schema_version($db), 2, 'база переведена на версию 2');
+    t_true(t_has_table($db, 'sessions'), 'таблица сессий создана');
+    t_equal($db->query('SELECT login FROM users')->fetchAll(PDO::FETCH_COLUMN), ['anna'], 'учётные записи на месте');
+    $db->exec("INSERT INTO sessions (token_hash, login, csrf, created_at, seen_at) VALUES ('h', 'anna', 'c', 1, 1)");
+    $db->exec("DELETE FROM users WHERE login = 'anna'");
+    t_equal((int)$db->query('SELECT COUNT(*) FROM sessions')->fetchColumn(), 0, 'удалили учётную запись — её сессии ушли вместе с ней');
 });
