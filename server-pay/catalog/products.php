@@ -32,9 +32,14 @@ const CATALOG_RESTORE_DAYS = 90;
  * Проверяет поля букета и приводит их к виду для базы. Ошибка — CatalogError
  * с текстом для сотрудника.
  *
+ * Главный раздел не прислали — берётся раздел по умолчанию. При правке
+ * передают $currentMain, главный раздел из базы: пока он отмечен, главным
+ * остаётся он. Иначе любая правка без этого поля, хоть цены, сдвинула бы
+ * адрес опубликованного букета.
+ *
  * @return array{title: string, description: string, price: int, images: list<string>, sections: list<string>, mainSection: string}
  */
-function catalog_product_fields(PDO $db, array $fields): array
+function catalog_product_fields(PDO $db, array $fields, ?string $currentMain = null): array
 {
     $title = trim((string)preg_replace('/\s+/u', ' ', (string)($fields['title'] ?? '')));
     if ($title === '') {
@@ -72,7 +77,9 @@ function catalog_product_fields(PDO $db, array $fields): array
     }
     $main = (string)($fields['mainSection'] ?? '');
     if ($main === '') {
-        $main = catalog_default_main_section($db, $sections);
+        $main = $currentMain !== null && in_array($currentMain, $sections, true)
+            ? $currentMain
+            : catalog_default_main_section($db, $sections);
     } elseif (!in_array($main, $sections, true)) {
         throw new CatalogError('Главный раздел должен быть среди отмеченных.');
     }
@@ -193,7 +200,8 @@ function catalog_create_product(PDO $db, string $login, array $fields, DateTimeI
 /**
  * Правка букета: название, состав, цена, фото, разделы. $version — версия,
  * которую видел сотрудник. У опубликованного смена главного раздела меняет
- * адрес, а со старого ставит переадресацию.
+ * адрес, а со старого ставит переадресацию. Главный раздел не прислали —
+ * остаётся прежним, пока он отмечен: адрес сам по себе не сдвигается.
  */
 function catalog_update_product(PDO $db, string $login, string $uid, int $version, array $fields, DateTimeImmutable $now): void
 {
@@ -202,7 +210,7 @@ function catalog_update_product(PDO $db, string $login, string $uid, int $versio
         if ($p['status'] === 'deleted') {
             throw new CatalogError('Букет удалён — сначала восстановите его.');
         }
-        $f = catalog_product_fields($db, $fields);
+        $f = catalog_product_fields($db, $fields, $p['main_section']);
         // Пока букет не опубликован, адреса никто не знает — slug следует за названием.
         $slug = $p['slug_pinned'] ? $p['slug'] : catalog_slugify($f['title']);
 

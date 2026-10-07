@@ -78,6 +78,31 @@ t_case('смена главного раздела', function (): void {
         'вернули обратно — цепочка схлопнулась, с живого адреса переадресации нет');
 });
 
+t_case('правка без главного раздела не двигает адрес', function (): void {
+    $db = t_catalog_with_sections();
+    // Главный раздел выбран явно — «Розы», хотя по умолчанию был бы «Букеты»: он первый в сетке.
+    $uid = catalog_create_product($db, 'anna', t_fields(['sections' => ['bukety', 'roses'], 'mainSection' => 'roses']), t_now());
+    catalog_publish($db, 'anna', $uid, 1, t_now());
+    // Правят только цену: главный раздел в форме не прислали — ни пустым (null), ни пустой строкой.
+    catalog_update_product($db, 'anna', $uid, 2, t_fields(['sections' => ['bukety', 'roses'], 'price' => 4800]), t_now('+1 hour'));
+    catalog_update_product($db, 'anna', $uid, 3, t_fields(['sections' => ['bukety', 'roses'], 'price' => 5200, 'mainSection' => '']), t_now('+2 hours'));
+    $p = t_row($db, $uid);
+    t_equal([$p['main_section'], $p['price']], ['roses', 5200], 'главный раздел остался прежним, цена сохранилась');
+    t_equal(t_redirects($db), [], 'адрес не менялся — переадресации нет');
+
+    // Галочку с главного раздела сняли: пересчёт по умолчанию, и у опубликованного адрес меняется.
+    catalog_update_product($db, 'anna', $uid, 4, t_fields(['sections' => ['bukety']]), t_now('+3 hours'));
+    t_equal(t_row($db, $uid)['main_section'], 'bukety', 'главный раздел больше не отмечен — выбран по умолчанию');
+    t_equal(t_redirects($db), ['/roses/buket-nezhnost/' => '/bukety/buket-nezhnost/'], 'со старого адреса — переадресация на новый');
+});
+
+t_case('правка черновика без главного раздела', function (): void {
+    $db = t_catalog_with_sections();
+    $uid = catalog_create_product($db, 'anna', t_fields(['sections' => ['bukety', 'roses'], 'mainSection' => 'roses']), t_now());
+    catalog_update_product($db, 'anna', $uid, 1, t_fields(['sections' => ['bukety', 'roses'], 'title' => 'Букет «Весна»']), t_now('+1 hour'));
+    t_equal(t_row($db, $uid)['main_section'], 'roses', 'у черновика выбранный главный раздел тоже не пересчитывается');
+});
+
 t_case('адрес в новом разделе занят', function (): void {
     $db = t_catalog_with_sections();
     // Одна из трёх старых одноимённых пар: «pion» и в «Розах», и в «Букетах».
