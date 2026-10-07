@@ -18,11 +18,21 @@ function catalog_photo_trash_path(string $rel): ?string
     return CATALOG_TRASH_DIR . '/' . $m[1];
 }
 
-/** Убрать фото в корзину; время файла — момент переноса (по нему корзина и чистится). */
+/**
+ * Убрать фото в корзину; время файла — момент переноса (по нему корзина и чистится).
+ *
+ * rename время файла не меняет, поэтому время ставится на исходном файле ДО
+ * переноса: не получилось — фото остаётся на месте. Иначе старое фото
+ * попало бы в корзину со своим старым временем и корзина стёрла бы его в
+ * тот же день.
+ */
 function catalog_photo_trash(string $webroot, string $rel, DateTimeImmutable $now): bool
 {
     $trash = catalog_photo_trash_path($rel);
     if ($trash === null || !is_file($webroot . $rel)) {
+        return false;
+    }
+    if (!@touch($webroot . $rel, $now->getTimestamp())) {
         return false;
     }
     $to = $webroot . $trash;
@@ -32,7 +42,8 @@ function catalog_photo_trash(string $webroot, string $rel, DateTimeImmutable $no
     if (!rename($webroot . $rel, $to)) {
         return false;
     }
-    touch($to, $now->getTimestamp());
+    // Если файл переехал копированием (другой диск), время могло не сохраниться.
+    @touch($to, $now->getTimestamp());
     return true;
 }
 

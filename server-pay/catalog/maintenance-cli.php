@@ -6,6 +6,10 @@
  *   15 3 * * * /usr/bin/php /var/www/u3620798/data/www/pionperm.ru/pay/catalog/maintenance-cli.php
  *
  * Делает копию базы и убирает фото, на которые больше никто не ссылается.
+ *
+ * Перед тем как включить расписание на этапе 3, уборка должна ещё и ждать,
+ * пока выложенный сайт перестанет показывать фото: сейчас она ждёт только
+ * сутки после того, как ссылки пропали из базы, а выкладка может задержаться.
  */
 
 declare(strict_types=1);
@@ -28,7 +32,10 @@ $now = new DateTimeImmutable();
 try {
     echo 'Копия: ', catalog_backup($file, catalog_home() . '/backups', $now), PHP_EOL;
     $r = catalog_photos_sweep(catalog_db_open($file), $webroot, catalog_home() . '/photo-candidates.json', $now);
-    printf("Фото: ждут уборки %d, убрано в корзину %d, стёрто из корзины %d.\n", $r['candidates'], $r['moved'], $r['purged']);
+    printf(
+        "Фото: ждут уборки %d, убрано в корзину %d, стёрто из корзины %d, возвращено из корзины %d.\n",
+        $r['candidates'], $r['moved'], $r['purged'], $r['returned'],
+    );
 } catch (Throwable $e) {
     fwrite(STDERR, 'Обслуживание не удалось: ' . $e->getMessage() . PHP_EOL);
     exit(1);
