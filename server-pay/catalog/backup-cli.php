@@ -21,7 +21,7 @@ if (!is_file($file)) {
     exit(0);
 }
 try {
-    echo 'Копия: ', catalog_backup(catalog_db_open($file), catalog_home() . '/backups', new DateTimeImmutable()), PHP_EOL;
+    echo 'Копия: ', catalog_backup($file, catalog_home() . '/backups', new DateTimeImmutable()), PHP_EOL;
 } catch (Throwable $e) {
     fwrite(STDERR, 'Копия не сделана: ' . $e->getMessage() . PHP_EOL);
     exit(1);

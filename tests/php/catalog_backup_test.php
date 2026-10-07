@@ -1,6 +1,7 @@
 <?php
 /**
- * Копии базы: одна в день, хранятся 30 дней.
+ * Копии базы: одна в день, хранятся 30 дней. Делаются через SQLite3::backup —
+ * на сервере SQLite 3.26, а копирование командой VACUUM в файл там ещё нет.
  */
 
 declare(strict_types=1);
@@ -24,18 +25,31 @@ t_case('копия базы', function (): void {
     file_put_contents("$dir/catalog-2026-09-05.sqlite", 'ровно 30 дней');
     file_put_contents("$dir/notes.txt", 'чужой файл');
 
-    $file = catalog_backup($db, $dir, t_now());
+    $file = catalog_backup("$home/catalog.sqlite", $dir, t_now());
     t_equal($file, "$dir/catalog-2026-10-05.sqlite", 'копия на сегодня');
     t_equal(t_sections_in($file), 3, 'в копии те же данные');
 
     $db->exec('DELETE FROM tiles');
     $db->exec('DELETE FROM sections');
-    catalog_backup($db, $dir, t_now('+3 hours'));
+    catalog_backup("$home/catalog.sqlite", $dir, t_now('+3 hours'));
     t_equal(t_sections_in($file), 3, 'второй запуск в тот же день копию не перезаписывает');
 
     $left = array_map('basename', glob("$dir/*") ?: []);
     sort($left);
     t_equal($left, ['catalog-2026-09-05.sqlite', 'catalog-2026-10-05.sqlite', 'notes.txt'], 'копии старше 30 дней удалены, остальное не тронуто');
+});
+
+t_case('копия во время записи', function (): void {
+    $home = t_tmpdir();
+    $db = t_catalog_with_sections(t_catalog_db("$home/catalog.sqlite"));
+    // Кто-то в эту секунду сохраняет букет: копия всё равно целая — с тем, что уже сохранено.
+    $db->exec('BEGIN IMMEDIATE');
+    $db->exec("INSERT INTO meta (key, value) VALUES ('uncommitted', '1')");
+    $file = catalog_backup("$home/catalog.sqlite", "$home/backups", t_now());
+    $db->exec('ROLLBACK');
+    t_equal(t_sections_in($file), 3, 'копия открывается и содержит сохранённое');
+    $copy = new PDO('sqlite:' . $file);
+    t_equal((int)$copy->query("SELECT COUNT(*) FROM meta WHERE key = 'uncommitted'")->fetchColumn(), 0, 'несохранённого в копии нет');
 });
 
 t_case('backup-cli.php', function (): void {
@@ -50,19 +64,15 @@ t_case('backup-cli.php', function (): void {
 
 t_case('копия после прерывания', function (): void {
     $home = t_tmpdir();
-    $db = t_catalog_with_sections(t_catalog_db("$home/catalog.sqlite"));
+    t_catalog_with_sections(t_catalog_db("$home/catalog.sqlite"));
     $dir = "$home/backups";
     mkdir($dir);
     $file = "$dir/catalog-2026-10-05.sqlite";
     $part = "$file.part";
-
-    // Симулируем остаток от прерванного VACUUM INTO.
+    // Остаток прерванного копирования: на сегодняшнюю копию он не похож и не мешает.
     file_put_contents($part, 'прерванная копия');
-    t_true(is_file($part), 'создан файл .part');
 
-    $result = catalog_backup($db, $dir, t_now());
-    t_equal($result, $file, 'возвращено финальное имя');
-    t_true(is_file($file), 'финальный файл создан');
-    t_true(!is_file($part), 'файл .part удалён');
+    t_equal(catalog_backup("$home/catalog.sqlite", $dir, t_now()), $file, 'возвращено финальное имя');
+    t_true(is_file($file) && !is_file($part), 'финальный файл создан, остаток убран');
     t_equal(t_sections_in($file), 3, 'финальный файл — настоящая база с данными');
 });
