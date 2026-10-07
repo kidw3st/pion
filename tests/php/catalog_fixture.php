@@ -101,3 +101,31 @@ function t_catalog_cli(string $script, string $home, array $args = []): array
     }
     return [$code, implode("\n", $out)];
 }
+
+/** Поля букета по умолчанию; $over — что поменять. */
+function t_fields(array $over = []): array
+{
+    return $over + [
+        'title' => 'Букет «Нежность»',
+        'description' => 'Розы, эвкалипт',
+        'price' => 4400,
+        'images' => [],
+        'sections' => ['bukety'],
+        'mainSection' => null,
+    ];
+}
+
+function t_row(PDO $db, string $uid): array
+{
+    $q = $db->prepare('SELECT * FROM products WHERE uid = ?');
+    $q->execute([$uid]);
+    return $q->fetch();
+}
+
+/** Букеты раздела по местам — все, независимо от статуса. */
+function t_section_order(PDO $db, string $section): array
+{
+    $q = $db->prepare('SELECT uid FROM product_sections WHERE section = ? ORDER BY position, uid');
+    $q->execute([$section]);
+    return $q->fetchAll(PDO::FETCH_COLUMN);
+}
