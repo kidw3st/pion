@@ -192,7 +192,8 @@ function catalog_create_product(PDO $db, string $login, array $fields, DateTimeI
 
 /**
  * Правка букета: название, состав, цена, фото, разделы. $version — версия,
- * которую видел сотрудник.
+ * которую видел сотрудник. У опубликованного смена главного раздела меняет
+ * адрес, а со старого ставит переадресацию.
  */
 function catalog_update_product(PDO $db, string $login, string $uid, int $version, array $fields, DateTimeImmutable $now): void
 {
@@ -204,6 +205,14 @@ function catalog_update_product(PDO $db, string $login, string $uid, int $versio
         $f = catalog_product_fields($db, $fields);
         // Пока букет не опубликован, адреса никто не знает — slug следует за названием.
         $slug = $p['slug_pinned'] ? $p['slug'] : catalog_slugify($f['title']);
+
+        if ($p['slug_pinned'] && $f['mainSection'] !== $p['main_section']) {
+            if (catalog_address_taken($db, $f['mainSection'], $slug, $uid)) {
+                throw new CatalogError('В этом разделе уже есть букет с таким же адресом — главным раздел сделать нельзя. '
+                    . 'Отметьте его просто как дополнительный.');
+            }
+            catalog_redirect_add($db, catalog_address($p['main_section'], $slug), catalog_address($f['mainSection'], $slug), $now);
+        }
 
         $before = catalog_product_sections($db, $uid);
         $leave = $db->prepare('DELETE FROM product_sections WHERE uid = ? AND section = ?');
@@ -235,6 +244,7 @@ function catalog_update_product(PDO $db, string $login, string $uid, int $versio
                 main_section = ?, updated_at = ?, updated_by = ?, version = version + 1
             WHERE uid = ?')
             ->execute([$slug, $f['title'], $f['description'], $f['price'], $images, $f['mainSection'], catalog_iso($now), $login, $uid]);
+        catalog_redirect_clear_live($db);
         catalog_touch($db, $now);
     });
 }
@@ -370,4 +380,65 @@ function catalog_find_namesake(PDO $db, string $title, DateTimeImmutable $now): 
         return ['uid' => $row['uid'], 'title' => $row['title'], 'status' => $row['status'], 'since' => $row['status_changed_at']];
     }
     return null;
+}
+
+/**
+ * Удалить. Черновик исчезает совсем — на сайте его не было. У опубликованного
+ * статус deleted: запись, фото и разделы остаются на 90 дней, с адреса —
+ * переадресация в главный раздел.
+ */
+function catalog_delete(PDO $db, string $login, string $uid, int $version, DateTimeImmutable $now): void
+{
+    catalog_tx($db, function () use ($db, $login, $uid, $version, $now): void {
+        $p = catalog_product_for_change($db, $uid, $version);
+        if ($p['status'] === 'deleted') {
+            throw new CatalogError('Букет уже удалён.');
+        }
+        if ($p['status'] === 'draft') {
+            $db->prepare('DELETE FROM products WHERE uid = ?')->execute([$uid]);
+            catalog_audit($db, $login, $now, 'product', $uid, 'deleted', $p['title'], null);
+            return;
+        }
+        $at = catalog_iso($now);
+        $db->prepare("UPDATE products SET status = 'deleted', status_before_delete = status, deleted_at = ?,
+                status_changed_at = ?, updated_at = ?, updated_by = ?, version = version + 1
+            WHERE uid = ?")
+            ->execute([$at, $at, $at, $login, $uid]);
+        catalog_redirect_add($db, catalog_address($p['main_section'], $p['slug']), '/' . $p['main_section'] . '/', $now);
+        catalog_audit($db, $login, $now, 'product', $uid, 'status', $p['status'], 'deleted');
+        catalog_touch($db, $now);
+    });
+}
+
+/**
+ * Восстановить удалённый (не позже 90 дней): прежний статус, адрес, фото и
+ * разделы. Если адрес за это время занял другой букет — slug с -2.
+ */
+function catalog_restore(PDO $db, string $login, string $uid, int $version, DateTimeImmutable $now): void
+{
+    catalog_tx($db, function () use ($db, $login, $uid, $version, $now): void {
+        $p = catalog_product_for_change($db, $uid, $version);
+        if ($p['status'] !== 'deleted') {
+            throw new CatalogError('Восстановить можно только удалённый букет.');
+        }
+        if ($p['deleted_at'] < catalog_iso($now->modify('-' . CATALOG_RESTORE_DAYS . ' days'))) {
+            throw new CatalogError('Букет удалён больше 90 дней назад — его уже не восстановить.');
+        }
+        $slug = $p['slug'];
+        if (catalog_address_taken($db, $p['main_section'], $slug, $uid)) {
+            $slug = catalog_free_slug($db, $slug, $uid);
+        }
+        $status = $p['status_before_delete'] ?? 'hidden';
+        $at = catalog_iso($now);
+        $db->prepare('UPDATE products SET status = ?, status_before_delete = NULL, deleted_at = NULL, slug = ?,
+                status_changed_at = ?, updated_at = ?, updated_by = ?, version = version + 1
+            WHERE uid = ?')
+            ->execute([$status, $slug, $at, $at, $login, $uid]);
+        catalog_audit($db, $login, $now, 'product', $uid, 'status', 'deleted', $status);
+        if ($slug !== $p['slug']) {
+            catalog_audit($db, $login, $now, 'product', $uid, 'slug', $p['slug'], $slug);
+        }
+        catalog_redirect_clear_live($db);
+        catalog_touch($db, $now);
+    });
 }
