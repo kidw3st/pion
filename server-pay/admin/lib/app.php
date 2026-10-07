@@ -10,6 +10,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/http.php';
 require_once __DIR__ . '/view.php';
 require_once __DIR__ . '/auth.php';
+require_once __DIR__ . '/status.php';
 
 /** Страницы, куда пускают без входа. */
 const ADMIN_PUBLIC_PAGES = ['login'];
@@ -54,6 +55,10 @@ function admin_handle(array $req, array $ctx, string $name, callable $page): arr
         }
     }
     $ctx['user'] = $user;
+    if ($user !== null) {
+        $deployed = admin_deployed_catalog($ctx['deployHome']);
+        $ctx['status'] = admin_status_line(admin_deploy_status(catalog_meta($ctx['db']), $deployed, $ctx['now']));
+    }
     return $page($req, $ctx);
 }
 
