@@ -108,8 +108,7 @@ function admin_sections_picker(array $sections, array $checked, string $main): s
             . ($slug === $main ? ' checked' : '') . '> главный</label></li>';
     }
     return '<fieldset class="form"><legend>Разделы</legend>'
-        . '<p class="hint">Можно несколько. Главный — по нему строится адрес страницы; если его не выбрать, '
-        . 'главным станет первый отмеченный (кроме «Новинок»).</p>'
+        . '<p class="hint">Можно несколько. Главный — по нему строится адрес страницы. Если главный не выбран, у нового букета им станет первый отмеченный (кроме «Новинок»), у сохранённого — останется прежний.</p>'
         . '<ul class="sections-pick">' . $rows . '</ul></fieldset>';
 }
 
@@ -126,7 +125,7 @@ function admin_new_form(array $ctx, array $post, string $error, ?array $twin): s
     return '<h1>Новый букет</h1>' . $twinBox . admin_error($error)
         . '<form method="post" action="' . ADMIN_BASE . 'product.php" class="form">' . admin_csrf_field($ctx['user'])
         . '<input type="hidden" name="action" value="create">'
-        . ($twin !== null ? '<input type="hidden" name="confirm_new" value="1">' : '')
+        . ($twin !== null ? '<input type="hidden" name="confirm_new" value="' . h(catalog_title_key(admin_str($post, 'title'))) . '">' : '')
         . '<label>Название<input name="title" maxlength="120" required value="' . h(admin_str($post, 'title')) . '"></label>'
         . '<label>Цена, ₽<input name="price" inputmode="numeric" required value="' . h(admin_str($post, 'price')) . '"></label>'
         . '<label>Состав<textarea name="description" maxlength="1000">' . h(admin_str($post, 'description')) . '</textarea></label>'
@@ -148,9 +147,10 @@ function admin_photo_list(array $images): string
 /**
  * Карточка букета. $post — что прислала форма (показать снова после ошибки
  * или вопроса о цене), null — значения из базы. $ask — вопрос перед
- * сохранением (цена изменилась больше чем вдвое).
+ * сохранением (цена изменилась больше чем вдвое). $askPrice — привязка
+ * подтверждения к конкретной цене: если изменили цену в форме, нужно заново.
  */
-function admin_product_form(array $ctx, array $p, ?array $post, string $error, string $ask): string
+function admin_product_form(array $ctx, array $p, ?array $post, string $error, string $ask, int $askPrice = 0): string
 {
     $db = $ctx['db'];
     $images = $post !== null ? admin_list($post, 'images') : (json_decode($p['images'], true) ?: []);
@@ -164,7 +164,7 @@ function admin_product_form(array $ctx, array $p, ?array $post, string $error, s
             : '<p class="hint">Адрес страницы: <span class="address">' . h($address) . '</span></p>')
         . admin_error($error)
         . ($ask !== '' ? '<div class="ask"><p>' . h($ask) . '</p>'
-            . '<p class="hint">Если всё верно — нажмите «Сохранить» ещё раз. Если нет — исправьте цену.</p></div>' : '');
+            . '<p class="hint">Если всё верно — нажмите ту же кнопку ещё раз. Если нет — исправьте цену.</p></div>' : '');
     if ($p['status'] === 'deleted') {
         return $html . '<p>Букет удалён ' . h(admin_date((string)$p['deleted_at']))
             . '. Его нет на сайте; со старого адреса — переадресация в раздел.</p>' . admin_photo_list($images);
@@ -176,7 +176,7 @@ function admin_product_form(array $ctx, array $p, ?array $post, string $error, s
     return $html . '<form method="post" action="' . ADMIN_BASE . 'product.php" class="form">' . admin_csrf_field($ctx['user'])
         . '<input type="hidden" name="uid" value="' . h($p['uid']) . '">'
         . '<input type="hidden" name="version" value="' . h($post !== null ? admin_str($post, 'version') : (string)$p['version']) . '">'
-        . ($ask !== '' ? '<input type="hidden" name="confirm_price" value="1">' : '')
+        . ($ask !== '' ? '<input type="hidden" name="confirm_price" value="' . h((string)$askPrice) . '">' : '')
         . '<label>Название<input name="title" maxlength="120" required value="' . h($value('title')) . '"></label>'
         . '<label>Цена, ₽<input name="price" inputmode="numeric" required value="' . h($value('price')) . '"></label>'
         . '<label>Состав<textarea name="description" maxlength="1000">' . h($value('description')) . '</textarea></label>'
@@ -192,7 +192,10 @@ function admin_product_create(array $req, array $ctx): array
         admin_layout('Новый букет', admin_new_form($ctx, $post, $error, $twin), $ctx['user'], $ctx['status']), $status);
     try {
         $fields = admin_product_fields($post);
-        if (admin_str($post, 'confirm_new') === '') {
+        // Сначала сухая проверка: поля и цена должны быть валидны, иначе не спрашиваем о тёзке.
+        catalog_product_fields($ctx['db'], $fields);
+        $confirmKey = catalog_title_key($fields['title']);
+        if (admin_str($post, 'confirm_new') !== $confirmKey) {
             $twin = catalog_find_namesake($ctx['db'], $fields['title'], $ctx['now']);
             if ($twin !== null) {
                 return $show('', $twin, 200);
@@ -212,19 +215,27 @@ function admin_product_save(array $req, array $ctx, string $action): array
     if ($p === null) {
         return admin_not_found($ctx);
     }
-    $show = fn (string $error, string $ask, int $status): array => admin_html(
-        admin_layout($p['title'], admin_product_form($ctx, $p, $post, $error, $ask), $ctx['user'], $ctx['status']), $status);
+    $show = fn (string $error, string $ask, int $askPrice, int $status): array => admin_html(
+        admin_layout($p['title'], admin_product_form($ctx, $p, $post, $error, $ask, $askPrice), $ctx['user'], $ctx['status']), $status);
     try {
         $fields = admin_product_fields($post);
-        if (admin_str($post, 'confirm_price') === '' && admin_price_jump((int)$p['price'], $fields['price'])) {
-            return $show('', 'Цена была ' . admin_rub((int)$p['price']) . ', станет ' . admin_rub($fields['price']) . '. Всё верно?', 200);
-        }
         $version = (int)admin_str($post, 'version');
+        // Проверяем версию без записи — если чужие правки, то вопроса о цене не нужно.
+        catalog_product_for_change($ctx['db'], $p['uid'], $version);
+        // Сухая проверка полей — если цена невалидна или проблемы другие, вопроса не спрашиваем.
+        catalog_product_fields($ctx['db'], $fields, $p['main_section']);
+        // Теперь проверяем цену: привязываем подтверждение к конкретной сумме.
+        $confirmPrice = (int)admin_str($post, 'confirm_price');
+        if ($confirmPrice !== $fields['price'] && admin_price_jump((int)$p['price'], $fields['price'])) {
+            return $show('', 'Цена была ' . admin_rub((int)$p['price']) . ', станет ' . admin_rub($fields['price']) . '. Всё верно?', $fields['price'], 200);
+        }
         catalog_update_product($ctx['db'], $ctx['user']['login'], $p['uid'], $version, $fields, $ctx['now']);
         return admin_redirect('product.php', ['uid' => $p['uid'], 'notice' => 'saved']);
     } catch (CatalogConflict $e) {
-        return $show($e->getMessage(), '', 409);
+        $html = admin_product_form($ctx, $p, $post, $e->getMessage(), '', 0)
+            . '<p><a class="btn-quiet" href="' . ADMIN_BASE . 'product.php?uid=' . h($p['uid']) . '">Открыть букет заново</a></p>';
+        return admin_html(admin_layout($p['title'], $html, $ctx['user'], $ctx['status']), 409);
     } catch (CatalogError $e) {
-        return $show($e->getMessage(), '', 422);
+        return $show($e->getMessage(), '', 0, 422);
     }
 }

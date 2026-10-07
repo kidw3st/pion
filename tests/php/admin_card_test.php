@@ -58,9 +58,10 @@ t_case('тёзка среди снятых', function (): void {
     $ask = t_card($ctx, 'POST', post: $post);
     t_true(str_contains($ask['body'], 'Такой букет уже был — снят с продажи 30 сентября. Вернуть его?'), 'админка предлагает вернуть прежний');
     t_true(str_contains($ask['body'], 'href="/pay/admin/product.php?uid=' . $old . '"'), 'со ссылкой на него');
-    t_true(str_contains($ask['body'], 'name="confirm_new" value="1"'), 'повторное «Создать» — если это другой букет');
+    $titleKey = catalog_title_key('Букет «Нежность»');
+    t_true(str_contains($ask['body'], 'name="confirm_new" value="' . h($titleKey) . '"'), 'повторное «Создать» — если это другой букет');
     t_equal((int)$db->query('SELECT COUNT(*) FROM products')->fetchColumn(), 1, 'новый пока не создан');
-    t_equal(t_card($ctx, 'POST', post: $post + ['confirm_new' => '1'])['status'], 303, 'это другой букет — создаётся');
+    t_equal(t_card($ctx, 'POST', post: $post + ['confirm_new' => $titleKey])['status'], 303, 'это другой букет — создаётся');
 });
 
 t_case('карточка и сохранение', function (): void {
@@ -88,9 +89,9 @@ t_case('цена изменилась больше чем вдвое', function 
     $post = ['action' => 'save', 'uid' => $uid, 'version' => '1', 'title' => 'Букет «Нежность»', 'price' => '44000', 'sections' => ['bukety']];
     $ask = t_card($ctx, 'POST', post: $post);
     t_true(str_contains($ask['body'], "Цена была 4\u{00A0}400\u{00A0}₽, станет 44\u{00A0}000\u{00A0}₽. Всё верно?"), 'админка переспрашивает');
-    t_true(str_contains($ask['body'], 'name="confirm_price" value="1"'), 'повторное «Сохранить» подтвердит цену');
+    t_true(str_contains($ask['body'], 'name="confirm_price" value="44000"'), 'повторное «Сохранить» подтвердит цену');
     t_equal(t_row($ctx['db'], $uid)['price'], 4400, 'пока не подтвердили — цена прежняя');
-    t_equal(t_card($ctx, 'POST', post: $post + ['confirm_price' => '1'])['status'], 303, 'подтвердили — сохранено');
+    t_equal(t_card($ctx, 'POST', post: $post + ['confirm_price' => '44000'])['status'], 303, 'подтвердили — сохранено');
     t_equal(t_row($ctx['db'], $uid)['price'], 44000, 'новая цена');
 });
 
@@ -108,4 +109,68 @@ t_case('нет такого букета', function (): void {
     $ctx = t_admin_ctx();
     t_equal(t_card($ctx, query: ['uid' => '999'])['status'], 404, 'понятная страница вместо ошибки');
     t_equal(t_card($ctx, 'POST', post: ['action' => 'save', 'uid' => '999'])['status'], 404, 'и при сохранении');
+});
+
+t_case('цена на подтверждение привязана', function (): void {
+    $ctx = t_admin_ctx();
+    $uid = catalog_create_product($ctx['db'], 'anna', t_fields(), t_now());
+    $post = ['action' => 'save', 'uid' => $uid, 'version' => '1', 'title' => 'Букет «Нежность»', 'price' => '44000', 'sections' => ['bukety']];
+    $ask = t_card($ctx, 'POST', post: $post);
+    t_equal($ask['status'], 200, 'вопрос о цене');
+    // Редактируем цену после вопроса — не соответствует привязанной, спросим заново
+    $r = t_card($ctx, 'POST', post: array_merge($post, ['confirm_price' => '44000', 'price' => '440']));
+    t_true(str_contains($r['body'], "станет 440\u{00A0}₽"), 'спрашиваем о новой цене 440');
+    t_true(str_contains($r['body'], 'name="confirm_price" value="440"'), 'новое подтверждение для 440');
+    t_equal(t_row($ctx['db'], $uid)['price'], 4400, 'цена в базе не изменилась');
+});
+
+t_case('цена невалидна — вопроса не спросим', function (): void {
+    $ctx = t_admin_ctx();
+    $uid = catalog_create_product($ctx['db'], 'anna', t_fields(), t_now());
+    $r = t_card($ctx, 'POST', post: ['action' => 'save', 'uid' => $uid, 'version' => '1', 'title' => 'Букет «Нежность»', 'price' => '44', 'sections' => ['bukety']]);
+    t_equal($r['status'], 422, 'ошибка валидации');
+    t_true(str_contains($r['body'], 'Цена'), 'сообщение об ошибке');
+    t_equal(str_contains($r['body'], 'Всё верно'), false, 'без вопроса о цене');
+});
+
+t_case('конфликт версии показывает ссылку', function (): void {
+    $ctx = t_admin_ctx();
+    $uid = catalog_create_product($ctx['db'], 'anna', t_fields(), t_now());
+    catalog_update_product($ctx['db'], 'anna', $uid, 1, t_fields(['price' => 4500]), t_now());
+    $post = ['action' => 'save', 'uid' => $uid, 'version' => '1', 'title' => 'Букет «Нежность»', 'price' => '44000', 'sections' => ['bukety']];
+    $r = t_card($ctx, 'POST', post: $post);
+    t_equal($r['status'], 409, 'конфликт');
+    t_true(str_contains($r['body'], 'href="/pay/admin/product.php?uid=' . h($uid) . '">Открыть букет заново</a>'), 'ссылка для перезагрузки');
+});
+
+t_case('после предложения тёзки — другой заголовок, другой тёзка', function (): void {
+    $ctx = t_admin_ctx();
+    $db = $ctx['db'];
+    $old1 = catalog_create_product($db, 'anna', t_fields(['title' => 'Букет «Нежность»']), t_now('-10 days'));
+    catalog_publish($db, 'anna', $old1, 1, t_now('-10 days'));
+    catalog_hide($db, 'anna', $old1, 2, t_now('-5 days'));
+    $old2 = catalog_create_product($db, 'anna', t_fields(['title' => 'Букет «Забвение»']), t_now('-10 days'));
+    catalog_publish($db, 'anna', $old2, 1, t_now('-10 days'));
+    catalog_hide($db, 'anna', $old2, 2, t_now('-5 days'));
+    // Первая попытка с «Нежность» — предложим first twin
+    $post1 = ['action' => 'create', 'title' => 'Букет «Нежность»', 'price' => '4400', 'sections' => ['bukety']];
+    $r1 = t_card($ctx, 'POST', post: $post1);
+    t_true(str_contains($r1['body'], 'href="/pay/admin/product.php?uid=' . $old1 . '"'), 'предложили Нежность');
+    // Редактируем название на «Забвение» и отправляем с confirm_new от Нежности
+    $key1 = catalog_title_key('Букет «Нежность»');
+    $r2 = t_card($ctx, 'POST', post: ['action' => 'create', 'title' => 'Букет «Забвение»', 'price' => '4400', 'sections' => ['bukety'], 'confirm_new' => $key1]);
+    t_true(str_contains($r2['body'], 'href="/pay/admin/product.php?uid=' . $old2 . '"'), 'предложили другой букет — Забвение');
+    t_equal((int)$db->query('SELECT COUNT(*) FROM products')->fetchColumn(), 2, 'ничего не создано');
+});
+
+t_case('перевод строк в описании', function (): void {
+    $ctx = t_admin_ctx();
+    $uid = catalog_create_product($ctx['db'], 'anna', t_fields(), t_now());
+    $post = [
+        'action' => 'save', 'uid' => $uid, 'version' => '1', 'title' => 'Букет «Нежность»', 'price' => '4400', 'description' => "строка 1\r\nстрока 2",
+        'sections' => ['bukety']
+    ];
+    t_card($ctx, 'POST', post: $post);
+    $p = t_row($ctx['db'], $uid);
+    t_equal($p['description'], "строка 1\nстрока 2", 'CRLF нормализован в LF');
 });

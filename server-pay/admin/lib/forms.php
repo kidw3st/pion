@@ -23,7 +23,7 @@ function admin_product_fields(array $post): array
 {
     return [
         'title' => admin_str($post, 'title'),
-        'description' => admin_str($post, 'description'),
+        'description' => str_replace("\r\n", "\n", admin_str($post, 'description')),
         'price' => admin_parse_price(admin_str($post, 'price')),
         'images' => admin_list($post, 'images'),
         'sections' => admin_list($post, 'sections'),
