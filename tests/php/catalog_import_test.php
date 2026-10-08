@@ -223,6 +223,78 @@ function t_import_sample(): array
     return json_decode((string)file_get_contents(__DIR__ . '/fixtures/catalog-export-small.json'), true, 64, JSON_THROW_ON_ERROR);
 }
 
+/** Кладёт в корень сайта все фото выгрузки — иначе загрузка откажет раньше, чем дойдёт до замка или базы. */
+function t_import_photos(array $export, string $webroot): void
+{
+    $paths = [];
+    foreach ($export['products'] as $p) {
+        $paths = array_merge($paths, $p['images']);
+    }
+    foreach ($export['sections'] as $s) {
+        $paths = array_merge($paths, $s['tileImage'] !== '' ? [$s['tileImage']] : [], $s['covers']);
+    }
+    foreach ($export['tiles'] as $t) {
+        if (isset($t['image'])) {
+            $paths[] = $t['image'];
+        }
+    }
+    foreach ($paths as $path) {
+        t_put_files($webroot, [ltrim($path, '/') => 'webp']);
+    }
+}
+
+t_case('import-cli.php: вторая загрузка при идущей первой отказывает', function (): void {
+    $scripts = t_catalog_scripts();
+    $file = t_tmpdir() . '/export.json';
+    copy(__DIR__ . '/fixtures/catalog-export-small.json', $file);
+    $webroot = t_tmpdir();
+    t_import_photos(t_import_sample(), $webroot);
+    putenv('PION_WEBROOT=' . $webroot);
+    try {
+        $home = t_tmpdir();
+        // Первая загрузка «идёт»: замок держит тест. flock на Windows — LockFileEx, он действует и между процессами.
+        $lock = fopen("$home/catalog.sqlite.import.lock", 'c');
+        t_true($lock !== false && flock($lock, LOCK_EX | LOCK_NB), 'замок взят тестом');
+        // Временный файл первой загрузки: вторая не должна его ни удалить, ни подменить.
+        file_put_contents("$home/catalog.sqlite.import", 'чужая загрузка');
+        [$code, $out] = t_catalog_cli("$scripts/catalog/import-cli.php", $home, [$file]);
+        t_equal($code, 1, 'идёт другая загрузка — отказ');
+        t_true(str_contains($out, 'уже идёт другая загрузка'), 'причина названа по-русски: ' . $out);
+        t_true(str_contains($out, 'catalog.sqlite.import.lock'), 'и назван файл замка: ' . $out);
+        clearstatcache();
+        t_true(!is_file("$home/catalog.sqlite"), 'базы нет');
+        t_equal(file_get_contents("$home/catalog.sqlite.import"), 'чужая загрузка', 'временный файл первой загрузки цел');
+
+        // Первая закончилась — замок снят, вторая проходит (старый временный файл она убирает сама).
+        flock($lock, LOCK_UN);
+        fclose($lock);
+        [$code, $out] = t_catalog_cli("$scripts/catalog/import-cli.php", $home, [$file]);
+        t_equal($code, 0, 'замок снят — загрузка прошла: ' . $out);
+        clearstatcache();
+        t_true(is_file("$home/catalog.sqlite"), 'база на месте');
+        t_true(!is_file("$home/catalog.sqlite.import"), 'временного файла нет');
+        t_true(is_file("$home/catalog.sqlite.import.lock"), 'файл замка остаётся — он пустой и ничему не мешает');
+
+        // Первый запуск: папки каталога ещё нет — замок заводит её сам, загрузка проходит.
+        $fresh = t_tmpdir() . '/ещё-нет/pion-catalog';
+        [$code, $out] = t_catalog_cli("$scripts/catalog/import-cli.php", $fresh, [$file]);
+        t_equal($code, 0, 'папки каталога нет — загрузка всё равно проходит: ' . $out);
+        clearstatcache();
+        t_true(is_file("$fresh/catalog.sqlite"), 'папка создана и база загружена');
+
+        // Не загрузилось (фото нет) — замок всё равно снят: исправить и повторить можно сразу.
+        $home = t_tmpdir();
+        putenv('PION_WEBROOT=' . t_tmpdir());
+        [$code] = t_catalog_cli("$scripts/catalog/import-cli.php", $home, [$file]);
+        t_equal($code, 1, 'фото нет — отказ');
+        putenv('PION_WEBROOT=' . $webroot);
+        [$code, $out] = t_catalog_cli("$scripts/catalog/import-cli.php", $home, [$file]);
+        t_equal($code, 0, 'после неудачной загрузки замок не мешает: ' . $out);
+    } finally {
+        putenv('PION_WEBROOT');
+    }
+});
+
 t_case('загрузка: пути фото проверяются', function (): void {
     $e = t_import_sample();
     unset($e['version']);

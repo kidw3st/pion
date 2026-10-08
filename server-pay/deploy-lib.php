@@ -431,6 +431,8 @@ const DEPLOY_BACKUP_ALERT_COOLDOWN = 86400;
  *             catalog — не чаще раза в DEPLOY_ALERT_COOLDOWN, backup — раза в
  *             DEPLOY_BACKUP_ALERT_COOLDOWN, maintenance — один раз на каждый
  *             неудавшийся ночной запуск (см. deploy_maintenance_alert_due);
+ *   alertTries — сколько раз подряд Telegram не принял сообщение о сбое каждого
+ *             рода: род => число (см. deploy_send_alerts, DEPLOY_ALERT_MAX_TRIES);
  *   master  — последний увиденный коммит master и с какого времени: sha, since;
  *   head    — последняя увиденная сборка в ветке server-build и с какого
  *             времени: sha, since. По sha отличают поломку, которая ещё в
@@ -441,7 +443,7 @@ function deploy_empty_state(): array
 {
     return [
         'current' => null, 'history' => [], 'bad' => [], 'badPairs' => [], 'failure' => null,
-        'alerts' => [], 'master' => null, 'head' => null,
+        'alerts' => [], 'alertTries' => [], 'master' => null, 'head' => null,
     ];
 }
 
@@ -756,6 +758,8 @@ function deploy_mark_alerted(array $state, string $kind, int $now): array
 const DEPLOY_TELEGRAM_SENT = 'отправлено';
 /** deploy_telegram: служебный чат не настроен — повторять бесполезно. */
 const DEPLOY_TELEGRAM_OFF = 'служебный чат не настроен (DEPLOY_ALERT_CHAT_ID в config.php)';
+/** Сколько раз подряд пробуем отправить одно сообщение: примерно час попыток через 15 минут. */
+const DEPLOY_ALERT_MAX_TRIES = 4;
 
 /**
  * Отправляет всё, о чём пора написать (deploy_pending_alerts), и отмечает
@@ -766,16 +770,43 @@ const DEPLOY_TELEGRAM_OFF = 'служебный чат не настроен (DE
  * Чат не настроен — отмечаем: повтор ничего не изменит, а журнал заполнился бы
  * одной и той же строкой.
  *
+ * Попыток не больше DEPLOY_ALERT_MAX_TRIES (счёт — state.alertTries, по роду
+ * сообщения). Telegram бывает доставляет сообщение, а ответ теряется: без
+ * предела оно приходило бы в личный чат владельца (туда же идут заказы) каждые
+ * 15 минут, пока длится сбой. После последней неудачной попытки сообщение
+ * считается отправленным и ждёт обычного перерыва: каталог — 3 часа, копия —
+ * сутки, обслуживание — до следующего неудавшегося запуска. Цена — не больше
+ * четырёх одинаковых сообщений, если ответы так и теряются. Счёт живёт, пока
+ * сообщение пора отправлять: сбой кончился — счёт снят, новый начнёт заново.
+ *
  * @param Closure(string): string $send текст → ответ deploy_telegram
  * @param Closure(string): void   $log  строка в deploy.log
  */
 function deploy_send_alerts(array $state, int $now, ?array $watch, Closure $send, Closure $log): array
 {
-    foreach (deploy_pending_alerts($state, $now, $watch) as $kind) {
+    $pending = deploy_pending_alerts($state, $now, $watch);
+    // state.json могли испортить вручную: счёт не массив — пуст, значение не целое — 0.
+    $tries = [];
+    if (is_array($state['alertTries'] ?? null)) {
+        foreach ($pending as $kind) {
+            $value = $state['alertTries'][$kind] ?? 0;
+            $tries[$kind] = is_int($value) && $value > 0 ? $value : 0;
+        }
+    }
+    $state['alertTries'] = [];
+    foreach ($pending as $kind) {
         $result = $send(deploy_alert_text($kind, $state, $watch));
         $log("сообщение о сбое ($kind): $result");
         if ($result === DEPLOY_TELEGRAM_SENT || $result === DEPLOY_TELEGRAM_OFF) {
             $state = deploy_mark_alerted($state, $kind, $now);
+            continue;
+        }
+        $count = ($tries[$kind] ?? 0) + 1;
+        if ($count >= DEPLOY_ALERT_MAX_TRIES) {
+            $state = deploy_mark_alerted($state, $kind, $now);
+            $log("сообщение о сбое ($kind): не ушло с $count попыток — следующая попытка после обычного перерыва");
+        } else {
+            $state['alertTries'][$kind] = $count;
         }
     }
     return $state;

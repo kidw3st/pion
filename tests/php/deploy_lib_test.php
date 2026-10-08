@@ -536,3 +536,142 @@ t_equal([$code, implode("\n", $out)], [0, 'нет'], 'deploy-lib.php сама к
     t_true(in_array('catalog', deploy_pending_alerts($state, $now, $watch), true),
         'deployedAt позже «сейчас» не берётся: правка не выложена 90 минут — пишем');
 })();
+
+// --- Сообщение, которое Telegram не принимает, пробуют не больше DEPLOY_ALERT_MAX_TRIES раз -
+(static function (): void {
+    $now = 1_800_000_000;
+    t_equal(DEPLOY_ALERT_MAX_TRIES, 4, 'всего четыре попытки — примерно час через 15 минут');
+    t_equal(deploy_empty_state()['alertTries'], [], 'в пустом состоянии счёта попыток нет');
+
+    // Копии нет совсем: backup пора слать, срок между сообщениями — сутки.
+    $watch = ['version' => '', 'changedAt' => 0, 'backupAt' => null, 'maintenance' => null];
+    $lines = [];
+    $log = static function (string $line) use (&$lines): void {
+        $lines[] = $line;
+    };
+    $fail = static fn(string $text): string => 'Telegram ответил 502';
+    $giveUp = 'сообщение о сбое (backup): не ушло с 4 попыток — следующая попытка после обычного перерыва';
+
+    // Три неудачи подряд: сообщение всё ещё пора слать, счёт растёт.
+    $state = deploy_empty_state();
+    foreach ([0, 900, 1800] as $i => $shift) {
+        t_equal(deploy_pending_alerts($state, $now + $shift, $watch), ['backup'], 'попытка ' . ($i + 1) . ': сообщение пора слать');
+        $state = deploy_send_alerts($state, $now + $shift, $watch, $fail, $log);
+        t_equal($state['alertTries']['backup'] ?? null, $i + 1, 'после неудачи ' . ($i + 1) . ' счёт равен ' . ($i + 1));
+        t_equal($state['alerts']['backup'] ?? null, null, 'и отметки о сообщении нет');
+    }
+    t_true(!in_array($giveUp, $lines, true), 'пока попытки есть, строки «не ушло» в журнале нет');
+
+    // Четвёртая неудача: сообщение считается отправленным и ждёт обычного перерыва (для backup — сутки).
+    t_equal(deploy_pending_alerts($state, $now + 2700, $watch), ['backup'], 'четвёртая попытка: сообщение ещё пора слать');
+    $state = deploy_send_alerts($state, $now + 2700, $watch, $fail, $log);
+    t_equal($state['alerts']['backup'] ?? null, $now + 2700, 'четвёртая неудача: сообщение отмечено');
+    t_true(!isset($state['alertTries']['backup']), 'и счёт снят');
+    t_equal(deploy_pending_alerts($state, $now + 3600, $watch), [], 'через час после начала сообщение больше не повторяется');
+    t_equal(deploy_pending_alerts($state, $now + 2700 + 86400 - 1, $watch), [], 'и ждёт всех суток');
+    t_equal(count(array_keys($lines, 'сообщение о сбое (backup): Telegram ответил 502', true)), 4, 'ответ Telegram в журнале — по разу за каждую попытку');
+    t_equal(count(array_keys($lines, $giveUp, true)), 1, 'строка «не ушло с 4 попыток» — одна');
+    t_equal(end($lines), $giveUp, 'и последняя');
+    // Перерыв прошёл — сообщение пора слать снова, и попытки отсчитываются заново.
+    $later = $now + 2700 + 86400;
+    t_equal(deploy_pending_alerts($state, $later, $watch), ['backup'], 'через сутки сообщение снова пора слать');
+    $state = deploy_send_alerts($state, $later, $watch, $fail, $log);
+    t_equal($state['alertTries']['backup'] ?? null, 1, 'и счёт начат заново');
+
+    // Успех после двух неудач: отмечено, счёт снят.
+    $state = deploy_empty_state();
+    $state = deploy_send_alerts($state, $now, $watch, $fail, $log);
+    $state = deploy_send_alerts($state, $now + 900, $watch, $fail, $log);
+    t_equal($state['alertTries']['backup'] ?? null, 2, 'две неудачи — счёт 2');
+    $state = deploy_send_alerts($state, $now + 1800, $watch, static fn(string $text): string => DEPLOY_TELEGRAM_SENT, $log);
+    t_equal($state['alerts']['backup'] ?? null, $now + 1800, 'успех после двух неудач: отмечено');
+    t_true(!isset($state['alertTries']['backup']), 'и счёт снят');
+    t_equal($state['alertTries'], [], 'счёт пуст');
+
+    // Чат не настроен: отмечено сразу, счёта нет.
+    $off = deploy_send_alerts(['alertTries' => ['backup' => 2]] + deploy_empty_state(), $now, $watch, static fn(string $text): string => DEPLOY_TELEGRAM_OFF, $log);
+    t_equal($off['alerts']['backup'] ?? null, $now, 'чат не настроен: отмечено');
+    t_equal($off['alertTries'], [], 'и счёт снят');
+
+    // Счёт одного рода не трогает другой: копия и обслуживание.
+    $both = ['version' => '', 'changedAt' => 0, 'backupAt' => null,
+        'maintenance' => ['ok' => false, 'at' => $now - 60, 'message' => 'x']];
+    $empty = deploy_empty_state();
+    $backupText = deploy_alert_text('backup', $empty, $both);
+    $onlyBackupFails = static fn(string $text): string => $text === $backupText ? 'Telegram ответил 502' : DEPLOY_TELEGRAM_SENT;
+    $state = deploy_send_alerts($empty, $now, $both, $fail, $log);
+    t_equal($state['alertTries'], ['backup' => 1, 'maintenance' => 1], 'обоим по одной неудаче');
+    $state = deploy_send_alerts($state, $now + 900, $both, $fail, $log);
+    t_equal($state['alertTries'], ['backup' => 2, 'maintenance' => 2], 'и по второй');
+    $state = deploy_send_alerts($state, $now + 1800, $both, $onlyBackupFails, $log);
+    t_equal($state['alertTries'], ['backup' => 3], 'обслуживание ушло — его счёт снят, счёт копии цел и растёт');
+    t_equal($state['alerts']['maintenance'] ?? null, $now + 1800, 'обслуживание отмечено');
+    t_equal($state['alerts']['backup'] ?? null, null, 'копия — нет');
+    $state = deploy_send_alerts($state, $now + 2700, $both, $onlyBackupFails, $log);
+    t_equal($state['alerts']['backup'] ?? null, $now + 2700, 'у копии четвёртая неудача: отмечена');
+    t_equal($state['alerts']['maintenance'] ?? null, $now + 1800, 'отметка обслуживания не сдвинулась');
+    t_equal($state['alertTries'], [], 'счётов нет');
+
+    // Счёт роду, о котором писать больше не нужно (сбой кончился), не переносится на следующий сбой.
+    $stale = ['alertTries' => ['lag' => 3, 'backup' => 2]] + deploy_empty_state();
+    $state = deploy_send_alerts($stale, $now, $watch, $fail, $log);
+    t_equal($state['alertTries'], ['backup' => 3], 'счёт роду, которого нет среди тех, о ком пора писать, снят');
+    $quiet = ['version' => '', 'changedAt' => 0, 'backupAt' => $now - 60, 'maintenance' => null];
+    $state = deploy_send_alerts(['alertTries' => ['backup' => 3]] + deploy_empty_state(), $now, $quiet, $fail, $log);
+    t_equal($state['alertTries'], [], 'писать не о чем — счёта нет');
+    t_equal($state['alerts'], [], 'и отметок нет');
+})();
+
+// --- Испорченный alertTries в state.json не роняет отправку; старый state.json без него грузится -
+(static function (): void {
+    $now = 1_800_000_000;
+    $watch = ['version' => '', 'changedAt' => 0, 'backupAt' => null, 'maintenance' => null];
+    $log = static function (string $line): void {
+    };
+    $fail = static fn(string $text): string => 'Telegram ответил 502';
+    $junk = [
+        'строка' => 'мусор',
+        'число' => 7,
+        'null' => null,
+        'значение — строка' => ['backup' => 'много'],
+        'значение — массив' => ['backup' => ['вложено' => 1]],
+        'значение — дробное' => ['backup' => 2.5],
+        'значение — булево' => ['backup' => true],
+        'значение — null' => ['backup' => null],
+        'значение — отрицательное' => ['backup' => -5],
+        'вложенный массив' => [['backup' => 1]],
+    ];
+    foreach ($junk as $what => $value) {
+        $state = ['alertTries' => $value] + deploy_empty_state();
+        try {
+            $after = deploy_send_alerts($state, $now, $watch, $fail, $log);
+            t_equal($after['alertTries'], ['backup' => 1], "alertTries — $what: не бросает, считается как 0");
+            $after = deploy_send_alerts($state, $now, $watch, static fn(string $text): string => DEPLOY_TELEGRAM_SENT, $log);
+            t_equal($after['alerts']['backup'] ?? null, $now, "alertTries — $what: отправлено — отмечено");
+            t_equal($after['alertTries'], [], "alertTries — $what: и счёт чист");
+        } catch (Throwable $e) {
+            t_true(false, "alertTries — $what: бросило " . $e::class . ': ' . $e->getMessage());
+        }
+    }
+    // Большое целое — попытки уже исчерпаны: одна неудача, и сообщение отмечено.
+    $after = deploy_send_alerts(['alertTries' => ['backup' => 99]] + deploy_empty_state(), $now, $watch, $fail, $log);
+    t_equal($after['alerts']['backup'] ?? null, $now, 'счёт больше предела: первая же неудача отмечает сообщение');
+
+    // Старый state.json (без alertTries) и испорченный — через deploy_state_load.
+    $home = t_tmpdir();
+    file_put_contents("$home/state.json", json_encode(['current' => null, 'history' => [], 'bad' => [], 'badPairs' => [], 'failure' => null, 'alerts' => [], 'master' => null, 'head' => null]));
+    $loaded = deploy_state_load($home);
+    t_equal($loaded['alertTries'], [], 'старый state.json: счёт пуст');
+    $after = deploy_send_alerts($loaded, $now, $watch, $fail, $log);
+    t_equal($after['alertTries'], ['backup' => 1], 'старый state.json: первая неудача — счёт 1');
+    file_put_contents("$home/state.json", json_encode(['alertTries' => 'мусор']));
+    $loaded = deploy_state_load($home);
+    try {
+        $after = deploy_send_alerts($loaded, $now, $watch, $fail, $log);
+        t_equal($after['alertTries'], ['backup' => 1], 'испорченный state.json (alertTries строкой) через deploy_state_load: не бросает');
+        deploy_state_save($home, $after);
+        t_equal(deploy_state_load($home)['alertTries'], ['backup' => 1], 'счёт сохраняется и читается обратно');
+    } catch (Throwable $e) {
+        t_true(false, 'испорченный state.json: бросило ' . $e::class . ': ' . $e->getMessage());
+    }
+})();

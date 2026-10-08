@@ -130,7 +130,11 @@ function deploy_telegram(string $text): string
     if ($code === 200 && is_array($reply) && ($reply['ok'] ?? false) === true) {
         return DEPLOY_TELEGRAM_SENT;
     }
-    return "Telegram ответил $code" . ($err !== '' ? " ($err)" : '');
+    // Причина от самого Telegram («Forbidden: bot was blocked by the user») — в журнал: по одному коду её не понять.
+    $why = is_array($reply) && is_string($reply['description'] ?? null)
+        ? mb_substr(trim((string)preg_replace('/\s+/u', ' ', $reply['description'])), 0, 300)
+        : '';
+    return "Telegram ответил $code" . ($err !== '' ? " ($err)" : '') . ($why !== '' ? " — $why" : '');
 }
 
 /**

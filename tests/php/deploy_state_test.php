@@ -123,8 +123,8 @@ $y = str_repeat('d', 40);
 $z = str_repeat('c', 40);
 t_equal(
     array_keys(deploy_empty_state()),
-    ['current', 'history', 'bad', 'badPairs', 'failure', 'alerts', 'master', 'head'],
-    'ключи состояния: badPairs рядом с bad, head — последний',
+    ['current', 'history', 'bad', 'badPairs', 'failure', 'alerts', 'alertTries', 'master', 'head'],
+    'ключи состояния: badPairs рядом с bad, alertTries рядом с alerts, head — последний',
 );
 $h = deploy_note_head(deploy_empty_state(), $x, 500);
 t_equal($h['head'], ['sha' => $x, 'since' => 500], 'голова ветки запоминается вместе со временем');
