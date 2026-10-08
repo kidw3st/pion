@@ -220,6 +220,16 @@ function deploy_run(string $home, string $webroot, bool $dryRun): int
     $short = substr($sha, 0, 7);
     try {
         $release = deploy_fetch_release($home, $sha);
+        $pair = deploy_pair_key($release);
+        if (isset($state['badPairs'][$pair])) {
+            $why = 'повторяет откатанную сборку (код ' . substr($release['commit'], 0, 7) . ', каталог '
+                . substr((string)($release['catalogVersion'] ?? '—'), 0, 7) . ')';
+            deploy_log($home, "сборка $short не выложена: $why");
+            if (!$dryRun) {
+                deploy_finish($home, deploy_state_idle(deploy_mark_bad($state, $sha, $why)), $now);
+            }
+            return 0;
+        }
         $updatePay = $release['paySha256'] !== ($state['current']['paySha256'] ?? null);
         $report = deploy_apply(
             deploy_release_archives($home, $sha),

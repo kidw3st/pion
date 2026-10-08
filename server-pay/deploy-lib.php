@@ -408,6 +408,10 @@ const DEPLOY_ALERT_COOLDOWN = 10800;
  *             (см. deploy_release_from_info);
  *   history — прошлые сборки для отката, новая первой;
  *   bad     — сборки, которые выкладывать нельзя: sha => причина;
+ *   badPairs — пары «код + каталог» откатанных сборок (deploy_pair_key =>
+ *             причина, последние 20): пересборка того же коммита с тем же
+ *             каталогом получает новую sha, но пара у неё прежняя, и выкладка
+ *             её не принимает;
  *   failure — текущий сбой: kind (transient|fatal), message, sha, since;
  *   alerts  — когда последний раз писали о сбое каждого рода (fatal,
  *             transient, lag). Запись снимается, когда сбой кончился или
@@ -421,7 +425,7 @@ const DEPLOY_ALERT_COOLDOWN = 10800;
 function deploy_empty_state(): array
 {
     return [
-        'current' => null, 'history' => [], 'bad' => [], 'failure' => null,
+        'current' => null, 'history' => [], 'bad' => [], 'badPairs' => [], 'failure' => null,
         'alerts' => [], 'master' => null, 'head' => null,
     ];
 }
@@ -518,6 +522,16 @@ function deploy_state_after_failure(array $state, string $kind, string $message,
     return $state;
 }
 
+/**
+ * Пара «код + каталог» сборки. После отката той же пары быть не должно: иначе
+ * пересборка того же коммита с тем же каталогом (новая sha в server-build)
+ * снова выложила бы то, что откатили.
+ */
+function deploy_pair_key(array $release): string
+{
+    return (string)($release['commit'] ?? '') . '|' . (string)($release['catalogVersion'] ?? '');
+}
+
 function deploy_state_after_rollback(array $state, int $now): array
 {
     $previous = $state['history'][0] ?? null;
@@ -525,6 +539,8 @@ function deploy_state_after_rollback(array $state, int $now): array
         throw new RuntimeException('откатываться не на что: прошлой сборки нет');
     }
     $state = deploy_mark_bad($state, $state['current']['sha'], 'откат вручную');
+    $state['badPairs'][deploy_pair_key($state['current'])] = 'откат вручную';
+    $state['badPairs'] = array_slice($state['badPairs'], -20, null, true);
     array_shift($state['history']);
     $previous['deployedAt'] = $now;
     $state['current'] = $previous;

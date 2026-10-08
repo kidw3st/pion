@@ -123,8 +123,8 @@ $y = str_repeat('d', 40);
 $z = str_repeat('c', 40);
 t_equal(
     array_keys(deploy_empty_state()),
-    ['current', 'history', 'bad', 'failure', 'alerts', 'master', 'head'],
-    'head — последний ключ состояния',
+    ['current', 'history', 'bad', 'badPairs', 'failure', 'alerts', 'master', 'head'],
+    'ключи состояния: badPairs рядом с bad, head — последний',
 );
 $h = deploy_note_head(deploy_empty_state(), $x, 500);
 t_equal($h['head'], ['sha' => $x, 'since' => 500], 'голова ветки запоминается вместе со временем');
@@ -288,3 +288,50 @@ t_true($threw === null, 'состояние сохраняется, хотя в 
 $msg = (string)(deploy_state_load($home)['failure']['message'] ?? '');
 t_true($msg !== '' && preg_match('//u', $msg) === 1, 'в файле корректный UTF-8');
 t_true(str_starts_with($msg, 'pay/init.php: ошибка ') && str_contains($msg, "\u{FFFD}"), 'битые байты заменены, остальной текст на месте');
+
+// --- Откат помечает пару «код + каталог» ---------------------------------
+// Пересборка того же коммита с тем же каталогом («Run workflow») даёт новую sha
+// в server-build, но не новую пару: по паре и узнаётся откатанное.
+$r1 = ['sha' => str_repeat('1', 40), 'commit' => str_repeat('a', 40), 'paySha256' => str_repeat('0', 64), 'catalogVersion' => str_repeat('c', 64)];
+$r2 = ['sha' => str_repeat('2', 40), 'commit' => str_repeat('b', 40), 'paySha256' => str_repeat('0', 64), 'catalogVersion' => str_repeat('d', 64)];
+$s = deploy_state_after_success(deploy_state_after_success(deploy_empty_state(), $r1, 1), $r2, 2);
+$s = deploy_state_after_rollback($s, 3);
+t_true(isset($s['badPairs'][deploy_pair_key($r2)]), 'откат помечает пару «код + каталог» откатанной сборки');
+t_equal(deploy_pair_key(['commit' => 'x']), 'x|', 'сборка без каталога — пара по коду');
+
+t_equal(deploy_pair_key($r2), str_repeat('b', 40) . '|' . str_repeat('d', 64), 'пара — код и версия каталога через «|»');
+t_equal($s['badPairs'], [deploy_pair_key($r2) => 'откат вручную'], 'в плохих парах — только откатанная сборка, с причиной');
+t_true(!isset($s['badPairs'][deploy_pair_key($r1)]), 'пара сборки, на которую вернулись, плохой не становится');
+t_equal(array_keys($s['bad']), [$r2['sha']], 'плохая sha по-прежнему помечается');
+t_equal($s['current']['sha'], $r1['sha'], 'откат вернул прошлую сборку');
+t_true(
+    deploy_pair_key($r2) !== deploy_pair_key(['commit' => $r2['commit'], 'catalogVersion' => str_repeat('e', 64)]),
+    'тот же код с другим каталогом — другая пара',
+);
+t_true(
+    deploy_pair_key($r2) !== deploy_pair_key(['commit' => $r2['commit']]),
+    'тот же код без каталога — другая пара',
+);
+
+// Сборка без каталога (старая или без переключателя): откат метит «код|».
+$s = deploy_state_after_success(deploy_state_after_success(deploy_empty_state(), $rel('a'), 1), $rel('b'), 2);
+$s = deploy_state_after_rollback($s, 3);
+t_equal(array_keys($s['badPairs']), ['commit-b|'], 'откат сборки без каталога метит пару «код|»');
+
+// Помним 20 последних пар, как и плохих sha.
+$s = deploy_state_after_success(deploy_state_after_success(deploy_empty_state(), $r1, 1), $r2, 2);
+for ($i = 0; $i < 25; $i++) {
+    $s['badPairs']['old-' . $i . '|'] = 'откат вручную';
+}
+$s = deploy_state_after_rollback($s, 3);
+t_equal(count($s['badPairs']), 20, 'помним 20 последних плохих пар');
+t_true(isset($s['badPairs'][deploy_pair_key($r2)]), 'свежая пара на месте');
+t_true(!isset($s['badPairs']['old-0|']) && isset($s['badPairs']['old-24|']), 'забыты самые старые');
+
+// Состояние на диске: старый state.json без badPairs читается, новое — сохраняется.
+$home = t_tmpdir();
+file_put_contents($home . '/state.json', json_encode(['current' => null, 'history' => [], 'bad' => [], 'failure' => null, 'alerts' => [], 'master' => null, 'head' => null]));
+t_equal(deploy_state_load($home)['badPairs'], [], 'файл состояния без badPairs читается');
+$s = deploy_state_after_rollback(deploy_state_after_success(deploy_state_after_success(deploy_empty_state(), $r1, 1), $r2, 2), 3);
+deploy_state_save($home, $s);
+t_equal(deploy_state_load($home)['badPairs'], [deploy_pair_key($r2) => 'откат вручную'], 'плохие пары сохраняются и читаются');
