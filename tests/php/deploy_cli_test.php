@@ -210,6 +210,14 @@ function t_cli_publish(array $box, string $sha, string $commit, ?string $catalog
     file_put_contents("$dir/build-info.json", json_encode($info));
 }
 
+/** Как будто сообщение $kind ушло в момент $at: правит state.json. @param array{home:string} $box */
+function t_cli_alerted_at(array $box, string $kind, int $at): void
+{
+    $state = deploy_state_load($box['home']);
+    $state['alerts'][$kind] = $at;
+    deploy_state_save($box['home'], $state);
+}
+
 /** Сборка $sha — голова ветки server-build в «GitHub». @param array{fake:string} $box */
 function t_cli_set_head(array $box, string $sha): void
 {
@@ -447,8 +455,16 @@ t_equal($code, 0, 'сторож: правка не выложена — код �
 t_true(str_contains($out, $say('catalog')), "сторож: правка не выложена 2 часа — сообщение ($out)");
 t_true(!str_contains($out, $say('backup')) && !str_contains($out, $say('maintenance')), "сторож: копия свежая, итога обслуживания нет — о них молчим ($out)");
 t_equal(array_keys(deploy_state_load($box['home'])['alerts']), ['catalog'], 'сторож: в state.json записано, о чём написали');
+// Сразу следующий запуск, потом через 15 минут (сообщение «ушло» 15 минут назад)
+// и через 3 часа: о каталоге напоминаем раз в 3 часа.
+[$code, $out] = t_cli_run($box, '');
+t_equal([$code, $out], [0, ''], 'сторож: сразу следующий запуск то же сообщение не повторяет');
+t_cli_alerted_at($box, 'catalog', time() - 900);
 [$code, $out] = t_cli_run($box, '');
 t_equal([$code, $out], [0, ''], 'сторож: через 15 минут то же сообщение не повторяется');
+t_cli_alerted_at($box, 'catalog', time() - DEPLOY_ALERT_COOLDOWN - 60);
+[$code, $out] = t_cli_run($box, '');
+t_true(str_contains($out, $say('catalog')), "сторож: через 3 часа о каталоге напоминаем ($out)");
 
 // Всё выложено — тишина, даже если правка свежая.
 $box = t_cli_fake_github(t_cli_rollback_box($v1));
@@ -458,20 +474,67 @@ t_cli_catalog($box, $v1, time() - 7200);
 t_equal([$code, $out], [0, ''], 'сторож: версия в базе выложена — молчим');
 t_equal(deploy_state_load($box['home'])['alerts'], [], 'сторож: в state.json ничего не записано');
 
-// Базу прочитать нельзя — выкладка идёт, в журнале строка, сообщения нет.
+// База не читается: выкладка идёт, в журнале строка. Молчит только о каталоге:
+// о копиях и обслуживании сторож пишет, как обычно (иначе испорченная база
+// заглушила бы и тревогу о том, что копии не делаются).
+// Итог обслуживания: неудачный запуск закончился $ago секунд назад.
+$maintenanceFailed = fn(int $ago = 0): array => ['ok' => false, 'at' => catalog_iso(new DateTimeImmutable('@' . (time() - $ago))), 'message' => 'диск полон'];
+$brokenDb = static function (array $box): void {
+    file_put_contents($box['catalogHome'] . '/catalog.sqlite', 'это не база SQLite, а просто текст, достаточно длинный, чтобы SQLite не принял его за пустой файл');
+};
 $box = t_cli_fake_github(t_cli_rollback_box($v1));
 t_cli_set_head($box, $bBuild);
-file_put_contents($box['catalogHome'] . '/catalog.sqlite', 'это не база SQLite, а просто текст, достаточно длинный, чтобы SQLite не принял его за пустой файл');
+$brokenDb($box);
 [$code, $out] = t_cli_run($box, '');
 t_equal($code, 0, 'сторож: база не читается — выкладка не падает');
 t_true(str_contains($out, 'не прочитать базу каталога для сторожа: '), "сторож: причина в журнале ($out)");
-t_true(!str_contains($out, 'сообщение о сбое') && !str_contains($out, 'упал'), "сторож: ни сообщения, ни падения ($out)");
+t_true(str_contains($out, $say('backup')), "сторож: база не читается, копий нет — о копиях пишем ($out)");
+t_true(!str_contains($out, $say('catalog')) && !str_contains($out, $say('maintenance')) && !str_contains($out, 'упал'), "сторож: о каталоге молчим, выкладка не упала ($out)");
 t_true(str_contains((string)file_get_contents($box['home'] . '/deploy.log'), 'не прочитать базу каталога для сторожа: '), 'сторож: строка записана и в deploy.log');
 t_equal(deploy_state_load($box['home'])['current']['sha'] ?? null, $bBuild, 'сторож: state.json записан как обычно');
+t_equal(array_keys(deploy_state_load($box['home'])['alerts']), ['backup'], 'сторож: в state.json — только о копиях');
 
+$box = t_cli_fake_github(t_cli_rollback_box($v1));
+t_cli_set_head($box, $bBuild);
+$brokenDb($box);
+t_put_files($box['catalogHome'] . '/backups', ['catalog-2026-10-08.sqlite' => 'copy']);
+file_put_contents($box['catalogHome'] . '/maintenance.json', json_encode($maintenanceFailed(), JSON_UNESCAPED_UNICODE));
+[$code, $out] = t_cli_run($box, '');
+t_equal($code, 0, 'сторож: база не читается, обслуживание упало — код выхода');
+t_true(str_contains($out, 'не прочитать базу каталога для сторожа: '), "сторож: и тут причина в журнале ($out)");
+t_true(str_contains($out, $say('maintenance')), "сторож: база не читается — о сбое обслуживания пишем ($out)");
+t_true(!str_contains($out, $say('backup')) && !str_contains($out, $say('catalog')), "сторож: копия свежая — о копиях и каталоге молчим ($out)");
+t_equal(array_keys(deploy_state_load($box['home'])['alerts']), ['maintenance'], 'сторож: в state.json — только об обслуживании');
+
+// Обслуживание: одно сообщение на каждый неудавшийся запуск (а не по сроку).
+$box = t_cli_fake_github(t_cli_rollback_box($v1));
+t_cli_set_head($box, $bBuild);
+t_cli_catalog($box, $v1, time() - 60, true, $maintenanceFailed());
+[$code, $out] = t_cli_run($box, '');
+t_true(str_contains($out, $say('maintenance')), "сторож: неудавшийся запуск — сообщение ($out)");
+// Прошло несколько часов: запуск кончился 6 часов назад, сообщение ушло 5 часов назад.
+file_put_contents($box['catalogHome'] . '/maintenance.json', json_encode($maintenanceFailed(6 * 3600), JSON_UNESCAPED_UNICODE));
+t_cli_alerted_at($box, 'maintenance', time() - 5 * 3600);
+[$code, $out] = t_cli_run($box, '');
+t_equal([$code, $out], [0, ''], 'сторож: о том же запуске через 5 часов (срок в 3 часа прошёл) не повторяет');
+file_put_contents($box['catalogHome'] . '/maintenance.json', json_encode($maintenanceFailed(), JSON_UNESCAPED_UNICODE));
+[$code, $out] = t_cli_run($box, '');
+t_true(str_contains($out, $say('maintenance')), "сторож: новый неудавшийся запуск — новое сообщение сразу ($out)");
+
+// Копии нет: напоминаем раз в сутки, а не раз в 3 часа.
+$box = t_cli_fake_github(t_cli_rollback_box($v1));
+t_cli_set_head($box, $bBuild);
+t_cli_catalog($box, $v1, time() - 60, false);
+[$code, $out] = t_cli_run($box, '');
+t_true(str_contains($out, $say('backup')), "сторож: копий нет — сообщение ($out)");
+t_cli_alerted_at($box, 'backup', time() - 4 * 3600);
+[$code, $out] = t_cli_run($box, '');
+t_equal([$code, $out], [0, ''], 'сторож: о копиях через 4 часа не напоминаем');
+t_cli_alerted_at($box, 'backup', time() - 86400 - 60);
+[$code, $out] = t_cli_run($box, '');
+t_true(str_contains($out, $say('backup')), "сторож: о копиях через сутки напоминаем ($out)");
 // Каждый путь deploy_run отдаёт сторожу данные: забытая передача молча отключила
 // бы сообщения на этом пути (по умолчанию watch пуст).
-$maintenanceFailed = fn(): array => ['ok' => false, 'at' => catalog_iso(new DateTimeImmutable()), 'message' => 'диск полон'];
 $paths = [
     // Ветки server-build в «GitHub» нет вовсе — опрос не удаётся.
     'GitHub не отвечает' => [1, static fn(array $box) => null],

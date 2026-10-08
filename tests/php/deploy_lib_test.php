@@ -131,9 +131,86 @@ t_equal(deploy_pending_alerts($youngFailure, $now, $stale), ['backup', 'maintena
 t_equal(deploy_pending_alerts($base, $now, $stale), ['catalog', 'backup', 'maintenance'], 'все три — по порядку');
 $backupSaid = deploy_mark_alerted($base, 'backup', $now - 600);
 t_equal(deploy_pending_alerts($backupSaid, $now, $stale), ['catalog', 'maintenance'], 'о копиях писали недавно, об остальном — нет');
-t_equal(deploy_pending_alerts(deploy_mark_alerted($base, 'backup', $now - DEPLOY_ALERT_COOLDOWN), $now, ['backupAt' => null] + $fresh), ['backup'], 'через 3 часа напоминаем');
+$noBackups = ['backupAt' => null] + $fresh;
+t_equal(deploy_pending_alerts(deploy_mark_alerted($base, 'backup', $now - DEPLOY_ALERT_COOLDOWN), $now, $noBackups), [], 'о копиях через 3 часа не напоминаем: срок сутки');
+t_equal(deploy_pending_alerts(deploy_mark_alerted($base, 'backup', $now - DEPLOY_BACKUP_ALERT_COOLDOWN + 1), $now, $noBackups), [], 'о копиях без секунды сутки — рано');
+t_equal(deploy_pending_alerts(deploy_mark_alerted($base, 'backup', $now - DEPLOY_BACKUP_ALERT_COOLDOWN), $now, $noBackups), ['backup'], 'о копиях через сутки напоминаем');
+t_equal(deploy_pending_alerts(deploy_mark_alerted($base, 'catalog', $now - DEPLOY_ALERT_COOLDOWN + 1), $now, $late), [], 'об отставании каталога без секунды 3 часа — рано');
+t_equal(deploy_pending_alerts(deploy_mark_alerted($base, 'catalog', $now - DEPLOY_ALERT_COOLDOWN), $now, $late), ['catalog'], 'об отставании каталога через 3 часа напоминаем');
 $lagging = deploy_note_master(deploy_note_head($base, str_repeat('1', 40), 1000), str_repeat('b', 40), 1000);
 t_equal(deploy_pending_alerts($lagging, $now, $late), ['lag', 'catalog'], 'отставание коммитов и каталога — отдельные сообщения');
+
+// Сторож каталога: обслуживание — одно сообщение на каждый неудавшийся запуск.
+$failedAt = static fn(int $at): array => ['maintenance' => ['ok' => false, 'at' => $at, 'message' => 'диск полон']] + $fresh;
+t_equal(deploy_pending_alerts($base, $now, $failedAt($now - 600)), ['maintenance'], 'обслуживание: сообщения ещё не было — пишем');
+$reported = deploy_mark_alerted($base, 'maintenance', $now - 300);
+t_equal(deploy_pending_alerts($reported, $now, $failedAt($now - 600)), [], 'обслуживание: о том же запуске уже писали — молчим, хотя срока в 3 часа ещё нет');
+t_equal(deploy_pending_alerts(deploy_mark_alerted($base, 'maintenance', $now - 7 * 3600), $now, $failedAt($now - 8 * 3600)), [], 'обслуживание: о том же запуске молчим и через много часов');
+t_equal(deploy_pending_alerts($reported, $now, $failedAt($now - 300)), [], 'обслуживание: запуск и сообщение в одну секунду — это тот же запуск');
+t_equal(deploy_pending_alerts($reported, $now, $failedAt($now - 299)), ['maintenance'], 'обслуживание: запуск позже сообщения — новый сбой, пишем сразу');
+t_equal(deploy_pending_alerts($reported, $now, $failedAt(0)), [], 'обслуживание: время запуска неизвестно, писали недавно — срок 3 часа');
+t_equal(deploy_pending_alerts(deploy_mark_alerted($base, 'maintenance', $now - DEPLOY_ALERT_COOLDOWN), $now, $failedAt(0)), ['maintenance'], 'обслуживание: время запуска неизвестно, прошло 3 часа — напоминаем');
+t_equal(deploy_pending_alerts(deploy_mark_alerted($base, 'maintenance', $now - 1), $now, $failedAt($now + 5000)), [], 'обслуживание: время запуска в будущем (часы разошлись), писали недавно — срок 3 часа');
+t_equal(deploy_pending_alerts(deploy_mark_alerted($base, 'maintenance', $now - DEPLOY_ALERT_COOLDOWN), $now, $failedAt($now + 5000)), ['maintenance'], 'обслуживание: время запуска в будущем, прошло 3 часа — напоминаем');
+
+// Сторож каталога: проверки раз в 15 минут, как cron; сколько сообщений за сутки.
+$simulate = static function (callable $watchAt, int $hours) use ($base): array {
+    $from = 2_000_000;
+    $state = $base;
+    $sent = [];
+    for ($t = $from; $t < $from + $hours * 3600; $t += 900) {
+        foreach (deploy_pending_alerts($state, $t, $watchAt($t, $from)) as $kind) {
+            $sent[] = [$t - $from, $kind];
+            $state = deploy_mark_alerted($state, $kind, $t);
+        }
+    }
+    return $sent;
+};
+$watchOf = static fn(int $t, ?array $maintenance, ?int $backupAt, string $version = 'v1'): array
+    => ['version' => $version, 'changedAt' => $t - 60 - ($version === 'v1' ? 0 : 5400), 'backupAt' => $backupAt, 'maintenance' => $maintenance];
+$failed = static fn(int $at): array => ['ok' => false, 'at' => $at, 'message' => 'диск полон'];
+t_equal(
+    $simulate(static fn(int $t, int $from) => $watchOf($t, $failed($from - 600), $t - 3600), 24),
+    [[0, 'maintenance']],
+    'один неудавшийся запуск за сутки проверок раз в 15 минут — одно сообщение',
+);
+t_equal(
+    $simulate(static fn(int $t, int $from) => $watchOf($t, $failed($t < $from + 86400 ? $from - 600 : $from + 86400 - 600), $t - 3600), 48),
+    [[0, 'maintenance'], [86400, 'maintenance']],
+    'следующей ночью новый неудавшийся запуск — одно новое сообщение, сразу после него',
+);
+t_equal(
+    $simulate(static fn(int $t, int $from) => $watchOf($t, ['ok' => true, 'at' => $t - 600, 'message' => ''], $t - 3600), 24),
+    [],
+    'обслуживание в порядке — сообщений нет',
+);
+$every3h = array_map(static fn(int $i): array => [$i * 10800, 'maintenance'], range(0, 7));
+t_equal(
+    $simulate(static fn(int $t, int $from) => $watchOf($t, $failed(0), $t - 3600), 24),
+    $every3h,
+    'время запуска неизвестно — по сроку в 3 часа, 8 сообщений в сутки',
+);
+t_equal(
+    $simulate(static fn(int $t, int $from) => $watchOf($t, $failed($t + 1000), $t - 3600), 24),
+    $every3h,
+    'время запуска в будущем — тоже по сроку в 3 часа',
+);
+t_equal(
+    $simulate(static fn(int $t, int $from) => $watchOf($t, null, null), 24),
+    [[0, 'backup']],
+    'копий нет сутки — одно сообщение',
+);
+t_equal(
+    $simulate(static fn(int $t, int $from) => $watchOf($t, null, null), 48),
+    [[0, 'backup'], [86400, 'backup']],
+    'копий нет двое суток — по одному сообщению в сутки',
+);
+$everythingBad = $simulate(static fn(int $t, int $from) => $watchOf($t, $failed($from - 600), null, 'v2'), 24);
+t_equal(
+    array_count_values(array_column($everythingBad, 1)),
+    ['catalog' => 8, 'backup' => 1, 'maintenance' => 1],
+    'сутки, когда плохо всё: отставание каталога каждые 3 часа, копии и обслуживание по разу',
+);
 
 // Сторож каталога: тексты сообщений.
 $said = ['maintenance' => ['ok' => false, 'at' => $now, 'message' => 'диск полон']] + $fresh;
@@ -162,6 +239,15 @@ t_equal(
     'Каталог pionperm.ru: ночное обслуживание не удалось — причина не записана.',
     'текст про обслуживание: сообщения нет',
 );
+$reasonText = static fn(string $message): string => deploy_alert_text('maintenance', $base, ['maintenance' => ['ok' => false, 'at' => 0, 'message' => $message]] + $fresh);
+$prefix = 'Каталог pionperm.ru: ночное обслуживание не удалось — ';
+t_equal($reasonText("Уборка фото остановлена\nпервая строка трассировки\nвторая"), $prefix . 'Уборка фото остановлена.', 'причина: только первая строка');
+t_equal($reasonText("Уборка фото остановлена.\r\nтрассировка"), $prefix . 'Уборка фото остановлена.', 'причина: первая строка с переводом строки Windows, точка не удваивается');
+t_equal($reasonText("\n\n  Нет места на диске  \n"), $prefix . 'Нет места на диске.', 'причина: пустые строки и пробелы по краям не в счёт');
+t_equal($reasonText(str_repeat('я', 300)), $prefix . str_repeat('я', 300) . '.', 'причина: ровно 300 знаков — без сокращения');
+t_equal($reasonText(str_repeat('я', 301)), $prefix . str_repeat('я', 299) . '…', 'причина: 301 знак — сокращена до 300 с «…», точки после «…» нет');
+t_equal($reasonText(str_repeat('ж', 5000) . "\nвторая строка"), $prefix . str_repeat('ж', 299) . '…', 'причина: длинная первая строка и вторая — одна сокращённая строка');
+t_equal(mb_strlen(deploy_alert_text('maintenance', $base, ['maintenance' => ['ok' => false, 'at' => 0, 'message' => str_repeat('я', 9000)]] + $fresh)), mb_strlen($prefix) + 300, 'причина: сообщение целиком не длиннее префикса и 300 знаков');
 t_true(str_contains(deploy_alert_text('maintenance', $base), 'ночное обслуживание не удалось'), 'текст про обслуживание без сторожа не падает');
 t_true(str_contains(deploy_alert_text('lag', deploy_note_master($base, 'abcdef1234', 0)), 'abcdef1'), 'прежние тексты на месте');
 
@@ -225,20 +311,77 @@ t_case('сторож каталога: чтение папки', function (): vo
 });
 
 t_case('сторож каталога: база не читается', function (): void {
+    $garbage = 'это не база SQLite, а просто текст, достаточно длинный, чтобы SQLite не принял его за пустой файл';
     $home = t_tmpdir();
-    file_put_contents("$home/catalog.sqlite", 'это не база SQLite, а просто текст, достаточно длинный, чтобы SQLite не принял его за пустой файл');
-    t_throws(static fn() => deploy_catalog_watch($home, "$home/catalog.sqlite"), PDOException::class, 'испорченный файл — исключение: вызывающий пишет его в журнал');
+    file_put_contents("$home/catalog.sqlite", $garbage);
+    $error = 'прежнее значение';
+    t_equal(
+        deploy_catalog_watch($home, "$home/catalog.sqlite", $error),
+        ['version' => '', 'changedAt' => 0, 'backupAt' => null, 'maintenance' => null],
+        'испорченный файл: сторож жив, о каталоге ему нечего сказать',
+    );
+    t_true(is_string($error) && $error !== '' && $error !== 'прежнее значение', 'испорченный файл: причина — в $dbError');
 
+    // Копии и итог обслуживания лежат рядом с испорченной базой — сторож их видит.
+    mkdir("$home/backups");
+    file_put_contents("$home/backups/catalog-2026-10-04.sqlite", 'x');
+    touch("$home/backups/catalog-2026-10-04.sqlite", 1_700_086_400);
+    file_put_contents("$home/maintenance.json", json_encode(['ok' => false, 'at' => catalog_iso(t_now()), 'message' => 'диск полон'], JSON_UNESCAPED_UNICODE));
+    $watch = deploy_catalog_watch($home, "$home/catalog.sqlite", $error);
+    t_equal(
+        $watch,
+        [
+            'version' => '', 'changedAt' => 0, 'backupAt' => 1_700_086_400,
+            'maintenance' => ['ok' => false, 'at' => t_now()->getTimestamp(), 'message' => 'диск полон'],
+        ],
+        'испорченный файл: копии и итог обслуживания прочитаны независимо от базы',
+    );
+    $state = deploy_state_after_success(deploy_empty_state(), ['sha' => str_repeat('1', 40), 'commit' => str_repeat('a', 40), 'paySha256' => '', 'catalogVersion' => 'v1'], 1000);
+    t_equal(
+        deploy_pending_alerts($state, t_now()->getTimestamp() + 600, $watch),
+        ['backup', 'maintenance'],
+        'испорченная база: о каталоге молчим, о копиях и обслуживании пишем',
+    );
+
+    // База новее кода (например, после отката /pay/): то же, и база не тронута.
     $newer = t_tmpdir();
     $db = t_catalog_db("$newer/catalog.sqlite");
     $db->exec('PRAGMA user_version = ' . (CATALOG_SCHEMA_VERSION + 1));
     $db = null;
-    t_throws(static fn() => deploy_catalog_watch($newer, "$newer/catalog.sqlite"), RuntimeException::class, 'база новее кода — исключение');
+    t_equal(
+        deploy_catalog_watch($newer, "$newer/catalog.sqlite", $error),
+        ['version' => '', 'changedAt' => 0, 'backupAt' => null, 'maintenance' => null],
+        'база новее кода: версии нет, остальное читается',
+    );
+    t_true(is_string($error) && str_contains($error, 'новее кода'), 'база новее кода: причина — в $dbError');
     $db = new PDO('sqlite:' . "$newer/catalog.sqlite");
     t_equal((int)$db->query('PRAGMA user_version')->fetchColumn(), CATALOG_SCHEMA_VERSION + 1, 'версия схемы чужой базы не изменилась');
     $db = null;
-});
 
+    // Здоровая база и отсутствие базы сбрасывают прежнюю ошибку.
+    $ok = t_tmpdir();
+    $db = t_catalog_db("$ok/catalog.sqlite");
+    $db = null;
+    $error = 'прежнее значение';
+    deploy_catalog_watch($ok, "$ok/catalog.sqlite", $error);
+    t_equal($error, null, 'здоровая база: $dbError пуст');
+    $error = 'прежнее значение';
+    t_equal(deploy_catalog_watch("$ok/нет", "$ok/нет/catalog.sqlite", $error), null, 'файла базы нет — null, как раньше: каталог ещё не переносили, не пишем ни о чём');
+    t_equal($error, null, 'файла базы нет: $dbError пуст');
+
+    // Пустой файл — не «нет базы»: общее открытие создаёт в нём таблицы (так и сказано в описании функции).
+    $empty = t_tmpdir();
+    file_put_contents("$empty/catalog.sqlite", '');
+    t_equal(
+        deploy_catalog_watch($empty, "$empty/catalog.sqlite", $error),
+        ['version' => '', 'changedAt' => 0, 'backupAt' => null, 'maintenance' => null],
+        'пустой файл базы: как база без правок',
+    );
+    t_equal($error, null, 'пустой файл базы: ошибки нет');
+    $db = new PDO('sqlite:' . "$empty/catalog.sqlite");
+    t_equal((string)$db->query("SELECT name FROM sqlite_master WHERE name = 'meta'")->fetchColumn(), 'meta', 'пустой файл базы: таблицы созданы');
+    $db = null;
+});
 // deploy-lib.php подключается и из scripts/check-server-build.php, которому каталог не нужен.
 // Копия во временной папке: путь без кириллицы надёжно запускается отдельным процессом на Windows.
 $alone = t_tmpdir();

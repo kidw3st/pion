@@ -129,8 +129,10 @@ function deploy_telegram(string $text): string
 /**
  * Что сторож каталога видит в папке каталога (см. deploy_catalog_watch).
  *
- * Сторож не должен ронять выкладку: база не открылась, не читается или новее
- * кода — строка в журнал и null, как будто базы нет. Папка каталога — по
+ * Сторож не должен ронять выкладку. База не открылась, не читается или новее
+ * кода — строка в журнал; о копиях и обслуживании сторож пишет всё равно, молчит
+ * только о каталоге (deploy_catalog_watch). Не получилось прочитать совсем —
+ * строка в журнал и null, сторож молчит обо всём. Папка каталога — по
  * PION_CATALOG_HOME или рядом с pion-deploy (catalog_home()).
  */
 function deploy_read_catalog_watch(string $home): ?array
@@ -141,7 +143,11 @@ function deploy_read_catalog_watch(string $home): ?array
             throw new RuntimeException("нет $code");
         }
         require_once $code;
-        return deploy_catalog_watch(catalog_home(), catalog_db_path());
+        $watch = deploy_catalog_watch(catalog_home(), catalog_db_path(), $dbError);
+        if ($dbError !== null) {
+            deploy_log($home, 'не прочитать базу каталога для сторожа: ' . $dbError);
+        }
+        return $watch;
     } catch (Throwable $e) {
         deploy_log($home, 'не прочитать базу каталога для сторожа: ' . $e->getMessage());
         return null;
