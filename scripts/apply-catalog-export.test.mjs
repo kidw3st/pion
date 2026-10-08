@@ -1,5 +1,6 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import http from 'node:http';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -56,8 +57,102 @@ describe('applyCatalogExport', () => {
   });
 });
 
+/** Локальный сервер на свободном порту; close() рвёт и висящие соединения. */
+function serve(handler) {
+  return new Promise((resolve) => {
+    const server = http.createServer(handler);
+    server.listen(0, '127.0.0.1', () => {
+      const { port } = server.address();
+      resolve({
+        url: `http://127.0.0.1:${port}/pay/catalog-export.php`,
+        close: () =>
+          new Promise((done) => {
+            server.closeAllConnections();
+            server.close(() => done());
+          }),
+      });
+    });
+  });
+}
+
+describe('applyCatalogExport по сети', () => {
+  it('200 с выгрузкой — принята и записана, представляется pion-build', async () => {
+    const body = readFileSync(FIXTURE, 'utf8');
+    let agent = null;
+    const s = await serve((req, res) => {
+      agent = req.headers['user-agent'];
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(body);
+    });
+    try {
+      const out = path.join(tmp(), 'catalog-export.json');
+      const r = await applyCatalogExport({ source: s.url, out });
+      expect(r).toMatchObject({ ok: true, products: 5, sections: 3 });
+      expect(readFileSync(out, 'utf8')).toBe(formatExport(JSON.parse(body)));
+      expect(agent).toBe('pion-build');
+    } finally {
+      await s.close();
+    }
+  });
+
+  it('503 — не скачалось, причина по-русски, файл не тронут', async () => {
+    const s = await serve((req, res) => {
+      res.writeHead(503, { 'Content-Type': 'application/json' });
+      res.end('{"error":"Каталог ещё не создан"}');
+    });
+    try {
+      const out = path.join(tmp(), 'catalog-export.json');
+      const r = await applyCatalogExport({ source: s.url, out });
+      expect(r).toMatchObject({ ok: false, kind: 'unreachable' });
+      expect(r.errors[0]).toContain('сервер ответил 503');
+      expect(existsSync(out)).toBe(false);
+    } finally {
+      await s.close();
+    }
+  });
+
+  it('обрыв соединения — нет связи, без английского «fetch failed»', async () => {
+    const s = await serve((req) => req.socket.destroy());
+    try {
+      const r = await applyCatalogExport({ source: s.url, out: path.join(tmp(), 'x.json') });
+      expect(r).toMatchObject({ ok: false, kind: 'unreachable' });
+      expect(r.errors[0]).toContain('нет связи с сервером');
+      expect(r.errors[0]).not.toContain('fetch failed');
+    } finally {
+      await s.close();
+    }
+  });
+
+  it('200, но не JSON (страница-заглушка хостинга) — понятная причина', async () => {
+    const s = await serve((req, res) => {
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end('<!doctype html><title>Сайт временно недоступен</title>');
+    });
+    try {
+      const r = await applyCatalogExport({ source: s.url, out: path.join(tmp(), 'x.json') });
+      expect(r).toMatchObject({ ok: false, kind: 'unreachable' });
+      expect(r.errors[0]).toContain('прислано не JSON');
+    } finally {
+      await s.close();
+    }
+  });
+
+  it('сервер молчит дольше timeoutMs — «не ответил за … с»', async () => {
+    const s = await serve(() => {
+      // не отвечаем
+    });
+    try {
+      const r = await applyCatalogExport({ source: s.url, out: path.join(tmp(), 'x.json'), timeoutMs: 200 });
+      expect(r).toMatchObject({ ok: false, kind: 'unreachable' });
+      expect(r.errors[0]).toContain('сервер не ответил за 0.2 с');
+    } finally {
+      await s.close();
+    }
+  });
+});
+
 describe('запуск из командной строки', () => {
-  const run = (...args) => spawnSync(process.execPath, [SCRIPT, ...args], { encoding: 'utf8' });
+  const run =(...args) => spawnSync(process.execPath, [SCRIPT, ...args], { encoding: 'utf8' });
 
   it('--check на хорошем файле — код 0', () => {
     const r = run('--check', FIXTURE);

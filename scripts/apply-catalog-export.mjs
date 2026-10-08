@@ -30,14 +30,29 @@ const USAGE = [
   '  --check             только проверить файл на месте, ничего не записывать (без --out)',
 ].join('\n');
 
-async function load(source) {
+async function load(source, timeoutMs) {
   if (/^https?:\/\//.test(source)) {
     // Сервер может зависнуть — сборка не должна ждать его до своего таймаута.
-    const res = await fetch(source, { signal: AbortSignal.timeout(30_000), headers: { 'User-Agent': 'pion-build' } });
-    if (!res.ok) throw new Error(`сервер ответил ${res.status}`);
-    return parseJson(await res.text());
+    let res;
+    let text;
+    try {
+      res = await fetch(source, { signal: AbortSignal.timeout(timeoutMs), headers: { 'User-Agent': 'pion-build' } });
+      if (!res.ok) throw new Error(`сервер ответил ${res.status}`);
+      text = await res.text();
+    } catch (error) {
+      if (res && !res.ok) throw error;
+      throw new Error(networkReason(error, timeoutMs));
+    }
+    return parseJson(text);
   }
   return parseJson(readFileSync(source, 'utf8'));
+}
+
+/** Причина сбоя сети по-русски: fetch пишет «fetch failed» и «The operation was aborted due to timeout». */
+function networkReason(error, timeoutMs) {
+  if (error?.name === 'TimeoutError' || error?.cause?.name === 'TimeoutError') return `сервер не ответил за ${timeoutMs / 1000} с`;
+  const code = error?.cause?.code ?? error?.code;
+  return `нет связи с сервером${code ? ` (${code})` : ''}`;
 }
 
 function parseJson(text) {
@@ -60,10 +75,10 @@ function previousFromFile(file) {
   return { count: null, warning: `прошлый файл ${file} не читается — число букетов сравнить не с чем` };
 }
 
-export async function applyCatalogExport({ source, out = DEFAULT_FILE, allowShrink = false, check = false, previousCount = null }) {
+export async function applyCatalogExport({ source, out = DEFAULT_FILE, allowShrink = false, check = false, previousCount = null, timeoutMs = 30_000 }) {
   let exp;
   try {
-    exp = await load(source);
+    exp = await load(source, timeoutMs);
   } catch (error) {
     return { ok: false, kind: 'unreachable', errors: [`Не удалось прочитать выгрузку ${source}: ${error.message}`] };
   }
