@@ -70,9 +70,15 @@ function createArchive(file, dir, exclude) {
  */
 function catalogInfo(catalogFile) {
   const exp = JSON.parse(readFileSync(catalogFile, 'utf8'));
-  if (!/^[0-9a-f]{64}$/.test(exp.version ?? '')) throw new Error('в выгрузке каталога нет версии');
-  if (exp.changedAt !== null && !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/.test(exp.changedAt ?? '')) {
-    throw new Error(`changedAt выгрузки не в виде catalog_iso: ${exp.changedAt}`);
+  // typeof — потому что RegExp.test превращает аргумент в строку, и массив ['2026-…+05:00'] прошёл бы проверку.
+  if (typeof exp.version !== 'string' || !/^[0-9a-f]{64}$/.test(exp.version)) {
+    throw new Error(`версия выгрузки каталога — не sha256: ${JSON.stringify(exp.version)}`);
+  }
+  if (
+    exp.changedAt !== null &&
+    (typeof exp.changedAt !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/.test(exp.changedAt))
+  ) {
+    throw new Error(`changedAt выгрузки не в виде catalog_iso: ${JSON.stringify(exp.changedAt)}`);
   }
   if (!Array.isArray(exp.products)) throw new Error('в выгрузке каталога нет списка товаров');
   return { version: exp.version, changedAt: exp.changedAt, products: exp.products.length };

@@ -140,9 +140,7 @@ function deploy_finish(string $home, array $state, int $now): void
  * Скачивает сборку в releases/<sha>/ и сверяет sha256 с build-info.json.
  * Уже скачанная и проверенная сборка берётся из папки.
  *
- * Ключи catalogVersion, catalogChangedAt ('' — каталог ещё не менялся) и
- * catalogProducts есть, только если сборка собрана с каталогом (build-info.json
- * содержит catalog).
+ * Запись о сборке составляет deploy_release_from_info (deploy-lib.php).
  *
  * @return array{sha:string,commit:string,paySha256:string,catalogVersion?:string,catalogChangedAt?:string,catalogProducts?:int}
  */
@@ -181,18 +179,7 @@ function deploy_fetch_release(string $home, string $sha): array
         }
     }
     $info = json_decode((string)file_get_contents($dir . '/build-info.json'), true);
-    $release = [
-        'sha' => $sha,
-        'commit' => (string)($info['commit'] ?? ''),
-        'paySha256' => (string)($info['pay']['sha256'] ?? ''),
-    ];
-    // Версия выложенного каталога — по ней админка показывает «на сайте» / «ждёт выкладки».
-    if (is_array($info['catalog'] ?? null) && is_string($info['catalog']['version'] ?? null)) {
-        $release['catalogVersion'] = $info['catalog']['version'];
-        $release['catalogChangedAt'] = is_string($info['catalog']['changedAt'] ?? null) ? $info['catalog']['changedAt'] : '';
-        $release['catalogProducts'] = (int)($info['catalog']['products'] ?? 0);
-    }
-    return $release;
+    return deploy_release_from_info($sha, $info);
 }
 
 /** @return array{site:string,pay:string} */

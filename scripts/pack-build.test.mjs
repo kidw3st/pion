@@ -101,16 +101,25 @@ describe('pack', () => {
     });
 
     it('останавливает сборку, если changedAt не в виде catalog_iso', () => {
-      for (const bad of ['2026-10-05T14:32:10.000Z', '2026-10-05T14:32:10Z', '2026-10-05 14:32:10+05:00', '', 1760000000, undefined]) {
+      const good = '2026-10-05T14:32:10+05:00';
+      // Массив: RegExp.test превращает его в строку, и без проверки типа ['2026-…+05:00'] прошёл бы.
+      const bads = ['2026-10-05T14:32:10.000Z', '2026-10-05T14:32:10Z', '2026-10-05 14:32:10+05:00', '', 1760000000, undefined, [good]];
+      for (const bad of bads) {
         const file = exportWith({ changedAt: bad });
-        expect(() => packWith(file), `changedAt = ${String(bad)}`).toThrow(/changedAt/);
+        expect(() => packWith(file), `changedAt = ${JSON.stringify(bad)}`).toThrow(/changedAt/);
       }
     });
 
-    it('останавливает сборку, если в выгрузке нет версии или товаров', () => {
-      expect(() => packWith(exportWith({ version: 'abc' }))).toThrow(/версии/);
-      expect(() => packWith(exportWith({ version: undefined }))).toThrow(/версии/);
-      expect(() => packWith(exportWith({ products: undefined }))).toThrow(/товаров/);
+    it('останавливает сборку, если версия выгрузки — не sha256 строкой', () => {
+      for (const bad of ['abc', '', VERSION.toUpperCase(), VERSION.slice(1), [VERSION], 7, null, undefined]) {
+        expect(() => packWith(exportWith({ version: bad })), `version = ${JSON.stringify(bad)}`).toThrow(/версия выгрузки каталога — не sha256/);
+      }
+    });
+
+    it('останавливает сборку, если в выгрузке нет списка товаров', () => {
+      for (const bad of [undefined, null, 'abc', { length: 5 }]) {
+        expect(() => packWith(exportWith({ products: bad })), `products = ${JSON.stringify(bad)}`).toThrow(/товаров/);
+      }
     });
   });
 

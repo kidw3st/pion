@@ -401,7 +401,11 @@ const DEPLOY_ALERT_COOLDOWN = 10800;
 /**
  * Состояние лежит в pion-deploy/state.json:
  *   current — выложенная сборка: sha (коммит ветки server-build), commit
- *             (коммит кода в master), paySha256, deployedAt;
+ *             (коммит кода в master), paySha256, deployedAt и, если сборка
+ *             собрана с каталогом, catalogVersion, catalogChangedAt ('' —
+ *             каталог ещё не менялся) и catalogProducts (число товаров); по
+ *             версии каталога админка показывает «на сайте» / «ждёт выкладки»
+ *             (см. deploy_release_from_info);
  *   history — прошлые сборки для отката, новая первой;
  *   bad     — сборки, которые выкладывать нельзя: sha => причина;
  *   failure — текущий сбой: kind (transient|fatal), message, sha, since;
@@ -452,7 +456,7 @@ function deploy_state_save(string $home, array $state): void
  * снимается вместе с расписанием сообщений о нём — следующий сбой сообщит о
  * себе сразу, а не по сроку прошлого.
  *
- * @param array{sha:string,commit:string,paySha256:string} $release
+ * @param array{sha:string,commit:string,paySha256:string,catalogVersion?:string,catalogChangedAt?:string,catalogProducts?:int} $release
  */
 function deploy_state_after_success(array $state, array $release, int $now): array
 {
@@ -637,6 +641,38 @@ function deploy_alert_text(string $kind, array $state): string
 function deploy_release_dir(string $home, string $sha): string
 {
     return $home . '/releases/' . $sha;
+}
+
+/**
+ * Запись о сборке для state.json — из её build-info.json (его пишет
+ * scripts/pack-build.mjs).
+ *
+ * Ключи catalog* есть, только если в build-info есть catalog (массив со
+ * строковой version): сборка без каталога о нём ничего не говорит, и админка
+ * считает выложенное неизвестным. catalogChangedAt — '' для сборки, где каталог
+ * ещё ни разу не менялся (в build-info там null). Выкладка не проверяет вид
+ * времени: это делает сборка (pack-build.mjs), а админка при чтении.
+ *
+ * @param mixed $info build-info.json после json_decode(.., true)
+ * @return array{sha:string,commit:string,paySha256:string,catalogVersion?:string,catalogChangedAt?:string,catalogProducts?:int}
+ */
+function deploy_release_from_info(string $sha, mixed $info): array
+{
+    if (!is_array($info)) {
+        $info = [];
+    }
+    $release = [
+        'sha' => $sha,
+        'commit' => (string)($info['commit'] ?? ''),
+        'paySha256' => (string)($info['pay']['sha256'] ?? ''),
+    ];
+    // Версия выложенного каталога — по ней админка показывает «на сайте» / «ждёт выкладки».
+    if (is_array($info['catalog'] ?? null) && is_string($info['catalog']['version'] ?? null)) {
+        $release['catalogVersion'] = $info['catalog']['version'];
+        $release['catalogChangedAt'] = is_string($info['catalog']['changedAt'] ?? null) ? $info['catalog']['changedAt'] : '';
+        $release['catalogProducts'] = (int)($info['catalog']['products'] ?? 0);
+    }
+    return $release;
 }
 
 /**
