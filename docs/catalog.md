@@ -117,6 +117,7 @@ curl -s -o /dev/null -w '%{http_code} [%{redirect_url}]\n' -A "$UA" https://pion
 curl -s -o /dev/null -w '%{http_code}\n' -A "$UA" https://pionperm.ru/korobki/tsvetochnaya-korobka-21/      # 200, на странице «Сейчас нет в продаже»
 curl -s -o /dev/null -w '%{http_code}\n' -A "$UA" https://pionperm.ru/images/catalog/                      # 403
 curl -s -o /dev/null -w '%{http_code}\n' -A "$UA" https://pionperm.ru/pay/catalog-redirect-lib.php         # 403
+curl -s -o /dev/null -w '%{http_code}\n' -A "$UA" https://pionperm.ru/pay/cart-lib.php                     # 403 (файл появится после слияния 3А)
 curl -s -A "$UA" https://pionperm.ru/api/redirects.json                                                    # {}
 curl -s -o /dev/null -w '%{http_code}\n' -A "$UA" https://pionperm.ru/blog/                               # 200
 ```
@@ -138,8 +139,11 @@ curl -s -o /dev/null -w '%{http_code}\n' -A "$UA" https://pionperm.ru/blog/     
 плиток, новый раздел, карточка раздела), «Журнал» (последние 500 изменений),
 «Пароль».
 
-Опубликовать букет без фото нельзя. Новый раздел создаётся скрытым: добавьте
-фото плитки и отметьте «Показывать в каталоге».
+Черновик без фото опубликовать нельзя. Но у букета, который уже в продаже, пока
+можно убрать все фото и нажать «Сохранить», а снятый букет без фото — вернуть в
+продажу (закроем на этапе 3В); на сайте у такого букета нет картинки. Новый
+раздел создаётся скрытым: добавьте фото плитки и отметьте «Показывать в
+каталоге».
 
 Фото: браузер уменьшает снимок и отправляет его сразу; сервер пересохраняет
 в WebP. Убранные и заменённые фото, а также фото удалённых букетов через
