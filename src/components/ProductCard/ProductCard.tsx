@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { Gallery } from '@/components/Gallery/Gallery';
 import { useCart } from '@/components/Cart/CartContext';
@@ -21,14 +22,26 @@ export function ProductCard({ product, isNew = false, href }: { product: Product
   return (
     <div className={styles.card}>
       <div className={styles.imageWrap}>
-        {/* Букеты с витрины снимают с нескольких сторон — карусель показывает
-            все кадры прямо в карточке: своей страницы у них нет. */}
-        <Gallery
-          images={product.images}
-          alt={product.title}
-          sizes="(max-width: 900px) 50vw, 300px"
-          compact
-        />
+        {/* У букета каталога есть страница — фото ведёт на неё одним снимком.
+            Витрина из CRM своих страниц не имеет и листает все кадры в карточке. */}
+        {href && product.images[0] ? (
+          <Link href={href} className={styles.photoLink} aria-label={product.title}>
+            <Image
+              src={product.images[0]}
+              alt={product.title}
+              fill
+              sizes="(max-width: 900px) 50vw, 300px"
+              className={styles.photo}
+            />
+          </Link>
+        ) : (
+          <Gallery
+            images={product.images}
+            alt={product.title}
+            sizes="(max-width: 900px) 50vw, 300px"
+            compact
+          />
+        )}
         {isNew && <span className={styles.badge}>NEW</span>}
       </div>
       {/* У букета каталога есть своя страница — название ведёт на неё. У витрины из CRM своих страниц нет. */}

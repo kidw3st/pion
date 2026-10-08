@@ -85,6 +85,14 @@ describe('catalog-view на выгрузке-образце', () => {
   });
 });
 
+describe('плитки без фото', () => {
+  it('раздел без фото плитки в сетку не выводится', () => {
+    const exp = load();
+    exp.sections.find((s) => s.slug === 'bukety').tileImage = '';
+    expect(catalogTiles(exp).map((t) => t.label)).toEqual(['Цветы', 'Создать уникальный букет']);
+  });
+});
+
 describe('карты адресов для сервера', () => {
   it('tilda-map: каждый букет — на его страницу по главному разделу, снятые тоже', () => {
     expect(tildaMap(load())).toEqual({

@@ -79,12 +79,16 @@ export function ambiguousTitles(exp) {
   return new Set([...seen].filter(([, sections]) => sections.size > 1).map(([title]) => title));
 }
 
-/** Плитки сетки каталога: у раздела — его название, адрес и фото плитки. */
+/**
+ * Плитки сетки каталога: у раздела — его название, адрес и фото плитки.
+ * Раздел без фото плитки в сетку не выводится: пустая картинка выглядела бы
+ * поломкой (админка и так создаёт новый раздел скрытым).
+ */
 export function catalogTiles(exp) {
   return exp.tiles.flatMap((t) => {
     if (t.type !== 'section') return [{ label: t.label, href: t.href, image: t.image }];
     const section = findSection(exp, t.slug);
-    return section ? [{ label: section.label, href: `/${section.slug}`, image: section.tileImage }] : [];
+    return section && section.tileImage ? [{ label: section.label, href: `/${section.slug}`, image: section.tileImage }] : [];
   });
 }
 

@@ -20,6 +20,21 @@
   object-fit: cover;
 }
 
+/* Фото-ссылка у карточки с собственной страницей (букет каталога в «Новинках»).
+   Кадр квадратный — как у Gallery в режиме compact (Gallery.module.css:
+   `.compact .frame { aspect-ratio: 1 / 1 }`), чтобы карточка занимала то же место. */
+.photoLink {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+}
+
+.photo {
+  object-fit: cover;
+}
+
 /* Measured on the live block: 51x50 circle in the accent colour with a white
    12px label. It straddles the photo's top edge — 10px above it, 10px in from
    the right — rather than sitting inside the corner. */

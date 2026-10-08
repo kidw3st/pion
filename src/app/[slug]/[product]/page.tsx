@@ -59,7 +59,8 @@ export async function generateMetadata({
   const needsLabel =
     getAmbiguousTitles().has(short) && !label.toLowerCase().includes(short) && !short.includes(label.toLowerCase());
   const name = needsLabel ? `${product.title} — ${label.toLowerCase()}` : product.title;
-  const title = `${name} — купить в Перми | Салон «Пион»`;
+  // «Купить» в заголовке снятого букета обещало бы то, чего нельзя.
+  const title = onSale ? `${name} — купить в Перми | Салон «Пион»` : `${name} — нет в продаже | Салон «Пион»`;
 
   return {
     ...buildMetadata({
@@ -151,7 +152,11 @@ export default async function ProductPage({
               </p>
             </>
           ) : (
-            <p className={styles.assurance}>Посмотрите похожие букеты ниже — их можно заказать.</p>
+            <p className={styles.assurance}>
+              {related.length > 0
+                ? 'Посмотрите похожие букеты ниже — их можно заказать.'
+                : `Позвоните нам — ${site.phone}, подскажем, что собрать вместо него.`}
+            </p>
           )}
 
           <div className={styles.block}>
