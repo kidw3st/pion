@@ -333,12 +333,27 @@ function catalog_hide(PDO $db, string $login, string $uid, int $version, DateTim
     catalog_change_status($db, $login, $uid, $version, 'active', 'hidden', 'Снять с продажи можно только букет в продаже.', $now);
 }
 
-/** Вернуть в продажу — на прежнее место, по тому же адресу. */
+/**
+ * Вернуть в продажу — на прежнее место, по тому же адресу. Только с ценой:
+ * у коробок из Tilda её нет (0 ₽), а букет в продаже за 0 ₽ сайт не примет —
+ * сборка остановится целиком.
+ */
 function catalog_unhide(PDO $db, string $login, string $uid, int $version, DateTimeImmutable $now): void
 {
-    catalog_change_status($db, $login, $uid, $version, 'hidden', 'active', 'Вернуть в продажу можно только снятый букет.', $now);
+    catalog_change_status(
+        $db, $login, $uid, $version, 'hidden', 'active', 'Вернуть в продажу можно только снятый букет.', $now,
+        static function (array $p): void {
+            if ((int)$p['price'] < CATALOG_PRICE_MIN) {
+                throw new CatalogError('Сначала укажите цену в карточке — от ' . CATALOG_PRICE_MIN . ' ₽, потом возвращайте букет в продажу.');
+            }
+        },
+    );
 }
 
+/**
+ * Смена статуса одной транзакцией. $check — дополнительная проверка букета
+ * (уже прочитанного внутри транзакции): бросает CatalogError, если нельзя.
+ */
 function catalog_change_status(
     PDO $db,
     string $login,
@@ -348,11 +363,15 @@ function catalog_change_status(
     string $to,
     string $error,
     DateTimeImmutable $now,
+    ?Closure $check = null,
 ): void {
-    catalog_tx($db, function () use ($db, $login, $uid, $version, $from, $to, $error, $now): void {
+    catalog_tx($db, function () use ($db, $login, $uid, $version, $from, $to, $error, $now, $check): void {
         $p = catalog_product_for_change($db, $uid, $version);
         if ($p['status'] !== $from) {
             throw new CatalogError($error);
+        }
+        if ($check !== null) {
+            $check($p);
         }
         $at = catalog_iso($now);
         $db->prepare('UPDATE products SET status = ?, status_changed_at = ?, updated_at = ?, updated_by = ?,

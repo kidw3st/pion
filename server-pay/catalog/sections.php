@@ -90,7 +90,9 @@ function catalog_section_value(string $field, mixed $value): string|int|null
 
 /**
  * Новый раздел: slug из названия, уникальный и не совпадающий с адресами
- * сайта (иначе -2, -3); плитка встаёт в конец сетки.
+ * сайта (иначе -2, -3); плитка встаёт в конец сетки. Раздел создаётся
+ * скрытым: без фото плитки на сайте была бы пустая картинка — сотрудник
+ * показывает его, когда добавит фото.
  */
 function catalog_create_section(PDO $db, string $login, string $label, DateTimeImmutable $now): string
 {
@@ -102,7 +104,7 @@ function catalog_create_section(PDO $db, string $login, string $label, DateTimeI
         for ($n = 2; in_array($slug, $taken, true) || in_array($slug, CATALOG_RESERVED_SLUGS, true); $n++) {
             $slug = "$base-$n";
         }
-        $db->prepare('INSERT INTO sections (slug, label, cover_title, heading, updated_at) VALUES (?, ?, ?, ?, ?)')
+        $db->prepare('INSERT INTO sections (slug, label, cover_title, heading, visible, updated_at) VALUES (?, ?, ?, ?, 0, ?)')
             ->execute([$slug, $label, $label, mb_strtoupper($label), catalog_iso($now)]);
         $db->prepare("INSERT INTO tiles (position, type, section)
             VALUES ((SELECT COALESCE(MAX(position), 0) + 1 FROM tiles), 'section', ?)")

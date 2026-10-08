@@ -229,6 +229,10 @@ function admin_product_save(array $req, array $ctx, string $action): array
         catalog_product_for_change($ctx['db'], $p['uid'], $version);
         // Сухая проверка полей — если цена невалидна или проблемы другие, вопроса не спрашиваем.
         catalog_product_fields($ctx['db'], $fields, $p['main_section']);
+        // Без фото на сайте пустая карточка: публикуем только с фото.
+        if ($action === 'publish' && $fields['images'] === []) {
+            throw new CatalogError('Добавьте хотя бы одно фото — без него букет не опубликовать.');
+        }
         // Теперь проверяем цену: привязываем подтверждение к конкретной сумме.
         $confirmPrice = (int)admin_str($post, 'confirm_price');
         if ($confirmPrice !== $fields['price'] && admin_price_jump((int)$p['price'], $fields['price'])) {

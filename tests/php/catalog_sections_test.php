@@ -16,10 +16,14 @@ t_case('новый раздел', function (): void {
     $section = array_values(array_filter($data['sections'], fn (array $s): bool => $s['slug'] === $slug))[0];
     t_equal(
         [$section['label'], $section['visible'], $section['coverTitle'], $section['heading'], $section['products']],
-        ['Осенняя коллекция', true, 'Осенняя коллекция', 'ОСЕННЯЯ КОЛЛЕКЦИЯ', []],
-        'раздел с плиткой; обложка и заголовок — из названия',
+        ['Осенняя коллекция', false, 'Осенняя коллекция', 'ОСЕННЯЯ КОЛЛЕКЦИЯ', []],
+        'раздел скрыт, пока его не показали; обложка и заголовок — из названия',
     );
-    t_equal($data['tiles'][count($data['tiles']) - 1], ['type' => 'section', 'slug' => $slug], 'плитка — в конце сетки');
+    t_true(!in_array(['type' => 'section', 'slug' => $slug], $data['tiles'], true), 'скрытого раздела в сетке нет');
+    // Фото плитки добавили, раздел показали — плитка встаёт в конец сетки.
+    catalog_update_section($db, 'anna', $slug, ['visible' => true], t_now());
+    $tiles = catalog_export_data($db)['tiles'];
+    t_equal($tiles[count($tiles) - 1], ['type' => 'section', 'slug' => $slug], 'показали — плитка в конце сетки');
 });
 
 t_case('занятые адреса', function (): void {

@@ -23,7 +23,7 @@ function t_card_body(array $ctx, string $uid): string
 t_case('опубликовать из карточки', function (): void {
     $ctx = t_admin_ctx();
     $uid = catalog_create_product($ctx['db'], 'anna', t_fields(), t_now());
-    $r = t_action($ctx, $uid, 'publish', 1, ['title' => 'Букет «Весна»', 'price' => '4400', 'sections' => ['bukety']]);
+    $r = t_action($ctx, $uid, 'publish', 1, ['title' => 'Букет «Весна»', 'price' => '4400', 'sections' => ['bukety'], 'images' => ['/images/catalog/bukety/buket-vesna-' . $uid . '-aaaaaaaa.webp']]);
     t_equal($r['headers']['Location'], '/pay/admin/product.php?uid=' . $uid . '&notice=published', 'опубликован');
     $p = t_row($ctx['db'], $uid);
     t_equal([$p['status'], $p['title'], $p['slug']], ['active', 'Букет «Весна»', 'buket-vesna'], 'правки сохранены, адрес закреплён по новому названию');
