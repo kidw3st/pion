@@ -190,3 +190,19 @@ describe('buildCsv', () => {
     );
   });
 });
+
+describe('feedCategories без повторов', () => {
+  it('раздел, уже ставший подкатегорией «Цветов», второй раз не добавляется', () => {
+    const categories = feedCategories({
+      catalogTiles: [
+        { label: 'Цветы', href: '/flowers', image: '/x.webp' },
+        { label: 'Пионы', href: '/pions', image: '/x.webp' },
+        { label: 'Букеты', href: '/bukety', image: '/x.webp' },
+      ],
+      flowerTiles: [{ label: 'Пионы', href: '/pions', image: '/x.webp' }],
+      sections: new Set(['pions', 'bukety']),
+    });
+    expect(categories.filter((c) => c.section === 'pions')).toHaveLength(1);
+    expect(categories.map((c) => c.name)).toEqual(['Цветы', 'Пионы', 'Букеты']);
+  });
+});

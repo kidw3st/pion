@@ -105,11 +105,16 @@ const slugOf = (href) => /^\/([a-z0-9-]+)$/.exec(href)?.[1] ?? null;
  * («Букеты до 5000», «Комнатные растения», всплывающая форма) пропускаются,
  * как и разделы без плитки — архивные сезонные коллекции.
  *
+ * Раздел попадает в категории один раз: если салон покажет «Пионы» плиткой
+ * каталога, а они уже подкатегория «Цветов», вторая категория дала бы в
+ * фиде повтор предложений — 2ГИС и Яндекс такое не принимают.
+ *
  * @param {{catalogTiles: {label: string, href: string}[], flowerTiles: {label: string, href: string}[], sections: Set<string>}} input
  * @returns {{id: string, name: string, parentId?: string, section?: string}[]}
  */
 export function feedCategories({ catalogTiles, flowerTiles, sections }) {
   const categories = [];
+  const seen = new Set();
   const add = (category) => {
     const id = String(categories.length + 1);
     categories.push({ id, ...category });
@@ -118,11 +123,18 @@ export function feedCategories({ catalogTiles, flowerTiles, sections }) {
   for (const tile of catalogTiles) {
     const slug = slugOf(tile.href);
     if (slug === FLOWERS_PAGE) {
-      const children = flowerTiles.filter((t) => sections.has(slugOf(t.href)));
+      const children = flowerTiles.filter((t) => sections.has(slugOf(t.href)) && !seen.has(slugOf(t.href)));
       if (children.length === 0) continue;
       const parentId = add({ name: tile.label });
-      for (const child of children) add({ name: child.label, parentId, section: slugOf(child.href) });
-    } else if (slug !== null && sections.has(slug)) {
+      for (const child of children) {
+        const section = slugOf(child.href);
+        // Одна и та же плитка дважды в самой странице «Цветы» — тоже один раз.
+        if (seen.has(section)) continue;
+        seen.add(section);
+        add({ name: child.label, parentId, section });
+      }
+    } else if (slug !== null && sections.has(slug) && !seen.has(slug)) {
+      seen.add(slug);
       add({ name: tile.label, section: slug });
     }
   }

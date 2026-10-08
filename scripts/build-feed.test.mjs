@@ -91,4 +91,11 @@ describe('buildFeed на настоящих данных сайта', () => {
   it('в описаниях нет слова «заказ»', () => {
     for (const m of yml.matchAll(/<description>([^<]*)<\/description>/g)) expect(m[1]).not.toMatch(/заказ/i);
   });
+
+  it('каждый букет — одним предложением; сколько не попало — считается', () => {
+    const ids = [...yml.matchAll(/<offer id="(\d+)"/g)].map((m) => m[1]);
+    expect(new Set(ids).size).toBe(ids.length);
+    const { outside } = buildFeed({ root, siteUrl: 'https://pionperm.ru', date: '2026-10-05 20:00' });
+    expect(Number.isInteger(outside)).toBe(true);
+  });
 });

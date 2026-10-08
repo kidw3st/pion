@@ -19,7 +19,8 @@ const readJson = (file) => JSON.parse(readFileSync(file, 'utf8'));
 
 /**
  * @param {{root: string, siteUrl: string, date: string}} input
- * @returns {{yml: string, csv: string}} YML-документ и CSV-файл
+ * @returns {{yml: string, csv: string, outside: number}} YML-документ, CSV-файл и
+ *   сколько букетов в продаже в фид не попало (у их главного раздела нет категории)
  */
 export function buildFeed({ root, siteUrl, date }) {
   // Каталог — снимок выгрузки, тот же, что читают страницы.
@@ -31,16 +32,19 @@ export function buildFeed({ root, siteUrl, date }) {
   const categories = feedCategories({ catalogTiles: catalogTiles(catalog), flowerTiles, sections });
   // Те же товары, что видит покупатель: букеты в продаже, каждый один раз —
   // в категории своего главного раздела (букет может стоять в нескольких).
-  const products = categories
-    .filter((category) => category.section)
-    .flatMap((category) =>
-      sectionProducts(catalog, category.section)
-        .filter((product) => product.mainSection === category.section)
-        .map((product) => ({ ...product, section: category.section })),
-    );
+  const covered = new Set(categories.filter((c) => c.section).map((c) => c.section));
+  const products = [...covered].flatMap((section) =>
+    sectionProducts(catalog, section)
+      .filter((product) => product.mainSection === section)
+      .map((product) => ({ ...product, section })),
+  );
+  // Букеты, у главного раздела которых нет категории в фиде (архивные сезонные
+  // разделы, «Новинки»), в фид не попадают — считаем их, чтобы это было видно в логе.
+  const outside = catalog.products.filter((p) => p.status === 'active' && !covered.has(p.mainSection)).length;
   return {
     yml: buildYml({ siteUrl, date, categories, products }),
     csv: buildCsv({ siteUrl, categories, products }),
+    outside,
   };
 }
 
@@ -55,7 +59,7 @@ export function feedDate(now) {
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-  const { yml, csv } = buildFeed({
+  const { yml, csv, outside } = buildFeed({
     root,
     siteUrl: process.env.SITE_URL || 'https://pionperm.ru',
     date: feedDate(new Date()),
@@ -63,5 +67,5 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
   mkdirSync(path.join(root, 'public', 'feed'), { recursive: true });
   writeFileSync(path.join(root, 'public', 'feed', 'products.xml'), yml);
   writeFileSync(path.join(root, 'public', 'feed', 'products.csv'), csv);
-  console.log(`[feed] public/feed/products.xml и products.csv: товаров ${(yml.match(/<offer /g) ?? []).length}`);
+  console.log(`[feed] public/feed/products.xml и products.csv: товаров ${(yml.match(/<offer /g) ?? []).length}, не в фиде (нет категории): ${outside}`);
 }
