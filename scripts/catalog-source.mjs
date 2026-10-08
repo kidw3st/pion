@@ -8,6 +8,10 @@
  * он или код. Если источник — сервер, а выгрузки нет, из снимка не собираем
  * никогда: снимок устарел, и выкладка вернула бы на сайт старый каталог.
  *
+ * Код выхода: 0 — решение принято (в GITHUB_OUTPUT build и catalog);
+ * 1 — ошибка: сервер не отдал выгрузку по коммиту или выгрузка не прошла
+ * проверку; 2 — неверный вызов (с «server» не задан CATALOG_OUT).
+ *
  * Запускается из .github/workflows/deploy.yml; см. docs/deploy.md.
  */
 import { appendFileSync, existsSync, readFileSync } from 'node:fs';
@@ -44,17 +48,25 @@ function readPrevious(file) {
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
   const env = process.env;
   const event = env.GITHUB_EVENT_NAME ?? 'push';
-  const source = env.CATALOG_SOURCE ?? '';
+  // Без учёта регистра — как concurrency и gate в deploy.yml (выражения GitHub так сравнивают строки).
+  const source = (env.CATALOG_SOURCE ?? '').toLowerCase();
   const commit = env.GITHUB_SHA ?? '';
   const previous = readPrevious(env.PREVIOUS_BUILD_INFO);
   let exportVersion = null;
   let fail = false;
   if (source === 'server') {
+    // Без CATALOG_OUT applyCatalogExport записал бы выгрузку поверх закоммиченного снимка.
+    if (!env.CATALOG_OUT) {
+      console.error('CATALOG_OUT не задан — выгрузку с сервера некуда положить.');
+      process.exit(2);
+    }
+    const previousCount = Number.isInteger(previous?.catalog?.products) ? previous.catalog.products : null;
+    if (previousCount === null) console.error('Внимание: защиты от потери нет — в прошлой сборке нет числа букетов.');
     const r = await applyCatalogExport({
       source: env.CATALOG_URL || 'https://pionperm.ru/pay/catalog-export.php',
       out: env.CATALOG_OUT,
       allowShrink: env.ALLOW_SHRINK === 'true',
-      previousCount: previous?.catalog?.products ?? null,
+      previousCount,
     });
     if (r.warning) console.error(`Внимание: ${r.warning}.`);
     if (r.ok) {

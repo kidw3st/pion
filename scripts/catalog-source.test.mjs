@@ -62,6 +62,8 @@ describe('запуск из командной строки', () => {
       GITHUB_OUTPUT: path.join(dir, 'github-output'),
       ...overrides,
     };
+    // undefined в overrides — «переменной нет вовсе».
+    for (const key of Object.keys(env)) if (env[key] === undefined) delete env[key];
     const r = spawnSync(process.execPath, [SCRIPT], { env, encoding: 'utf8' });
     const output = existsSync(env.GITHUB_OUTPUT) ? readFileSync(env.GITHUB_OUTPUT, 'utf8') : '';
     return { ...r, output: output.split('\n'), out: env.CATALOG_OUT };
@@ -122,6 +124,72 @@ describe('запуск из командной строки', () => {
     const r = run(dir, FIXTURE, { PREVIOUS_BUILD_INFO: info });
     expect(r.status).toBe(0);
     expect(r.output).toContain('build=true');
+  });
+
+  it('в прошлой сборке нет числа букетов — предупреждение, что защиты от потери нет', () => {
+    const warning = 'Внимание: защиты от потери нет — в прошлой сборке нет числа букетов.';
+    const cases = {
+      'файла нет': null,
+      'не JSON': '{не json',
+      'нет catalog': JSON.stringify({ commit: 'c0' }),
+      'число не целое': JSON.stringify({ commit: 'c0', catalog: { version: 'v0', products: '487' } }),
+    };
+    for (const [label, text] of Object.entries(cases)) {
+      const dir = mkdtempSync(path.join(os.tmpdir(), 'pion-source-'));
+      const info = path.join(dir, 'previous-build-info.json');
+      if (text !== null) writeFileSync(info, text);
+      const r = run(dir, FIXTURE, { PREVIOUS_BUILD_INFO: info });
+      expect(r.status, label).toBe(0);
+      expect(r.stderr, label).toContain(warning);
+      expect(r.output, label).toContain('build=true');
+    }
+    const dir = mkdtempSync(path.join(os.tmpdir(), 'pion-source-'));
+    const info = path.join(dir, 'previous-build-info.json');
+    writeFileSync(info, JSON.stringify({ commit: 'c0', catalog: { version: 'v0', products: 5 } }));
+    expect(run(dir, FIXTURE, { PREVIOUS_BUILD_INFO: info }).stderr).not.toContain('защиты от потери нет');
+    // Переключатель выключен — выгрузку не берём, и предупреждать не о чем.
+    expect(run(dir, FIXTURE, { CATALOG_SOURCE: '', GITHUB_EVENT_NAME: 'push' }).stderr).not.toContain('защиты от потери нет');
+  });
+
+  it('букетов намного меньше, чем в прошлой сборке: стоп; с ALLOW_SHRINK=true — собирать', () => {
+    const dir = mkdtempSync(path.join(os.tmpdir(), 'pion-source-'));
+    const info = path.join(dir, 'previous-build-info.json');
+    writeFileSync(info, JSON.stringify({ commit: 'c0', catalog: { version: 'v0', products: 100 } }));
+    const stopped = run(dir, FIXTURE, { PREVIOUS_BUILD_INFO: info, GITHUB_EVENT_NAME: 'workflow_dispatch' });
+    expect(stopped.status).toBe(1);
+    expect(stopped.output).toContain('build=false');
+    expect(stopped.stderr).toContain('allow_shrink');
+    const dir2 = mkdtempSync(path.join(os.tmpdir(), 'pion-source-'));
+    const allowed = run(dir2, FIXTURE, { PREVIOUS_BUILD_INFO: info, GITHUB_EVENT_NAME: 'workflow_dispatch', ALLOW_SHRINK: 'true' });
+    expect(allowed.status, allowed.stderr).toBe(0);
+    expect(allowed.output).toContain('build=true');
+    expect(allowed.output).toContain('catalog=server');
+  });
+
+  it('CATALOG_OUT не задан или пуст — код 2, в data/ ничего не пишем', () => {
+    const snapshot = path.join(root, 'data', 'catalog-export.json');
+    const before = readFileSync(snapshot);
+    for (const value of [undefined, '']) {
+      const dir = mkdtempSync(path.join(os.tmpdir(), 'pion-source-'));
+      // Адрес выгрузки — несуществующий файл: даже если бы скрипт взял запасной путь,
+      // он ничего не записал бы, а код был бы 0 (сервер не ответил, расписание).
+      const r = run(dir, path.join(dir, 'нет-выгрузки.json'), { CATALOG_OUT: value });
+      expect(r.status).toBe(2);
+      expect(r.stderr).toContain('CATALOG_OUT не задан — выгрузку с сервера некуда положить.');
+      expect(r.output.join('\n')).not.toContain('build=');
+    }
+    expect(readFileSync(snapshot).equals(before)).toBe(true);
+    // Переключатель выключен — CATALOG_OUT не нужен.
+    const dir = mkdtempSync(path.join(os.tmpdir(), 'pion-source-'));
+    expect(run(dir, FIXTURE, { CATALOG_SOURCE: '', GITHUB_EVENT_NAME: 'push', CATALOG_OUT: undefined }).status).toBe(0);
+  });
+
+  it('«Server» — тоже включено: регистр не важен, как в concurrency и gate', () => {
+    const dir = mkdtempSync(path.join(os.tmpdir(), 'pion-source-'));
+    const r = run(dir, FIXTURE, { CATALOG_SOURCE: 'Server' });
+    expect(r.status, r.stderr).toBe(0);
+    expect(r.output).toContain('build=true');
+    expect(r.output).toContain('catalog=server');
   });
 
   it('переключатель выключен — сервер не спрашиваем; по коммиту из снимка, по расписанию ничего', () => {
