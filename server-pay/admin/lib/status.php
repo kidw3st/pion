@@ -29,6 +29,14 @@ function admin_deployed_catalog(string $deployHome): ?array
     if (!is_string($changed) || ($changed !== '' && DateTimeImmutable::createFromFormat(DATE_ATOM, $changed) === false)) {
         $changed = '';
     }
+    if ($changed !== '') {
+        // Дата по форме верная, но может не разбираться (месяц 13, час 25, пояс +99:00) — а разбирает её admin_change_on_site.
+        try {
+            new DateTimeImmutable($changed);
+        } catch (Exception) {
+            $changed = '';
+        }
+    }
     return ['version' => $current['catalogVersion'], 'changedAt' => $changed];
 }
 
