@@ -7,8 +7,10 @@
  * - адреса карты сайта, которые пропали или появились;
  * - страницы (index.html), которые пропали или появились;
  * - на общих страницах: <title>, <meta name="description">, canonical, первый
- *   <h1> и список ссылок внутри <main> (адрес и текст) — так видны «Новинки» на
- *   главной и плитки каталога;
+ *   <h1> и список ссылок и кнопок внутри <main> в порядке документа (у ссылки —
+ *   адрес, текст и адреса картинок внутри неё, у кнопки — текст и картинки) —
+ *   так видны «Новинки» на главной, плитки каталога с их фото и плитка-кнопка
+ *   «Создать уникальный букет»;
  * - разделы, где поменялся список букетов в разметке (адрес и цена каждого);
  * - страницы букетов, где поменялись название, цена, наличие или фото;
  * - файлы api/catalog/*.json (по разобранному содержимому: порядок ключей не
@@ -18,18 +20,24 @@
  * же адреса, цены, фото и порядок.
  *
  * Код выхода: 0 — отличий нет; 1 — сборки различаются (для этапа 3В: сравнение
- * сборки из снимка со сборкой из выгрузки сервера); 2 — неверный вызов.
+ * сборки из снимка со сборкой из выгрузки сервера); 2 — неверный вызов или
+ * папка, не похожая на сборку (нет sitemap.xml или ни одной страницы
+ * index.html): две пустые папки «одинаковыми» не считаются.
  * С --report код выхода всегда 0: посмотреть отличия, ничего не останавливая.
  *
  * Из других скриптов и тестов: import { compareBuilds } from './compare-builds.mjs'
- * — вернёт { lines, differences } и ничего не напечатает.
+ * — вернёт { lines, differences } и ничего не напечатает; если папка не сборка,
+ * бросит ошибку с понятным текстом.
  */
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
 import path from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 
 /** Сколько отличий каждого вида показывать подробно (счётчик считает все). */
 const SHOW = 25;
+
+/** Папка не похожа на сборку сайта: программа отвечает на это кодом 2, а не «отличий нет». */
+class NotABuildError extends Error {}
 
 function walk(dir, base = dir, out = []) {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
@@ -45,15 +53,22 @@ function readText(root, rel) {
   try {
     return readFileSync(path.join(root, rel), 'utf8');
   } catch (error) {
-    if (error.code === 'ENOENT') return null;
+    if (error.code === 'ENOENT' || error.code === 'ENOTDIR') return null;
     throw error;
   }
 }
 
-const sitemap = (root) =>
-  new Set([...(readText(root, 'sitemap.xml') ?? '').matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]));
-
-const pagesOf = (root) => new Set(walk(root).filter((f) => f.endsWith('index.html')));
+/**
+ * Адреса карты сайта и список страниц (index.html) сборки; читается один раз.
+ * Папка без sitemap.xml или без единой страницы — не сборка: сравнивать нечего.
+ */
+function loadBuild(root) {
+  const xml = readText(root, 'sitemap.xml');
+  if (xml === null) throw new NotABuildError(`В папке «${root}» нет sitemap.xml — это не сборка сайта (out/), сравнивать нечего.`);
+  const pages = new Set(walk(root).filter((f) => f.endsWith('index.html')));
+  if (pages.size === 0) throw new NotABuildError(`В папке «${root}» нет ни одной страницы index.html — это не сборка сайта (out/), сравнивать нечего.`);
+  return { urls: new Set([...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1])), pages };
+}
 
 const diff = (a, b) => [[...a].filter((x) => !b.has(x)), [...b].filter((x) => !a.has(x))];
 
@@ -63,6 +78,18 @@ const plain = (html) => html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim()
 const firstMatch = (html, re) => html.match(re)?.[1] ?? null;
 
 const same = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
+
+/** Адреса картинок (src) внутри куска разметки. srcSet не берём: src его дублирует. */
+const imageSources = (html) => [...html.matchAll(/<img[^>]*\ssrc="([^"]*)"/g)].map((m) => m[1]);
+
+/** Строка для сравнения: подпись, текст без тегов и, если есть картинки, их адреса в скобках. */
+function keyOf(label, inner) {
+  const srcs = imageSources(inner);
+  return `${label} — ${plain(inner)}${srcs.length ? ` [${srcs.join(' ')}]` : ''}`;
+}
+
+/** Ссылки (m[1] — адрес, m[2] — содержимое) и кнопки (m[3] — содержимое) в порядке документа. */
+const LINKS_AND_BUTTONS = /<a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>|<button[^>]*>([\s\S]*?)<\/button>/g;
 
 /** Всё, что сравнивается на странице; страница читается и разбирается один раз. */
 function facts(root, rel) {
@@ -85,7 +112,7 @@ function facts(root, rel) {
     description: firstMatch(html, /<meta name="description" content="([^"]*)"/),
     canonical: firstMatch(html, /<link rel="canonical" href="([^"]*)"/),
     h1: h1 ? plain(h1[1]) : null,
-    links: [...main.matchAll(/<a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/g)].map((m) => `${m[1]} — ${plain(m[2])}`),
+    links: [...main.matchAll(LINKS_AND_BUTTONS)].map((m) => (m[1] === undefined ? keyOf('button', m[3]) : keyOf(m[1], m[2]))),
     list: list ? list.itemListElement.map((i) => `${i.item.url} ${i.item.offers?.price}`).join('\n') : null,
     product: product
       ? [product.name, product.offers?.price ?? '—', product.offers?.availability ?? '—', (product.image ?? []).join(',')].join(' | ')
@@ -170,17 +197,15 @@ export function compareBuilds(before, after) {
   const lines = [];
   let differences = 0;
 
-  const mapBefore = sitemap(before);
-  const mapAfter = sitemap(after);
+  // Карта сайта и список страниц строятся один раз (раньше список пересобирали на каждой странице — около 70 с).
+  const { urls: mapBefore, pages: pagesBefore } = loadBuild(before);
+  const { urls: mapAfter, pages: pagesAfter } = loadBuild(after);
   const [goneUrls, newUrls] = diff(mapBefore, mapAfter);
   differences += goneUrls.length + newUrls.length;
   lines.push(`Карта сайта: было ${mapBefore.size}, стало ${mapAfter.size}.`);
   for (const u of goneUrls) lines.push(`  − ${u}`);
   for (const u of newUrls) lines.push(`  + ${u}`);
 
-  // Список страниц строится один раз: раньше его пересобирали на каждой странице (около 70 с).
-  const pagesBefore = pagesOf(before);
-  const pagesAfter = pagesOf(after);
   const [gonePages, newPages] = diff(pagesBefore, pagesAfter);
   differences += gonePages.length + newPages.length;
   lines.push(`Страницы: пропало ${gonePages.length}, появилось ${newPages.length}.`);
@@ -209,7 +234,7 @@ export function compareBuilds(before, after) {
         if (gone.length + added.length === 0) {
           note = same([...a.links].sort(), [...b.links].sort()) ? ' (поменялся порядок)' : ' (поменялось число повторов)';
         }
-        lines.push(`Ссылки в <main> на ${rel}: убрано ${gone.length}, добавлено ${added.length}${note}.${listed(gone, '−')}${listed(added, '+')}`);
+        lines.push(`Ссылки и кнопки в <main> на ${rel}: убрано ${gone.length}, добавлено ${added.length}${note}.${listed(gone, '−')}${listed(added, '+')}`);
       }
     }
     if (pageChanged) pagesChanged++;
@@ -228,7 +253,7 @@ export function compareBuilds(before, after) {
   lines.push(`Разделов с другим списком: ${listChanges}. Страниц букетов с другими данными: ${productChanges}.`);
   lines.push(
     `Страниц с другими данными в разметке: ${pagesChanged} (<title> — ${fieldChanges.title}, описание — ${fieldChanges.description}, ` +
-      `canonical — ${fieldChanges.canonical}, <h1> — ${fieldChanges.h1}, ссылки в <main> — ${fieldChanges.links}).`,
+      `canonical — ${fieldChanges.canonical}, <h1> — ${fieldChanges.h1}, ссылки и кнопки в <main> — ${fieldChanges.links}).`,
   );
 
   const names = [...new Set([...apiFiles(before), ...apiFiles(after)])].sort();
@@ -276,7 +301,24 @@ export function compareBuilds(before, after) {
   return { lines, differences };
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+/**
+ * Запущен ли файл как программа. Node приводит главный модуль к настоящему пути
+ * (через symlink и junction), а argv[1] — нет, поэтому сравниваем настоящие пути
+ * обоих; .native ещё и раскрывает короткие имена вроде C:\Users\2BA0~1.
+ * Любая неудача значит «не главный модуль».
+ */
+function isMain() {
+  try {
+    return (
+      Boolean(process.argv[1]) &&
+      realpathSync.native(path.resolve(process.argv[1])) === realpathSync.native(fileURLToPath(import.meta.url))
+    );
+  } catch {
+    return false;
+  }
+}
+
+if (isMain()) {
   const args = process.argv.slice(2);
   const report = args.includes('--report');
   const [before, after] = args.filter((a) => a !== '--report');
@@ -284,8 +326,14 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     console.error('Как вызывать: node scripts/compare-builds.mjs [--report] <до>/out <после>/out');
     process.exitCode = 2;
   } else {
-    const { lines, differences } = compareBuilds(before, after);
-    for (const line of lines) console.log(line);
-    process.exitCode = report || differences === 0 ? 0 : 1;
+    try {
+      const { lines, differences } = compareBuilds(before, after);
+      for (const line of lines) console.log(line);
+      process.exitCode = report || differences === 0 ? 0 : 1;
+    } catch (error) {
+      if (!(error instanceof NotABuildError)) throw error;
+      console.error(error.message);
+      process.exitCode = 2;
+    }
   }
 }

@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, rmSync, rmdirSync, symlinkSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -30,6 +30,15 @@ const itemList = (urls) =>
     itemListElement: urls.map((url, i) => ({ '@type': 'ListItem', position: i + 1, item: { url, offers: { price: 1000 } } })),
   });
 
+/** Картинка так, как её отдаёт next/image: srcSet перед src. */
+const photo = (src) => `<img alt="Фото" loading="lazy" data-nimg="fill" srcSet="${src} 256w, ${src} 384w" src="${src}"/>`;
+
+/** Ссылка [адрес, текст, картинка?] или (адрес null) кнопка [null, текст, картинка?]. */
+function control([href, text, img]) {
+  const inner = `${img ? photo(img) : ''}<div><span>${text}</span></div>`;
+  return href === null ? `<button type="button" class="t">${inner}</button>` : `<a class="t" href="${href}">${inner}</a>`;
+}
+
 /** Страница так, как её отдаёт Next: теги в <head>, <h1>, ссылки внутри <main>. */
 function page({ title = 'Пион', description = 'Описание', canonical = 'https://pionperm.ru/', h1 = 'Салон', links = [], list = [] } = {}) {
   return (
@@ -38,7 +47,7 @@ function page({ title = 'Пион', description = 'Описание', canonical 
     `<link rel="canonical" href="${canonical}"/>` +
     `<script type="application/ld+json">${itemList(list)}</script></head>` +
     `<body><header><a href="/menu/">Меню</a></header><h1 class="x">${h1}</h1>` +
-    `<main class="page_main__abc">${links.map(([href, text]) => `<a class="t" href="${href}"><div><span>${text}</span></div></a>`).join('')}</main>` +
+    `<main class="page_main__abc">${links.map(control).join('')}</main>` +
     `<footer><a href="/footer/">Подвал</a></footer></body></html>`
   );
 }
@@ -119,6 +128,53 @@ describe('compareBuilds', () => {
     const entry = result.lines.find((l) => l.includes('index.html') && l.includes('/bukety/buket-v/'));
     expect(entry).toBeDefined();
     expect(entry).toContain('/bukety/buket-b/');
+  });
+
+  it('ссылка без картинки в отчёте остаётся «адрес — текст», без скобок', () => {
+    const after = build({ 'index.html': page({ links: [['/bukety/buket-v/', 'Букет В']], list: [] }) });
+    const entry = compareBuilds(build(), after).lines.find((l) => l.includes('/bukety/buket-v/'));
+    expect(entry).toContain('+ /bukety/buket-v/ — Букет В');
+    expect(entry).not.toContain('[');
+  });
+
+  it('тот же адрес и текст, другая картинка внутри ссылки (фото плитки) — отличие', () => {
+    const tiles = (src) => [['/bukety/', 'Букеты', src]];
+    const before = build({ 'index.html': page({ links: tiles('/images/site/catalog-tiles/tile-1.webp') }) });
+    const after = build({ 'index.html': page({ links: tiles('/images/site/catalog-tiles/tile-7.webp') }) });
+    const result = compareBuilds(before, after);
+    expect(result.differences).toBeGreaterThan(0);
+    const entry = result.lines.find((l) => l.includes('index.html') && l.includes('tile-7.webp'));
+    expect(entry).toBeDefined();
+    expect(entry).toContain('/bukety/ — Букеты [/images/site/catalog-tiles/tile-1.webp]');
+    expect(compareBuilds(before, before).differences).toBe(0);
+  });
+
+  it('плитка-кнопка в <main>: добавили, убрали, переименовали или сменили фото — отличие', () => {
+    const popup = [null, 'Создать уникальный букет', '/images/site/catalog-tiles/tile-12.webp'];
+    const home = (links) => build({ 'index.html': page({ links }) });
+    const tile = ['/bukety/', 'Букеты'];
+    const withPopup = home([tile, popup]);
+    expect(compareBuilds(withPopup, home([tile, popup])).differences).toBe(0);
+    const cases = {
+      добавили: [home([tile]), withPopup],
+      убрали: [withPopup, home([tile])],
+      переименовали: [withPopup, home([tile, [null, 'Другое название', popup[2]]])],
+      'сменили фото': [withPopup, home([tile, [null, popup[1], '/images/site/catalog-tiles/tile-3.webp']])],
+    };
+    for (const [what, [before, after]] of Object.entries(cases)) {
+      const result = compareBuilds(before, after);
+      expect(result.differences, what).toBeGreaterThan(0);
+      expect(text(result), what).toContain('button — ');
+    }
+  });
+
+  it('кнопка и ссылка меняются местами — отличие (порядок документа)', () => {
+    const tile = ['/bukety/', 'Букеты'];
+    const popup = [null, 'Создать уникальный букет'];
+    const home = (links) => build({ 'index.html': page({ links }) });
+    const result = compareBuilds(home([tile, popup]), home([popup, tile]));
+    expect(result.differences).toBeGreaterThan(0);
+    expect(text(result)).toContain('порядок');
   });
 
   it('тот же адрес, другой текст ссылки в <main> — отличие', () => {
@@ -229,8 +285,30 @@ describe('compareBuilds', () => {
   });
 });
 
+describe('compareBuilds: папка не сборка', () => {
+  it('две пустые папки — ошибка, а не «одинаковые»', () => {
+    const a = tree({});
+    const b = tree({});
+    expect(() => compareBuilds(a, b)).toThrow(/нет sitemap\.xml/);
+    expect(() => compareBuilds(a, b)).toThrow(a);
+  });
+
+  it('нет sitemap.xml только в одной из сборок — ошибка с именем этой папки', () => {
+    const good = build();
+    const bad = build({ 'sitemap.xml': null });
+    expect(() => compareBuilds(good, bad)).toThrow(bad);
+    expect(() => compareBuilds(bad, good)).toThrow(bad);
+  });
+
+  it('карта есть, а страниц index.html нет — ошибка', () => {
+    const noPages = tree({ 'sitemap.xml': '<urlset/>', 'feed/products.csv': 'x', 'images/a.webp': 'x' });
+    expect(() => compareBuilds(build(), noPages)).toThrow(/нет ни одной страницы index\.html/);
+  });
+});
+
 describe('compare-builds как программа', () => {
-  const run = (...args) => spawnSync(process.execPath, [SCRIPT, ...args], { encoding: 'utf8' });
+  const run2 = (...args) => spawnSync(process.execPath, args, { encoding: 'utf8' });
+  const run = (...args) => run2(SCRIPT, ...args);
 
   it('одинаковые сборки: код 0 и печать', () => {
     const res = run(build(), build());
@@ -255,6 +333,39 @@ describe('compare-builds как программа', () => {
     const res = run(build(), path.join(os.tmpdir(), 'pion-compare-no-such-dir'));
     expect(res.status).toBe(2);
     expect(res.stderr).toContain('Как вызывать');
+  });
+
+  it('папка, не похожая на сборку: сообщение по-русски и код 2, в том числе с --report', () => {
+    const empty = tree({});
+    const cases = [[empty, empty], ['--report', empty, empty], [empty, build()], ['--report', build(), empty]];
+    for (const args of cases) {
+      const res = run(...args);
+      expect(res.status, args.join(' ')).toBe(2);
+      expect(res.stdout, args.join(' ')).toBe('');
+      expect(res.stderr, args.join(' ')).toContain('это не сборка сайта');
+    }
+  });
+
+  it('запуск через junction на папку scripts: печатает отличия и возвращает код 1', (ctx) => {
+    const holder = mkdtempSync(path.join(os.tmpdir(), 'pion-compare-link-'));
+    const link = path.join(holder, 'scripts-link');
+    try {
+      symlinkSync(path.dirname(SCRIPT), link, 'junction');
+    } catch (error) {
+      rmSync(holder, { recursive: true, force: true }); // ссылки нет, внутри пусто
+      ctx.skip(`не удалось создать junction/symlink во временной папке: ${error.code ?? error.message}`);
+    }
+    try {
+      const different = build({ 'feed/products.csv': 'name;price\nБукет А;1\n' });
+      const res = run2(path.join(link, 'compare-builds.mjs'), build(), different);
+      expect(res.status).toBe(1);
+      expect(res.stdout).toContain('products.csv');
+      expect(res.stdout).toContain('Итого отличий');
+    } finally {
+      // Только сама ссылка: rmSync с recursive пошёл бы внутрь и мог бы тронуть настоящую папку scripts.
+      rmdirSync(link);
+      made.push(holder);
+    }
   });
 
   it('импорт модуля ничего не печатает и не завершает процесс', () => {
