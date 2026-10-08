@@ -21,21 +21,23 @@ function admin_deployed_catalog(string $deployHome): ?array
 {
     $state = json_decode((string)@file_get_contents($deployHome . '/state.json'), true);
     $current = is_array($state) ? ($state['current'] ?? null) : null;
-    if (!is_array($current) || !is_string($current['catalogVersion'] ?? null)) {
+    // Пустая версия — то же, что отсутствующая: сравнивать с ней нечего.
+    if (!is_array($current) || !is_string($current['catalogVersion'] ?? null) || $current['catalogVersion'] === '') {
         return null;
     }
     $changed = $current['catalogChangedAt'] ?? '';
     // Мусор вместо даты не должен ронять журнал и карточки: такую отметку считаем неизвестной.
-    if (!is_string($changed) || ($changed !== '' && DateTimeImmutable::createFromFormat(DATE_ATOM, $changed) === false)) {
-        $changed = '';
-    }
-    if ($changed !== '') {
-        // Дата по форме верная, но может не разбираться (месяц 13, час 25, пояс +99:00) — а разбирает её admin_change_on_site.
-        try {
-            new DateTimeImmutable($changed);
-        } catch (Exception) {
+    // Ловим Throwable, а не Exception: NUL-байт в строке даёт ValueError уже на проверке вида.
+    try {
+        if (!is_string($changed) || ($changed !== '' && DateTimeImmutable::createFromFormat(DATE_ATOM, $changed) === false)) {
             $changed = '';
         }
+        if ($changed !== '') {
+            // Дата по форме верная, но может не разбираться (месяц 13, час 25, пояс +99:00) — а разбирает её admin_change_on_site.
+            new DateTimeImmutable($changed);
+        }
+    } catch (Throwable) {
+        $changed = '';
     }
     return ['version' => $current['catalogVersion'], 'changedAt' => $changed];
 }

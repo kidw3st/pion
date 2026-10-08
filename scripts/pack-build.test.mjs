@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, utimesSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { GNU_TAR, listArchive, pack } from './pack-build.mjs';
 
@@ -60,6 +61,57 @@ describe('pack', () => {
     const paySha = createHash('sha256').update(readFileSync(path.join(dest, 'pion-pay.tar.gz'))).digest('hex');
     expect(info.pay.sha256).toBe(paySha);
     expect(info.pay.file).toBe('pion-pay.tar.gz');
+    // Без catalogFile каталог в build-info не пишется — как до 3Б.
+    expect(info).not.toHaveProperty('catalog');
+    expect(JSON.parse(readFileSync(path.join(dest, 'build-info.json'), 'utf8'))).not.toHaveProperty('catalog');
+  });
+
+  describe('каталог в build-info.json', () => {
+    const FIXTURE = fileURLToPath(new URL('../tests/php/fixtures/catalog-export-small.json', import.meta.url));
+    const VERSION = '4e8ad6165702c28cc49e0e9e14eb37f7de4771608bd1e349162eba59946dfafc';
+
+    /** Копия образца выгрузки с подставленными полями. */
+    function exportWith(changes) {
+      const file = path.join(tree({}), 'catalog-export.json');
+      writeFileSync(file, JSON.stringify({ ...JSON.parse(readFileSync(FIXTURE, 'utf8')), ...changes }));
+      return file;
+    }
+
+    function packWith(catalogFile) {
+      const dest = path.join(tree({}), 'build');
+      const info = pack({
+        outDir: tree(SITE),
+        payDir: tree({ 'init.php': '<?php' }),
+        dest,
+        commit: 'abc1234def',
+        catalogFile,
+      });
+      return { info, dest };
+    }
+
+    it('пишет версию, время и число товаров выгрузки', () => {
+      const { info, dest } = packWith(FIXTURE);
+      expect(info.catalog).toEqual({ version: VERSION, changedAt: '2026-10-05T14:32:10+05:00', products: 5 });
+      expect(JSON.parse(readFileSync(path.join(dest, 'build-info.json'), 'utf8'))).toEqual(info);
+    });
+
+    it('принимает выгрузку, в которой каталог ещё не менялся (changedAt: null)', () => {
+      const { info } = packWith(exportWith({ changedAt: null }));
+      expect(info.catalog.changedAt).toBeNull();
+    });
+
+    it('останавливает сборку, если changedAt не в виде catalog_iso', () => {
+      for (const bad of ['2026-10-05T14:32:10.000Z', '2026-10-05T14:32:10Z', '2026-10-05 14:32:10+05:00', '', 1760000000, undefined]) {
+        const file = exportWith({ changedAt: bad });
+        expect(() => packWith(file), `changedAt = ${String(bad)}`).toThrow(/changedAt/);
+      }
+    });
+
+    it('останавливает сборку, если в выгрузке нет версии или товаров', () => {
+      expect(() => packWith(exportWith({ version: 'abc' }))).toThrow(/версии/);
+      expect(() => packWith(exportWith({ version: undefined }))).toThrow(/версии/);
+      expect(() => packWith(exportWith({ products: undefined }))).toThrow(/товаров/);
+    });
   });
 
   // По sha256 /pay/ deploy.php решает, перекладывать ли платёжную часть. Обычный

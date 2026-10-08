@@ -1,7 +1,9 @@
 /**
  * Упаковывает готовую сборку для сервера: архив сайта, архив /pay/ и
  * build-info.json с sha256 обоих. По нему deploy.php на сервере проверяет,
- * что скачал ровно то, что собрал GitHub.
+ * что скачал ровно то, что собрал GitHub. Если передан catalogFile (выгрузка
+ * каталога, из которой собран сайт), в build-info.json есть и catalog: версия,
+ * время изменения и число товаров — deploy.php переносит их в state.json.
  *
  *   npm run build && npm run pack     # кладёт всё в build/
  *
@@ -59,7 +61,26 @@ function createArchive(file, dir, exclude) {
   execFileSync(TAR, [...create, file, '-C', dir, '--exclude', exclude, '.']);
 }
 
-export function pack({ outDir, payDir, dest, commit, now = new Date() }) {
+/**
+ * Что build-info.json говорит о каталоге, из которого собран сайт: версия (по ней
+ * админка показывает «на сайте» / «ждёт выкладки»), время последнего изменения и число товаров.
+ *
+ * Админка понимает время только в виде catalog_iso (2026-10-05T14:32:10+05:00): другой вид
+ * спрятал бы отметки «на сайте» — лучше остановить сборку здесь, чем выложить такую.
+ */
+function catalogInfo(catalogFile) {
+  const exp = JSON.parse(readFileSync(catalogFile, 'utf8'));
+  if (!/^[0-9a-f]{64}$/.test(exp.version ?? '')) throw new Error('в выгрузке каталога нет версии');
+  if (exp.changedAt !== null && !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/.test(exp.changedAt ?? '')) {
+    throw new Error(`changedAt выгрузки не в виде catalog_iso: ${exp.changedAt}`);
+  }
+  if (!Array.isArray(exp.products)) throw new Error('в выгрузке каталога нет списка товаров');
+  return { version: exp.version, changedAt: exp.changedAt, products: exp.products.length };
+}
+
+export function pack({ outDir, payDir, dest, commit, now = new Date(), catalogFile = null }) {
+  // Читаем выгрузку до того, как трогать build/: негодная выгрузка не должна оставлять недособранную папку.
+  const catalog = catalogFile ? catalogInfo(catalogFile) : null;
   rmSync(dest, { recursive: true, force: true });
   mkdirSync(dest, { recursive: true });
   const site = path.join(dest, 'pion-site.tar.gz');
@@ -82,6 +103,7 @@ export function pack({ outDir, payDir, dest, commit, now = new Date() }) {
   }
 
   const info = { commit, builtAt: now.toISOString(), site: describeArchive(site), pay: describeArchive(pay) };
+  if (catalog) info.catalog = catalog;
   writeFileSync(path.join(dest, 'build-info.json'), JSON.stringify(info, null, 2) + '\n');
   return info;
 }
@@ -95,8 +117,9 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
     payDir: path.join(root, 'server-pay'),
     dest: path.join(root, 'build'),
     commit,
+    catalogFile: path.join(root, 'data', 'catalog-export.json'),
   });
   console.log(
-    `[pack] build/: сайт ${(info.site.bytes / 1048576).toFixed(1)} МБ, /pay/ ${Math.round(info.pay.bytes / 1024)} КБ, коммит ${commit.slice(0, 7)}`,
+    `[pack] build/: сайт ${(info.site.bytes / 1048576).toFixed(1)} МБ, /pay/ ${Math.round(info.pay.bytes / 1024)} КБ, коммит ${commit.slice(0, 7)}, каталог ${info.catalog.version.slice(0, 12)}`,
   );
 }
