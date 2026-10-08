@@ -20,10 +20,12 @@
  * же адреса, цены, фото и порядок.
  *
  * Код выхода: 0 — отличий нет; 1 — сборки различаются (для этапа 3В: сравнение
- * сборки из снимка со сборкой из выгрузки сервера); 2 — неверный вызов или
- * папка, не похожая на сборку (нет sitemap.xml или ни одной страницы
- * index.html): две пустые папки «одинаковыми» не считаются.
- * С --report код выхода всегда 0: посмотреть отличия, ничего не останавливая.
+ * сборки из снимка со сборкой из выгрузки сервера); 2 — неверный вызов, папка,
+ * не похожая на сборку (нет sitemap.xml или ни одной страницы index.html: две
+ * пустые папки «одинаковыми» не считаются), или сравнение не удалось (любая
+ * неожиданная ошибка; причина — в stderr после «Сравнение не удалось:»).
+ * С --report код выхода при отличиях 0: посмотреть их, ничего не останавливая;
+ * код 2 остаётся и с --report.
  *
  * Из других скриптов и тестов: import { compareBuilds } from './compare-builds.mjs'
  * — вернёт { lines, differences } и ничего не напечатает; если папка не сборка,
@@ -31,7 +33,7 @@
  */
 import { existsSync, readFileSync, readdirSync, realpathSync } from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 /** Сколько отличий каждого вида показывать подробно (счётчик считает все). */
 const SHOW = 25;
@@ -118,6 +120,15 @@ function facts(root, rel) {
       ? [product.name, product.offers?.price ?? '—', product.offers?.availability ?? '—', (product.image ?? []).join(',')].join(' | ')
       : null,
   };
+}
+
+/** facts, но с названием файла в тексте ошибки: «Сравнение не удалось: <файл>: <причина>». */
+function factsOf(root, rel) {
+  try {
+    return facts(root, rel);
+  } catch (error) {
+    throw new Error(`${path.join(root, rel)}: ${error?.message ?? error}`, { cause: error });
+  }
 }
 
 /** Поля страницы, сравниваемые как строки: [поле, как назвать в отчёте]. */
@@ -216,8 +227,8 @@ export function compareBuilds(before, after) {
   let pagesChanged = 0;
   const fieldChanges = { title: 0, description: 0, canonical: 0, h1: 0, links: 0 };
   for (const rel of [...pagesBefore].filter((p) => pagesAfter.has(p))) {
-    const a = facts(before, rel);
-    const b = facts(after, rel);
+    const a = factsOf(before, rel);
+    const b = factsOf(after, rel);
     let pageChanged = false;
     for (const [field, label] of TEXT_FIELDS) {
       if (a[field] === b[field]) continue;
@@ -302,17 +313,18 @@ export function compareBuilds(before, after) {
 }
 
 /**
- * Запущен ли файл как программа. Node приводит главный модуль к настоящему пути
- * (через symlink и junction), а argv[1] — нет, поэтому сравниваем настоящие пути
- * обоих; .native ещё и раскрывает короткие имена вроде C:\Users\2BA0~1.
- * Любая неудача значит «не главный модуль».
+ * Запущен ли файл как программа. Прямой запуск узнаём по адресу модуля; Node приводит
+ * главный модуль к настоящему пути (через symlink и junction), а argv[1] — нет, поэтому
+ * иначе сравниваем настоящие пути обоих (.native ещё и раскрывает короткие имена вроде
+ * C:\Users\2BA0~1). Если realpath не работает (странный сетевой или subst-том), прямой
+ * запуск всё равно узнан. Любая неудача значит «не главный модуль».
  */
 function isMain() {
   try {
-    return (
-      Boolean(process.argv[1]) &&
-      realpathSync.native(path.resolve(process.argv[1])) === realpathSync.native(fileURLToPath(import.meta.url))
-    );
+    const argv1 = process.argv[1];
+    if (!argv1) return false;
+    if (import.meta.url === pathToFileURL(argv1).href) return true;
+    return realpathSync.native(path.resolve(argv1)) === realpathSync.native(fileURLToPath(import.meta.url));
   } catch {
     return false;
   }
@@ -331,8 +343,9 @@ if (isMain()) {
       for (const line of lines) console.log(line);
       process.exitCode = report || differences === 0 ? 0 : 1;
     } catch (error) {
-      if (!(error instanceof NotABuildError)) throw error;
-      console.error(error.message);
+      // Ворота не должны «падать в 1»: код 1 значит только «сборки различаются».
+      const message = error instanceof NotABuildError ? error.message : `Сравнение не удалось: ${error?.message ?? error}`;
+      console.error(message);
       process.exitCode = 2;
     }
   }

@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, rmSync, rmdirSync, symlinkSync, writeFileSync } from 'node:fs';
+import { lstatSync, mkdirSync, mkdtempSync, rmSync, rmdirSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -8,9 +8,41 @@ import { compareBuilds } from './compare-builds.mjs';
 
 const SCRIPT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'compare-builds.mjs');
 
-const made = [];
+const made = []; // временные папки: удаляются в конце
+const links = []; // [ссылка, папка, где она лежит]: ссылки снимаются раньше папок
+
+/**
+ * Снимает symlink или junction, не заходя внутрь. Сначала unlink: так снимается symlink
+ * на Linux/macOS (там rmdir даёт ENOTDIR; тип 'junction' там просто symlink) и junction на
+ * Windows; rmdir — запасной путь, если unlink не удался. Рекурсивно через ссылку не удаляем.
+ */
+function removeLink(link) {
+  try {
+    lstatSync(link);
+  } catch (error) {
+    if (error.code === 'ENOENT') return; // ссылки нет
+    throw error;
+  }
+  try {
+    unlinkSync(link);
+  } catch {
+    rmdirSync(link);
+  }
+}
+
 afterAll(() => {
-  for (const dir of made) rmSync(dir, { recursive: true, force: true });
+  const stuck = new Set();
+  for (const [link, holder] of links) {
+    try {
+      removeLink(link);
+    } catch {
+      stuck.add(holder);
+    }
+  }
+  for (const dir of made) {
+    // Папку, где осталась ссылка, не трогаем: рекурсивное удаление могло бы пойти по ней в настоящую папку scripts.
+    if (!stuck.has(dir)) rmSync(dir, { recursive: true, force: true });
+  }
 });
 
 /** Временная папка с файлами: путь => содержимое. */
@@ -346,13 +378,29 @@ describe('compare-builds как программа', () => {
     }
   });
 
+  it('неожиданная ошибка при сравнении: «Сравнение не удалось: …» и код 2, а не 1, в том числе с --report', () => {
+    // ItemList без itemListElement: разбор страницы падает.
+    const broken = page().replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, '<script type="application/ld+json">{"@type":"ItemList"}</script>');
+    const before = build({ 'index.html': broken });
+    const after = build({ 'index.html': broken });
+    for (const args of [[before, after], ['--report', before, after]]) {
+      const res = run(...args);
+      expect(res.status, args.join(' ')).toBe(2);
+      expect(res.stdout, args.join(' ')).toBe('');
+      expect(res.stderr, args.join(' ')).toContain('Сравнение не удалось: ');
+      expect(res.stderr, args.join(' ')).toContain('index.html');
+    }
+  });
+
   it('запуск через junction на папку scripts: печатает отличия и возвращает код 1', (ctx) => {
+    // Папка и ссылка записываются для уборки до всего, что может бросить ошибку.
     const holder = mkdtempSync(path.join(os.tmpdir(), 'pion-compare-link-'));
+    made.push(holder);
     const link = path.join(holder, 'scripts-link');
+    links.push([link, holder]);
     try {
-      symlinkSync(path.dirname(SCRIPT), link, 'junction');
+      symlinkSync(path.dirname(SCRIPT), link, 'junction'); // на Linux/macOS тип игнорируется: обычный symlink
     } catch (error) {
-      rmSync(holder, { recursive: true, force: true }); // ссылки нет, внутри пусто
       ctx.skip(`не удалось создать junction/symlink во временной папке: ${error.code ?? error.message}`);
     }
     try {
@@ -362,9 +410,7 @@ describe('compare-builds как программа', () => {
       expect(res.stdout).toContain('products.csv');
       expect(res.stdout).toContain('Итого отличий');
     } finally {
-      // Только сама ссылка: rmSync с recursive пошёл бы внутрь и мог бы тронуть настоящую папку scripts.
-      rmdirSync(link);
-      made.push(holder);
+      removeLink(link); // только сама ссылка, не папка scripts
     }
   });
 
