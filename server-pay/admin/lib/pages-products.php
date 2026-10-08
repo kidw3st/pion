@@ -16,6 +16,9 @@ require_once __DIR__ . '/pages-log.php';
 /** Фильтр «Статус»: значение => подпись. Пустое значение — все, кроме удалённых. */
 const ADMIN_STATUS_FILTER = ['' => 'Все, кроме удалённых', 'active' => 'В продаже', 'hidden' => 'Сняты с продажи', 'draft' => 'Черновики', 'deleted' => 'Удалённые'];
 
+/** Сколько букетов в списке за раз: полный каталог — сотни фото, на мобильном интернете это долго. */
+const ADMIN_LIST_PAGE = 60;
+
 function admin_page_products(array $req, array $ctx): array
 {
     $db = $ctx['db'];
@@ -35,6 +38,9 @@ function admin_page_products(array $req, array $ctx): array
         }
         return $needle === '' || str_contains(mb_strtolower($p['title']), $needle);
     });
+    $found = count($items);
+    $shown = max(ADMIN_LIST_PAGE, (int)admin_str($req['query'], 'shown'));
+    $items = array_slice($items, 0, $shown);
 
     $sectionOptions = '<option value="">Все разделы</option>';
     foreach ($sections as $s) {
@@ -47,7 +53,7 @@ function admin_page_products(array $req, array $ctx): array
     $list = '';
     foreach ($items as $p) {
         $thumb = $p['images'] !== []
-            ? '<img src="' . h($p['images'][0]) . '" alt="" loading="lazy">'
+            ? '<img src="' . h($p['images'][0]) . '" alt="" width="56" height="56" loading="lazy" decoding="async">'
             : '<span class="thumb"></span>';
         $where = implode(', ', array_map(fn (string $s): string => $labels[$s] ?? $s, $p['sections']));
         $list .= '<li><a href="' . ADMIN_BASE . 'product.php?uid=' . h($p['uid']) . '">' . $thumb . '<span>'
@@ -62,8 +68,13 @@ function admin_page_products(array $req, array $ctx): array
         . '<label>Раздел<select name="section">' . $sectionOptions . '</select></label>'
         . '<label>Статус<select name="status">' . $statusOptions . '</select></label>'
         . '<p class="buttons"><button class="btn-quiet" type="submit">Показать</button></p></form>'
-        . '<p class="hint">Найдено: ' . count($items) . '</p>'
-        . ($list !== '' ? '<ul class="items">' . $list . '</ul>' : '<p>Ничего не нашлось.</p>');
+        . '<p class="hint">Найдено: ' . $found . '</p>'
+        . ($list !== '' ? '<ul class="items">' . $list . '</ul>' : '<p>Ничего не нашлось.</p>')
+        . ($found > $shown
+            ? '<p class="buttons"><a class="btn-quiet" href="' . ADMIN_BASE . '?' . h(http_build_query(
+                ['q' => $q, 'section' => $section, 'status' => $status, 'shown' => $shown + ADMIN_LIST_PAGE], '', '&')
+            ) . '">Показать ещё</a></p>'
+            : '');
     return admin_html(admin_layout('Букеты', $html, $ctx['user'], $ctx['status'], admin_notice($req)));
 }
 
