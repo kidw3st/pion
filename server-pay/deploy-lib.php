@@ -749,7 +749,10 @@ function deploy_alert_text(string $kind, array $state, ?array $watch = null): st
     // Причина обслуживания — из maintenance.json: первая строка, не длиннее 300
     // знаков (обрезанная кончается «…»). Точку в конце ставит сам текст.
     $why = trim((string)($watch['maintenance']['message'] ?? ''));
-    $why = trim(rtrim(trim(preg_split('/\R/', $why, 2)[0] ?? ''), '.'));
+    // Строки делим по \r\n, \r и \n явно: без флага /u «\R» совпал бы и с байтом 0x85, а это
+    // вторая половина «х» (D1 85) — причина обрывалась бы на первой «х». С флагом /u на битом
+    // UTF-8 preg_split вернул бы false, и причина пропала бы вовсе.
+    $why = trim(rtrim(trim(preg_split('/\r\n|\r|\n/', $why, 2)[0] ?? ''), '.'));
     $cut = mb_strlen($why) > 300;
     if ($cut) {
         $why = rtrim(mb_substr($why, 0, 299)) . '…';

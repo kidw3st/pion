@@ -157,7 +157,9 @@ function deploy_read_catalog_watch(string $home): ?array
 /**
  * Отправляет то, о чём пора написать, и сохраняет состояние. $watch — что
  * сторож каталога прочитал в этом запуске (deploy_read_catalog_watch); null —
- * базы нет или она не читается, о каталоге молчим.
+ * файла базы нет (или нет catalog/db.php): о каталоге молчим совсем. Нечитаемая
+ * база — не null: версии в таком $watch нет, о каталоге молчим, а о копиях и
+ * обслуживании сторож пишет, как обычно.
  */
 function deploy_finish(string $home, array $state, int $now, ?array $watch = null): void
 {
