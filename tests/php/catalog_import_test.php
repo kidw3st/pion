@@ -150,11 +150,71 @@ t_case('import-cli.php', function (): void {
         t_true(is_file("$home/catalog.sqlite"), 'после удачной загрузки база на месте');
         t_true(!is_file("$home/catalog.sqlite" . '.import'), 'временного файла нет');
         t_true(str_contains($out, 'букетов 2') && str_contains($out, $source['version']), 'печатает, сколько загружено, и версию');
+        $hash = md5_file("$home/catalog.sqlite");
         [$code] = t_catalog_cli("$scripts/catalog/import-cli.php", $home, [$file]);
         t_equal($code, 1, 'второй раз в ту же базу — отказ');
+        // Отказ при уже существующей базе её не трогает: уборка за неудачной загрузкой — только для временного файла.
+        // clearstatcache: PHP помнит положительный is_file, и удаление базы осталось бы незамеченным.
+        clearstatcache();
+        t_true(is_file("$home/catalog.sqlite"), 'после отказа действующая база на месте');
+        t_true(md5_file("$home/catalog.sqlite") === $hash, 'и не изменилась');
+        t_true(!is_file("$home/catalog.sqlite" . '.import'), 'временного файла рядом с действующей базой не заводят');
+
+        // Не вышло переименовать готовый файл в имя базы (здесь на месте базы — папка): отказ по-русски, без
+        // предупреждения PHP, временный файл убран.
+        $blocked = t_tmpdir();
+        mkdir("$blocked/catalog.sqlite");
+        [$code, $out] = t_catalog_cli("$scripts/catalog/import-cli.php", $blocked, [$file]);
+        t_equal($code, 1, 'имя базы занято — отказ');
+        t_true(str_contains($out, 'Не загружено: не переименовать'), 'причина названа по-русски: ' . $out);
+        t_true(!str_contains($out, 'Warning'), 'без предупреждения PHP: ' . $out);
+        clearstatcache();
+        t_true(!is_file("$blocked/catalog.sqlite" . '.import'), 'временный файл убран');
+
+        // Фото пропали, а база уже есть: отказ, и база та же.
+        putenv('PION_WEBROOT=' . t_tmpdir());
+        [$code, $out] = t_catalog_cli("$scripts/catalog/import-cli.php", $home, [$file]);
+        t_equal($code, 1, 'фото нет, база есть — отказ');
+        t_true(str_contains($out, 'не найдены'), 'причина названа: фото не найдены');
+        clearstatcache();
+        t_true(is_file("$home/catalog.sqlite"), 'действующая база на месте');
+        t_true(md5_file("$home/catalog.sqlite") === $hash, 'и не изменилась');
+        t_true(!is_file("$home/catalog.sqlite" . '.import'), 'временного файла нет');
     } finally {
         putenv('PION_WEBROOT');
     }
+});
+
+t_case('import-cli.php: база появилась, пока шла загрузка', function (): void {
+    $scripts = t_catalog_scripts();
+    $home = t_tmpdir();
+    $file = t_tmpdir() . '/export.json';
+    copy(__DIR__ . '/fixtures/catalog-export-small.json', $file);
+    // Без хитростей со временем: обёртка потока «race» на первой же проверке фото заводит файл базы —
+    // ровно то, что сделал бы второй импорт или user-cli.php add посреди загрузки.
+    $driver = t_tmpdir() . '/driver.php';
+    file_put_contents($driver, '<?php
+class RaceWrap {
+    public $context;
+    public function url_stat(string $path, int $flags): array|false {
+        $db = getenv("PION_CATALOG_HOME") . "/catalog.sqlite";
+        if (!file_exists($db)) {
+            file_put_contents($db, "чужая база");
+        }
+        return ["mode" => 0100644, "size" => 1];
+    }
+}
+stream_wrapper_register("race", "RaceWrap");
+putenv("PION_WEBROOT=race://site");
+$argv = [__FILE__, $argv[1]];
+require ' . var_export("$scripts/catalog/import-cli.php", true) . ';
+');
+    [$code, $out] = t_catalog_cli($driver, $home, [$file]);
+    t_equal($code, 1, 'база появилась за время загрузки — отказ');
+    t_true(str_contains($out, 'пока шла загрузка, появилась база'), 'причина названа: ' . $out);
+    clearstatcache();
+    t_equal(file_get_contents("$home/catalog.sqlite"), 'чужая база', 'чужую базу не заменили');
+    t_true(is_file("$home/catalog.sqlite" . '.import'), 'загруженное оставлено рядом для разбора');
 });
 
 function t_import_sample(): array
@@ -221,6 +281,7 @@ t_case('загрузка: одно фото у двух букетов счит�
         }
     }
     $expected = count(array_unique($all));
+    t_true($expected < count($all), 'в выгрузке есть повтор — проверка не пустая');
     try {
         catalog_import(t_catalog_db(), $export, t_now(), $webroot);
         t_true(false, 'без фото загрузка должна отказать');

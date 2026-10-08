@@ -12,7 +12,9 @@
  * имя базы он получает, только когда загрузка прошла: неудачная загрузка не
  * оставляет пустую базу (админка тогда по-прежнему отвечает 503, а не
  * показывает вход). Повторить можно сразу, исправив причину. В непустую базу не
- * загружает.
+ * загружает. Пока скрипт не напечатал версию, user-cli.php не запускать: он
+ * заводит базу сам, и загрузка тогда откажет (загруженное останется в
+ * <база>.import).
  *
  * Печатает, сколько загружено, и версию — она должна совпасть с версией в
  * файле.
@@ -36,6 +38,7 @@ $target = catalog_db_path();
 $fresh = !is_file($target);
 $dbFile = $fresh ? $target . '.import' : $target;
 $db = null;
+$keep = false;
 try {
     $export = json_decode((string)file_get_contents($file), true, 512, JSON_THROW_ON_ERROR);
     if ($fresh && is_file($dbFile) && !unlink($dbFile)) {
@@ -47,8 +50,17 @@ try {
     $counts = catalog_import($db, $export, new DateTimeImmutable(), $webroot);
     $version = catalog_export($db)['version'];
     $db = null;
-    if ($fresh && !rename($dbFile, $target)) {
-        throw new RuntimeException("не переименовать $dbFile в $target");
+    if ($fresh) {
+        // Пока шла загрузка, базу мог завести кто-то другой (второй импорт, user-cli.php add):
+        // rename() молча заменил бы её. Загруженное тогда не удаляем — его разбирают вручную.
+        clearstatcache();
+        if (is_file($target)) {
+            $keep = true;
+            throw new RuntimeException("пока шла загрузка, появилась база $target — загруженное оставлено в $dbFile, разберитесь вручную");
+        }
+        if (!@rename($dbFile, $target)) {
+            throw new RuntimeException("не переименовать $dbFile в $target");
+        }
     }
     printf(
         "Загружено: разделов %d, букетов %d, переадресаций %d.\nВерсия каталога: %s\n",
@@ -62,7 +74,7 @@ try {
     // В трассе исключения остаётся база (она передавалась аргументом) — пока исключение живо, файл не удалить.
     unset($e);
     $db = null;
-    if ($fresh) {
+    if ($fresh && !$keep) {
         foreach ([$dbFile, $dbFile . '-journal'] as $leftover) {
             if (is_file($leftover)) {
                 @unlink($leftover);
