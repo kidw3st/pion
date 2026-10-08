@@ -126,11 +126,37 @@ function deploy_telegram(string $text): string
     return $code === 200 && is_string($raw) && str_contains($raw, '"ok":true') ? 'отправлено' : "Telegram ответил $code";
 }
 
-/** Отправляет то, о чём пора написать, и сохраняет состояние. */
-function deploy_finish(string $home, array $state, int $now): void
+/**
+ * Что сторож каталога видит в папке каталога (см. deploy_catalog_watch).
+ *
+ * Сторож не должен ронять выкладку: база не открылась, не читается или новее
+ * кода — строка в журнал и null, как будто базы нет. Папка каталога — по
+ * PION_CATALOG_HOME или рядом с pion-deploy (catalog_home()).
+ */
+function deploy_read_catalog_watch(string $home): ?array
 {
-    foreach (deploy_pending_alerts($state, $now) as $kind) {
-        deploy_log($home, "сообщение о сбое ($kind): " . deploy_telegram(deploy_alert_text($kind, $state)));
+    try {
+        $code = __DIR__ . '/catalog/db.php';
+        if (!is_file($code)) {
+            throw new RuntimeException("нет $code");
+        }
+        require_once $code;
+        return deploy_catalog_watch(catalog_home(), catalog_db_path());
+    } catch (Throwable $e) {
+        deploy_log($home, 'не прочитать базу каталога для сторожа: ' . $e->getMessage());
+        return null;
+    }
+}
+
+/**
+ * Отправляет то, о чём пора написать, и сохраняет состояние. $watch — что
+ * сторож каталога прочитал в этом запуске (deploy_read_catalog_watch); null —
+ * базы нет или она не читается, о каталоге молчим.
+ */
+function deploy_finish(string $home, array $state, int $now, ?array $watch = null): void
+{
+    foreach (deploy_pending_alerts($state, $now, $watch) as $kind) {
+        deploy_log($home, "сообщение о сбое ($kind): " . deploy_telegram(deploy_alert_text($kind, $state, $watch)));
         $state = deploy_mark_alerted($state, $kind, $now);
     }
     deploy_state_save($home, $state);
@@ -189,7 +215,8 @@ function deploy_release_archives(string $home, string $sha): array
     return ['site' => $dir . '/' . DEPLOY_ARCHIVES['site'], 'pay' => $dir . '/' . DEPLOY_ARCHIVES['pay']];
 }
 
-function deploy_run(string $home, string $webroot, bool $dryRun): int
+/** @param array|null $watch что сторож каталога прочитал в этом запуске; передаётся в каждый deploy_finish */
+function deploy_run(string $home, string $webroot, bool $dryRun, ?array $watch = null): int
 {
     $now = time();
     $state = deploy_state_load($home);
@@ -202,7 +229,7 @@ function deploy_run(string $home, string $webroot, bool $dryRun): int
     } catch (RuntimeException $e) {
         deploy_log($home, 'не узнать, есть ли новая сборка: ' . $e->getMessage());
         if (!$dryRun) {
-            deploy_finish($home, deploy_state_after_failure($state, 'transient', $e->getMessage(), null, $now), $now);
+            deploy_finish($home, deploy_state_after_failure($state, 'transient', $e->getMessage(), null, $now), $now, $watch);
         }
         return 1;
     }
@@ -213,7 +240,7 @@ function deploy_run(string $home, string $webroot, bool $dryRun): int
     }
 
     if (!$dryRun && ($sha === ($state['current']['sha'] ?? null) || isset($state['bad'][$sha]))) {
-        deploy_finish($home, deploy_state_idle($state), $now);
+        deploy_finish($home, deploy_state_idle($state), $now, $watch);
         return 0;
     }
 
@@ -226,7 +253,7 @@ function deploy_run(string $home, string $webroot, bool $dryRun): int
                 . substr((string)($release['catalogVersion'] ?? '—'), 0, 7) . ')';
             deploy_log($home, "сборка $short не выложена: $why");
             if (!$dryRun) {
-                deploy_finish($home, deploy_state_idle(deploy_mark_bad($state, $sha, $why)), $now);
+                deploy_finish($home, deploy_state_idle(deploy_mark_bad($state, $sha, $why)), $now, $watch);
             }
             return 0;
         }
@@ -242,13 +269,13 @@ function deploy_run(string $home, string $webroot, bool $dryRun): int
     } catch (DeployFatal $e) {
         deploy_log($home, "сборка $short отклонена: " . $e->getMessage());
         if (!$dryRun) {
-            deploy_finish($home, deploy_state_after_failure($state, 'fatal', $e->getMessage(), $sha, $now), $now);
+            deploy_finish($home, deploy_state_after_failure($state, 'fatal', $e->getMessage(), $sha, $now), $now, $watch);
         }
         return 1;
     } catch (RuntimeException $e) {
         deploy_log($home, "сборка $short не выложена: " . $e->getMessage());
         if (!$dryRun) {
-            deploy_finish($home, deploy_state_after_failure($state, 'transient', $e->getMessage(), $sha, $now), $now);
+            deploy_finish($home, deploy_state_after_failure($state, 'transient', $e->getMessage(), $sha, $now), $now, $watch);
         }
         return 1;
     }
@@ -282,7 +309,7 @@ function deploy_run(string $home, string $webroot, bool $dryRun): int
         deploy_log($home, 'не удалось удалить старые сборки: ' . $e->getMessage());
     }
     deploy_log($home, 'выложена ' . $summary);
-    deploy_finish($home, $state, $now);
+    deploy_finish($home, $state, $now, $watch);
     return 0;
 }
 
@@ -432,7 +459,9 @@ if (!flock($lock, LOCK_EX | LOCK_NB)) {
 
 try {
     exit(match ($mode) {
-        '' => deploy_run($home, $webroot, false),
+        // База каталога читается один раз, уже под замком и до любого deploy_finish.
+        // Пробный прогон, откат и статус сообщений не шлют, базу не читают.
+        '' => deploy_run($home, $webroot, false, deploy_read_catalog_watch($home)),
         '--dry-run' => deploy_run($home, $webroot, true),
         '--rollback' => deploy_rollback($home, $webroot),
         default => deploy_usage(),

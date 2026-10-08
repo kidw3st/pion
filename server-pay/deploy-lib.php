@@ -397,6 +397,11 @@ const DEPLOY_LAG_ALERT_AFTER = 5400;
  * связан: см. deploy_state_after_failure и deploy_note_master.
  */
 const DEPLOY_ALERT_COOLDOWN = 10800;
+/**
+ * Копия базы делается раз в сутки — двое суток без неё значит, что
+ * обслуживание не идёт.
+ */
+const DEPLOY_BACKUP_STALE_AFTER = 172800;
 
 /**
  * Состояние лежит в pion-deploy/state.json:
@@ -414,8 +419,11 @@ const DEPLOY_ALERT_COOLDOWN = 10800;
  *             её не принимает;
  *   failure — текущий сбой: kind (transient|fatal), message, sha, since;
  *   alerts  — когда последний раз писали о сбое каждого рода (fatal,
- *             transient, lag). Запись снимается, когда сбой кончился или
- *             начался другой: новая поломка не ждёт расписания прошлой;
+ *             transient, lag и сторож каталога: catalog, backup,
+ *             maintenance). Запись снимается, когда сбой кончился или
+ *             начался другой: новая поломка не ждёт расписания прошлой.
+ *             Сторожу каталога снимать нечего: его три рода пишут не чаще
+ *             раза в DEPLOY_ALERT_COOLDOWN, пока причина в силе;
  *   master  — последний увиденный коммит master и с какого времени: sha, since;
  *   head    — последняя увиденная сборка в ветке server-build и с какого
  *             времени: sha, since. По sha отличают поломку, которая ещё в
@@ -594,7 +602,8 @@ function deploy_alert_due(array $state, string $kind, int $now): bool
 }
 
 /**
- * О чём пора написать в служебный чат.
+ * О чём пора написать в служебный чат про выкладку сайта (о каталоге — в
+ * deploy_pending_catalog_alerts).
  *
  * Пока выкладка сбоит, об отставании от master молчим: причина та же.
  *
@@ -608,7 +617,7 @@ function deploy_alert_due(array $state, string $kind, int $now): bool
  *
  * @return list<string> 'fatal' | 'transient' | 'lag'
  */
-function deploy_pending_alerts(array $state, int $now): array
+function deploy_pending_build_alerts(array $state, int $now): array
 {
     $failure = $state['failure'];
     if (is_array($failure)) {
@@ -632,24 +641,146 @@ function deploy_pending_alerts(array $state, int $now): array
     return [];
 }
 
+/**
+ * О чём пора написать про каталог. $watch — то, что прочитала
+ * deploy_catalog_watch (базы нет — сюда не попадаем).
+ *
+ *   catalog     — версия каталога в базе не та, что на сайте, и последняя
+ *                 правка старше 90 минут. Если выкладка сбоит, не пишем: о ней
+ *                 и так пишут. Не пишем и когда сравнивать не с чем — как и
+ *                 админка («Сайт пока собирается из прежнего каталога»): на
+ *                 сайте нет версии каталога (ещё ничего не выкладывалось или
+ *                 сборка без каталога) либо в базе не было ни одной правки;
+ *   backup      — копии базы нет совсем или последняя старше двух суток;
+ *   maintenance — ночное обслуживание записало, что не удалось.
+ *
+ * Копии и обслуживание от выкладки не зависят и пишутся и при её сбое.
+ *
+ * @param array{version:string,changedAt:int,backupAt:?int,maintenance:?array{ok:bool,at:int,message:string}} $watch
+ * @return list<string> 'catalog' | 'backup' | 'maintenance'
+ */
+function deploy_pending_catalog_alerts(array $state, int $now, array $watch): array
+{
+    $kinds = [];
+    $deployed = $state['current']['catalogVersion'] ?? null;
+    $version = (string)($watch['version'] ?? '');
+    if (!is_array($state['failure'] ?? null)
+        && is_string($deployed) && $deployed !== ''
+        && $version !== '' && $version !== $deployed
+        && $now - (int)($watch['changedAt'] ?? 0) >= DEPLOY_LAG_ALERT_AFTER
+        && deploy_alert_due($state, 'catalog', $now)) {
+        $kinds[] = 'catalog';
+    }
+    $backupAt = $watch['backupAt'] ?? null;
+    if (($backupAt === null || $now - $backupAt > DEPLOY_BACKUP_STALE_AFTER) && deploy_alert_due($state, 'backup', $now)) {
+        $kinds[] = 'backup';
+    }
+    if (($watch['maintenance']['ok'] ?? true) === false && deploy_alert_due($state, 'maintenance', $now)) {
+        $kinds[] = 'maintenance';
+    }
+    return $kinds;
+}
+
+/**
+ * Всё, о чём пора написать в служебный чат: про выкладку сайта и, если база
+ * каталога есть ($watch не null), про каталог.
+ *
+ * @param array|null $watch результат deploy_catalog_watch
+ * @return list<string> 'fatal' | 'transient' | 'lag' | 'catalog' | 'backup' | 'maintenance'
+ */
+function deploy_pending_alerts(array $state, int $now, ?array $watch = null): array
+{
+    $kinds = deploy_pending_build_alerts($state, $now);
+    return $watch === null ? $kinds : [...$kinds, ...deploy_pending_catalog_alerts($state, $now, $watch)];
+}
+
 function deploy_mark_alerted(array $state, string $kind, int $now): array
 {
     $state['alerts'][$kind] = $now;
     return $state;
 }
 
-function deploy_alert_text(string $kind, array $state): string
+/**
+ * Текст сообщения. $watch нужен сообщению об обслуживании (его причина лежит
+ * в maintenance.json); остальным он не нужен.
+ *
+ * @param array|null $watch результат deploy_catalog_watch
+ */
+function deploy_alert_text(string $kind, array $state, ?array $watch = null): string
 {
     $failure = $state['failure'] ?? [];
     $build = substr((string)($failure['sha'] ?? ''), 0, 7);
     $message = (string)($failure['message'] ?? '');
     $master = substr((string)($state['master']['sha'] ?? ''), 0, 7);
+    // Точку в конце причины убираем: ставит её сам текст.
+    $why = trim(rtrim(trim((string)($watch['maintenance']['message'] ?? '')), '.'));
     return match ($kind) {
         'fatal' => "Выкладка pionperm.ru остановлена: сборка $build не прошла проверку — $message. Сайт работает на прежней сборке.",
         'transient' => "Выкладка pionperm.ru: больше часа не получается выложить новую сборку — $message.",
         'lag' => "Выкладка pionperm.ru: коммит $master в master больше 90 минут не превращается в сборку. Проверьте GitHub Actions.",
+        'catalog' => 'Каталог pionperm.ru: изменения из админки больше 90 минут не на сайте. Проверьте GitHub Actions («Сборка и выкладка»).',
+        'backup' => 'Каталог pionperm.ru: свежей копии базы нет больше двух суток — проверьте задание обслуживания.',
+        'maintenance' => 'Каталог pionperm.ru: ночное обслуживание не удалось — ' . ($why !== '' ? $why : 'причина не записана') . '.',
         default => "Выкладка pionperm.ru: $kind",
     };
+}
+
+// --- Сторож каталога -------------------------------------------------------
+
+/**
+ * Что сторож каталога видит в папке каталога (pion-catalog):
+ *   version, changedAt — версия выгрузки и время последней правки из meta
+ *                        базы (секунды; нет правок — '' и 0);
+ *   backupAt           — время самой свежей копии backups/catalog-*.sqlite;
+ *                        null — копий нет;
+ *   maintenance        — итог ночного обслуживания из maintenance.json
+ *                        ({ok, at, message}; по контракту его пишет после
+ *                        каждого запуска catalog/maintenance-cli.php);
+ *                        null — файла нет или он не по контракту.
+ *
+ * Базу только читает: нет файла базы — null, ни базы, ни папки не создаётся.
+ * Не открылась, не читается или новее кода — исключение: вызывающий пишет его
+ * в журнал и считает, что базы нет.
+ *
+ * Код базы подключается здесь, а не вверху файла: deploy-lib.php подключает и
+ * scripts/check-server-build.php, которому каталог не нужен.
+ *
+ * @return array{version:string,changedAt:int,backupAt:?int,maintenance:?array{ok:bool,at:int,message:string}}|null
+ */
+function deploy_catalog_watch(string $catalogHome, string $dbFile): ?array
+{
+    require_once __DIR__ . '/catalog/db.php';
+    if (!is_file($dbFile)) {
+        return null;
+    }
+    $db = catalog_db_open($dbFile);
+    $meta = catalog_meta($db);
+    $db = null;
+
+    $backupAt = null;
+    foreach (@scandir($catalogHome . '/backups') ?: [] as $name) {
+        $file = $catalogHome . '/backups/' . $name;
+        if (str_starts_with($name, 'catalog-') && str_ends_with($name, '.sqlite') && is_file($file)) {
+            $at = @filemtime($file);
+            if ($at !== false && ($backupAt === null || $at > $backupAt)) {
+                $backupAt = $at;
+            }
+        }
+    }
+
+    $raw = @file_get_contents($catalogHome . '/maintenance.json');
+    $done = is_string($raw) ? json_decode($raw, true) : null;
+    $text = static fn(mixed $value): string => is_scalar($value) ? (string)$value : '';
+    $maintenance = is_array($done) && is_bool($done['ok'] ?? null)
+        ? ['ok' => $done['ok'], 'at' => (int)strtotime($text($done['at'] ?? '')), 'message' => $text($done['message'] ?? '')]
+        : null;
+
+    return [
+        'version' => $text($meta['version'] ?? ''),
+        'changedAt' => (int)strtotime($text($meta['changed_at'] ?? '')),
+        'backupAt' => $backupAt,
+        'maintenance' => $maintenance,
+    ];
 }
 
 // --- Скачанные сборки --------------------------------------------------------

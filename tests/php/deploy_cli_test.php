@@ -17,30 +17,36 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/../../server-pay/deploy-lib.php';
+require_once __DIR__ . '/catalog_fixture.php';
 
 /**
- * Копия deploy.php с библиотекой во временной папке; рядом пустые home
- * (служебная папка pion-deploy) и www (веб-корень).
+ * Копия deploy.php с библиотекой и кодом базы каталога во временной папке;
+ * рядом пустые home (служебная папка pion-deploy), www (веб-корень) и
+ * catalogHome (папка каталога pion-catalog: без неё сторож каталога в копии
+ * пошёл бы искать базу по путям вокруг временной папки).
  *
- * @return array{script:string,home:string,www:string}
+ * @return array{script:string,home:string,www:string,catalogHome:string}
  */
 function t_cli_sandbox(): array
 {
     $root = t_tmpdir();
-    foreach (['deploy.php', 'deploy-lib.php'] as $name) {
+    mkdir("$root/catalog");
+    foreach (['deploy.php', 'deploy-lib.php', 'catalog/db.php'] as $name) {
         if (!copy(dirname(__DIR__, 2) . '/server-pay/' . $name, "$root/$name")) {
             throw new RuntimeException("не скопировать $name");
         }
     }
     mkdir("$root/home");
     mkdir("$root/www");
-    return ['script' => "$root/deploy.php", 'home' => "$root/home", 'www' => "$root/www"];
+    mkdir("$root/pion-catalog");
+    return ['script' => "$root/deploy.php", 'home' => "$root/home", 'www' => "$root/www", 'catalogHome' => "$root/pion-catalog"];
 }
 
 /**
  * Запускает копию deploy.php в режиме $mode. Пути приходят через
- * PION_DEPLOY_HOME и PION_DEPLOY_WEBROOT: дочерний процесс наследует их, а
- * после запуска они снимаются.
+ * PION_DEPLOY_HOME, PION_DEPLOY_WEBROOT и PION_CATALOG_HOME: дочерний процесс
+ * наследует их, а после запуска они снимаются. Папка каталога подменяется
+ * всегда: настоящую deploy.php читать не должен.
  *
  * @param bool $mergeStderr false — stderr выбрасывается, остаётся один stdout
  * @return array{0:int,1:string} код выхода и вывод
@@ -56,11 +62,13 @@ function t_cli_run(array $box, string $mode, bool $mergeStderr = true): array
     $stderr = $mergeStderr ? '2>&1' : '2>' . (PHP_OS_FAMILY === 'Windows' ? 'NUL' : '/dev/null');
     putenv('PION_DEPLOY_HOME=' . $box['home']);
     putenv('PION_DEPLOY_WEBROOT=' . $box['www']);
+    putenv('PION_CATALOG_HOME=' . $box['catalogHome']);
     try {
         exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($box['script']) . ' ' . $mode . ' ' . $stderr, $out, $code);
     } finally {
         putenv('PION_DEPLOY_HOME');
         putenv('PION_DEPLOY_WEBROOT');
+        putenv('PION_CATALOG_HOME');
     }
     return [$code, implode("\n", $out)];
 }
@@ -104,7 +112,7 @@ function t_cli_minute(): int
  * файл, которого нет ни в одной сборке.
  *
  * @param string|null $catalogB версия каталога сборки B в state.json; null — сборка без каталога
- * @return array{script:string,home:string,www:string}
+ * @return array{script:string,home:string,www:string,catalogHome:string}
  */
 function t_cli_rollback_box(?string $catalogB = null): array
 {
@@ -140,8 +148,8 @@ function t_cli_rollback_box(?string $catalogB = null): array
  * что наружу копия не ходит. Если функция в deploy.php изменится так, что
  * подмена не найдёт её, проверка упадёт сразу, а не пойдёт в сеть.
  *
- * @param array{script:string,home:string,www:string} $box
- * @return array{script:string,home:string,www:string,fake:string}
+ * @param array{script:string,home:string,www:string,catalogHome:string} $box
+ * @return array{script:string,home:string,www:string,catalogHome:string,fake:string}
  */
 function t_cli_fake_github(array $box): array
 {
@@ -206,6 +214,28 @@ function t_cli_publish(array $box, string $sha, string $commit, ?string $catalog
 function t_cli_set_head(array $box, string $sha): void
 {
     file_put_contents($box['fake'] . '/refs', "$sha refs/heads/server-build\n");
+}
+
+/**
+ * База каталога для сторожа в папке каталога песочницы: версия и время правки
+ * в meta, свежая копия (если нужна) и итог обслуживания (если задан).
+ *
+ * @param array{catalogHome:string} $box
+ * @param array{ok:bool,at:string,message:string}|null $maintenance
+ */
+function t_cli_catalog(array $box, string $version, int $changedAt, bool $backup = true, ?array $maintenance = null): void
+{
+    $db = catalog_db_open($box['catalogHome'] . '/catalog.sqlite');
+    $set = $db->prepare('INSERT INTO meta (key, value) VALUES (?, ?)');
+    $set->execute(['version', $version]);
+    $set->execute(['changed_at', catalog_iso(new DateTimeImmutable('@' . $changedAt))]);
+    $db = null;
+    if ($backup) {
+        t_put_files($box['catalogHome'] . '/backups', ['catalog-2026-10-08.sqlite' => 'copy']);
+    }
+    if ($maintenance !== null) {
+        file_put_contents($box['catalogHome'] . '/maintenance.json', json_encode($maintenance, JSON_UNESCAPED_UNICODE));
+    }
 }
 
 // --- Статус, неизвестный ключ, откат без истории: ничего не выложено ---------
@@ -395,6 +425,97 @@ t_equal(file_get_contents($box['www'] . '/index.html'), 'next home', 'пара �
 // Подмена GitHub не выпускает в сеть: чужие режимы по-прежнему закрыты.
 t_throws(static fn() => t_cli_run($box, '--find-chat'), InvalidArgumentException::class, 'подмена GitHub: --find-chat всё равно закрыт');
 t_throws(static fn() => t_cli_run(t_cli_sandbox(), ''), InvalidArgumentException::class, 'без подмены GitHub выкладку запустить нельзя');
+
+// --- Сторож каталога: deploy.php читает базу и пишет в служебный чат ------------
+// Песочница смотрит в свою папку каталога (PION_CATALOG_HOME), настоящую не
+// читает. Служебный чат в песочнице не настроен: о том, что сообщение ушло бы,
+// говорит строка в журнале.
+$say = static fn(string $kind): string => "сообщение о сбое ($kind): служебный чат не настроен";
+$bBuild = str_repeat('b', 40);
+
+// Базы нет — сторож молчит, выкладка работает, папку каталога не трогает.
+$box = t_cli_fake_github(t_cli_rollback_box($v1));
+t_cli_set_head($box, $bBuild);
+[$code, $out] = t_cli_run($box, '');
+t_equal([$code, $out], [0, ''], 'сторож: базы каталога нет — молчим');
+t_equal(t_snapshot($box['catalogHome']), [], 'сторож: в папку каталога ничего не пишет');
+
+// Правка сохранена 2 часа назад, а на сайте прежний каталог; копия свежая.
+t_cli_catalog($box, $v2, time() - 7200);
+[$code, $out] = t_cli_run($box, '');
+t_equal($code, 0, 'сторож: правка не выложена — код выхода');
+t_true(str_contains($out, $say('catalog')), "сторож: правка не выложена 2 часа — сообщение ($out)");
+t_true(!str_contains($out, $say('backup')) && !str_contains($out, $say('maintenance')), "сторож: копия свежая, итога обслуживания нет — о них молчим ($out)");
+t_equal(array_keys(deploy_state_load($box['home'])['alerts']), ['catalog'], 'сторож: в state.json записано, о чём написали');
+[$code, $out] = t_cli_run($box, '');
+t_equal([$code, $out], [0, ''], 'сторож: через 15 минут то же сообщение не повторяется');
+
+// Всё выложено — тишина, даже если правка свежая.
+$box = t_cli_fake_github(t_cli_rollback_box($v1));
+t_cli_set_head($box, $bBuild);
+t_cli_catalog($box, $v1, time() - 7200);
+[$code, $out] = t_cli_run($box, '');
+t_equal([$code, $out], [0, ''], 'сторож: версия в базе выложена — молчим');
+t_equal(deploy_state_load($box['home'])['alerts'], [], 'сторож: в state.json ничего не записано');
+
+// Базу прочитать нельзя — выкладка идёт, в журнале строка, сообщения нет.
+$box = t_cli_fake_github(t_cli_rollback_box($v1));
+t_cli_set_head($box, $bBuild);
+file_put_contents($box['catalogHome'] . '/catalog.sqlite', 'это не база SQLite, а просто текст, достаточно длинный, чтобы SQLite не принял его за пустой файл');
+[$code, $out] = t_cli_run($box, '');
+t_equal($code, 0, 'сторож: база не читается — выкладка не падает');
+t_true(str_contains($out, 'не прочитать базу каталога для сторожа: '), "сторож: причина в журнале ($out)");
+t_true(!str_contains($out, 'сообщение о сбое') && !str_contains($out, 'упал'), "сторож: ни сообщения, ни падения ($out)");
+t_true(str_contains((string)file_get_contents($box['home'] . '/deploy.log'), 'не прочитать базу каталога для сторожа: '), 'сторож: строка записана и в deploy.log');
+t_equal(deploy_state_load($box['home'])['current']['sha'] ?? null, $bBuild, 'сторож: state.json записан как обычно');
+
+// Каждый путь deploy_run отдаёт сторожу данные: забытая передача молча отключила
+// бы сообщения на этом пути (по умолчанию watch пуст).
+$maintenanceFailed = fn(): array => ['ok' => false, 'at' => catalog_iso(new DateTimeImmutable()), 'message' => 'диск полон'];
+$paths = [
+    // Ветки server-build в «GitHub» нет вовсе — опрос не удаётся.
+    'GitHub не отвечает' => [1, static fn(array $box) => null],
+    'новой сборки нет' => [0, static function (array $box) use ($bBuild): void {
+        t_cli_set_head($box, $bBuild);
+    }],
+    'сборка повторяет откатанную' => [0, static function (array $box) use ($v1, $codeB): void {
+        t_cli_publish($box, str_repeat('3', 40), $codeB, $v1, 'same');
+        t_cli_set_head($box, str_repeat('3', 40));
+        $state = deploy_state_load($box['home']);
+        $state['badPairs'][deploy_pair_key(['commit' => $codeB, 'catalogVersion' => $v1])] = 'откат вручную';
+        deploy_state_save($box['home'], $state);
+    }],
+    'сборка испорчена' => [1, static function (array $box): void {
+        t_cli_set_head($box, str_repeat('4', 40));
+    }],
+    'сборка скачалась не целиком' => [1, static function (array $box) use ($v1, $codeB): void {
+        t_cli_publish($box, str_repeat('5', 40), $codeB, $v1, 'torn');
+        file_put_contents(deploy_release_dir($box['fake'], str_repeat('5', 40)) . '/pion-site.tar.gz', 'обрыв', FILE_APPEND);
+        t_cli_set_head($box, str_repeat('5', 40));
+    }],
+    'сборка выложена' => [0, static function (array $box) use ($v1, $codeB): void {
+        t_cli_publish($box, str_repeat('6', 40), $codeB, $v1, 'new');
+        t_cli_set_head($box, str_repeat('6', 40));
+    }],
+];
+foreach ($paths as $name => [$wantCode, $setup]) {
+    $box = t_cli_fake_github(t_cli_rollback_box($v1));
+    t_cli_catalog($box, $v1, time() - 60, true, $maintenanceFailed());
+    $setup($box);
+    [$code, $out] = t_cli_run($box, '');
+    t_equal($code, $wantCode, "сторож ($name): код выхода ($out)");
+    t_true(str_contains($out, $say('maintenance')), "сторож ($name): сбой обслуживания доходит до чата ($out)");
+    t_true(is_int(deploy_state_load($box['home'])['alerts']['maintenance'] ?? null), "сторож ($name): сообщение отмечено в state.json");
+}
+
+// Пробный прогон, откат и статус базу не читают: сообщений они не шлют.
+$box = t_cli_fake_github(t_cli_rollback_box($v1));
+file_put_contents($box['catalogHome'] . '/catalog.sqlite', 'это не база SQLite, а просто текст, достаточно длинный, чтобы SQLite не принял его за пустой файл');
+t_cli_set_head($box, $bBuild);
+foreach (['--status', '--dry-run', '--rollback'] as $mode) {
+    [, $out] = t_cli_run($box, $mode);
+    t_true(!str_contains($out, 'сторожа'), "сторож: режим $mode базу каталога не читает ($out)");
+}
 
 // --- Замок занят: вторая выкладка не стартует -------------------------------
 $box = t_cli_sandbox();
