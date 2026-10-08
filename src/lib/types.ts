@@ -12,6 +12,14 @@ export interface Product {
    * mirroring the shop and showing everything it has.
    */
   published?: boolean;
+  /**
+   * Раздел, по которому строится адрес страницы (`/<раздел>/<slug>/`).
+   * Есть у букетов каталога, нет у витрины из CRM и карточек главной из
+   * site.json.
+   */
+  mainSection?: string;
+  /** В продаже или снят: у снятого страница есть, но в разделах его нет и заказать нельзя. */
+  status?: 'active' | 'hidden';
 }
 
 /**
