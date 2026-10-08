@@ -117,7 +117,7 @@ curl -s -o /dev/null -w '%{http_code} [%{redirect_url}]\n' -A "$UA" https://pion
 curl -s -o /dev/null -w '%{http_code}\n' -A "$UA" https://pionperm.ru/korobki/tsvetochnaya-korobka-21/      # 200, на странице «Сейчас нет в продаже»
 curl -s -o /dev/null -w '%{http_code}\n' -A "$UA" https://pionperm.ru/images/catalog/                      # 403
 curl -s -o /dev/null -w '%{http_code}\n' -A "$UA" https://pionperm.ru/pay/catalog-redirect-lib.php         # 403
-curl -s -o /dev/null -w '%{http_code}\n' -A "$UA" https://pionperm.ru/pay/cart-lib.php                     # 403 (файл появится после слияния 3А)
+curl -s -o /dev/null -w '%{http_code}\n' -A "$UA" https://pionperm.ru/pay/cart-lib.php                     # 403
 curl -s -A "$UA" https://pionperm.ru/api/redirects.json                                                    # {}
 curl -s -o /dev/null -w '%{http_code}\n' -A "$UA" https://pionperm.ru/blog/                               # 200
 ```
