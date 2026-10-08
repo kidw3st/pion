@@ -453,3 +453,43 @@ file_put_contents("$alone/probe.php", "<?php\nrequire __DIR__ . '/deploy-lib.php
 $out = [];
 exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg("$alone/probe.php") . ' 2>&1', $out, $code);
 t_equal([$code, implode("\n", $out)], [0, 'нет'], 'deploy-lib.php сама каталог не подключает: он нужен только сторожу');
+
+// --- Отметка о сообщении — только когда оно ушло ----------------------------
+(static function (): void {
+    $now = 1_800_000_000;
+    // Копии нет совсем — сообщение о копии пора отправить.
+    $watch = ['version' => '', 'changedAt' => 0, 'backupAt' => null, 'maintenance' => null];
+    $lines = [];
+    $log = static function (string $line) use (&$lines): void {
+        $lines[] = $line;
+    };
+    t_true(in_array('backup', deploy_pending_alerts(deploy_empty_state(), $now, $watch), true), 'исходно: о копии пора писать');
+
+    $failed = deploy_send_alerts(deploy_empty_state(), $now, $watch, static fn(string $text): string => 'Telegram ответил 502', $log);
+    t_equal($failed['alerts']['backup'] ?? null, null, 'Telegram не принял — не отмечено');
+    t_true(in_array('сообщение о сбое (backup): Telegram ответил 502', $lines, true), 'в журнале — что ответил Telegram');
+    t_true(in_array('backup', deploy_pending_alerts($failed, $now + 900, $watch), true), 'через 15 минут сообщение снова пора отправить');
+
+    $sent = deploy_send_alerts(deploy_empty_state(), $now, $watch, static fn(string $text): string => DEPLOY_TELEGRAM_SENT, $log);
+    t_equal($sent['alerts']['backup'] ?? null, $now, 'отправлено — отмечено');
+    t_true(!in_array('backup', deploy_pending_alerts($sent, $now + 900, $watch), true), 'и через 15 минут не повторяется');
+
+    $off = deploy_send_alerts(deploy_empty_state(), $now, $watch, static fn(string $text): string => DEPLOY_TELEGRAM_OFF, $log);
+    t_equal($off['alerts']['backup'] ?? null, $now, 'чат не настроен — отмечено: повтор ничего не даст, а журнал засорился бы');
+
+    $texts = [];
+    deploy_send_alerts(deploy_empty_state(), $now, $watch, static function (string $text) use (&$texts): string {
+        $texts[] = $text;
+        return DEPLOY_TELEGRAM_SENT;
+    }, $log);
+    t_true(in_array(deploy_alert_text('backup', deploy_empty_state(), $watch), $texts, true), 'отправляется текст deploy_alert_text');
+})();
+
+// --- Время выкладки из будущего не откладывает сообщение о каталоге ----------
+(static function (): void {
+    $now = 1_800_000_000;
+    $state = ['current' => ['catalogVersion' => 'v1', 'deployedAt' => $now + 86400]] + deploy_empty_state();
+    $watch = ['version' => 'v2', 'changedAt' => $now - 5400, 'backupAt' => $now - 60, 'maintenance' => null];
+    t_true(in_array('catalog', deploy_pending_alerts($state, $now, $watch), true),
+        'deployedAt позже «сейчас» не берётся: правка не выложена 90 минут — пишем');
+})();

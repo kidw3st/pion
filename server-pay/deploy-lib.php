@@ -706,8 +706,9 @@ function deploy_pending_catalog_alerts(array $state, int $now, array $watch): ar
     // берёт живую выгрузку, и выкладка после правки сдвигает отсчёт самое
     // большее на одну сборку; пока сборки не выкладываются, он не сдвигается.
     // Времени выкладки в состоянии нет — отсчёт только от правки.
+    // Время выкладки из будущего (не бывает: его пишет deploy.php через time()) не берём: иначе сообщение не пришло бы до него.
     $deployedAt = $state['current']['deployedAt'] ?? null;
-    $since = max((int)($watch['changedAt'] ?? 0), is_int($deployedAt) ? $deployedAt : 0);
+    $since = max((int)($watch['changedAt'] ?? 0), is_int($deployedAt) && $deployedAt <= $now ? $deployedAt : 0);
     if (!is_array($state['failure'] ?? null)
         && is_string($deployed) && $deployed !== ''
         && $version !== '' && $version !== $deployed
@@ -744,6 +745,35 @@ function deploy_pending_alerts(array $state, int $now, ?array $watch = null): ar
 function deploy_mark_alerted(array $state, string $kind, int $now): array
 {
     $state['alerts'][$kind] = $now;
+    return $state;
+}
+
+/** deploy_telegram: сообщение ушло. */
+const DEPLOY_TELEGRAM_SENT = 'отправлено';
+/** deploy_telegram: служебный чат не настроен — повторять бесполезно. */
+const DEPLOY_TELEGRAM_OFF = 'служебный чат не настроен (DEPLOY_ALERT_CHAT_ID в config.php)';
+
+/**
+ * Отправляет всё, о чём пора написать (deploy_pending_alerts), и отмечает
+ * отправленное. Telegram не принял сообщение (сеть, ответ не 200) — отметки
+ * нет: следующий запуск выкладки, через 15 минут, попробует снова. Иначе
+ * сообщение терялось бы на весь перерыв между сообщениями: о копии — на сутки,
+ * об обслуживании — до следующего неудачного запуска, об остальном — на 3 часа.
+ * Чат не настроен — отмечаем: повтор ничего не изменит, а журнал заполнился бы
+ * одной и той же строкой.
+ *
+ * @param Closure(string): string $send текст → ответ deploy_telegram
+ * @param Closure(string): void   $log  строка в deploy.log
+ */
+function deploy_send_alerts(array $state, int $now, ?array $watch, Closure $send, Closure $log): array
+{
+    foreach (deploy_pending_alerts($state, $now, $watch) as $kind) {
+        $result = $send(deploy_alert_text($kind, $state, $watch));
+        $log("сообщение о сбое ($kind): $result");
+        if ($result === DEPLOY_TELEGRAM_SENT || $result === DEPLOY_TELEGRAM_OFF) {
+            $state = deploy_mark_alerted($state, $kind, $now);
+        }
+    }
     return $state;
 }
 

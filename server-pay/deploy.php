@@ -105,7 +105,7 @@ function deploy_telegram(string $text): string
     $token = defined('TELEGRAM_TOKEN') ? (string)TELEGRAM_TOKEN : '';
     $chat = defined('DEPLOY_ALERT_CHAT_ID') ? (string)DEPLOY_ALERT_CHAT_ID : '';
     if ($token === '' || $chat === '') {
-        return 'служебный чат не настроен (DEPLOY_ALERT_CHAT_ID в config.php)';
+        return DEPLOY_TELEGRAM_OFF;
     }
     $ch = curl_init('https://api.telegram.org/bot' . $token . '/sendMessage');
     curl_setopt_array($ch, [
@@ -123,7 +123,7 @@ function deploy_telegram(string $text): string
     $raw = curl_exec($ch);
     $code = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
     curl_close($ch);
-    return $code === 200 && is_string($raw) && str_contains($raw, '"ok":true') ? 'отправлено' : "Telegram ответил $code";
+    return $code === 200 && is_string($raw) && str_contains($raw, '"ok":true') ? DEPLOY_TELEGRAM_SENT : "Telegram ответил $code";
 }
 
 /**
@@ -165,10 +165,15 @@ function deploy_read_catalog_watch(string $home): ?array
  */
 function deploy_finish(string $home, array $state, int $now, ?array $watch = null): void
 {
-    foreach (deploy_pending_alerts($state, $now, $watch) as $kind) {
-        deploy_log($home, "сообщение о сбое ($kind): " . deploy_telegram(deploy_alert_text($kind, $state, $watch)));
-        $state = deploy_mark_alerted($state, $kind, $now);
-    }
+    $state = deploy_send_alerts(
+        $state,
+        $now,
+        $watch,
+        static fn(string $text): string => deploy_telegram($text),
+        static function (string $line) use ($home): void {
+            deploy_log($home, $line);
+        },
+    );
     deploy_state_save($home, $state);
 }
 
