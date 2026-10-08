@@ -1,0 +1,22 @@
+name: Расписание не засыпает
+
+# GitHub выключает запуски по расписанию в публичном репозитории после 60 дней
+# без коммитов. Раз в месяц включаем их заново — и эту задачу, и «Сборку и выкладку».
+on:
+  schedule:
+    - cron: '17 4 1 * *'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for wf in deploy.yml keepalive.yml; do
+            gh api -X PUT "repos/${GITHUB_REPOSITORY}/actions/workflows/$wf/enable"
+          done

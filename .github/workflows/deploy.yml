@@ -1,9 +1,36 @@
 name: Сборка и выкладка
 
 # Каждый коммит в master собирается здесь и кладётся в ветку server-build:
-# pion-site.tar.gz, pion-pay.tar.gz и build-info.json с их sha256. Сервер
-# (pay/deploy.php по расписанию раз в 15 минут) сам забирает новую сборку.
+# pion-site.tar.gz, pion-pay.tar.gz и build-info.json с их sha256 и версией
+# каталога, из которого собран сайт. Сервер (pay/deploy.php по расписанию раз
+# в 15 минут) сам забирает новую сборку.
 # master — это то, что на сайте: незаконченная работа живёт в ветках.
+#
+# Откуда каталог — решает переключатель, переменная репозитория CATALOG_SOURCE
+# (Settings → Secrets and variables → Actions → Variables). Пока она не равна
+# «server», всё как до этапа 3: коммит собирается из закоммиченного снимка
+# data/catalog-export.json, а запуск по расписанию ничего не делает. С «server»
+# каталог берётся из админки (/pay/catalog-export.php): коммит собирается
+# всегда, а запуск по расписанию (раз в 15 минут) сверяет коммит и версию
+# каталога с прошлой сборкой из server-build и собирает, только если изменилось
+# что-то из них. Решение принимает scripts/catalog-source.mjs.
+#
+# Из устаревшего снимка не собираем: если источник — сервер, а выгрузку
+# получить не удалось, запуск по расписанию тихо заканчивается без сборки
+# (следующий попробует через 15 минут), а запуск по коммиту — ошибкой, без
+# публикации. Выгрузка, не прошедшая проверку, — ошибка при любом запуске.
+#
+# allow_shrink — галочка ручного запуска (Run workflow): букетов в выгрузке
+# намного меньше, чем в прошлой сборке, и так и задумано (салон удалил много
+# букетов). Без неё такая выгрузка не принимается — защита от выкладки
+# полупустого каталога.
+#
+# Очередь. gate — лёгкая задача без очереди: запуск по расписанию она
+# пропускает дальше, только когда переключатель включён. build стоит в очереди
+# deploy-build: одна сборка за раз; новый коммит отменяет идущую сборку, запуск
+# по расписанию её ждёт. publish стоит в очереди deploy-publish: две публикации
+# не спорят за server-build. Чтобы GitHub не выключил расписание, раз в месяц
+# его включает заново keepalive.yml.
 #
 # Работа разделена на две задачи. build собирает и проверяет: там запускаются
 # npm, setup-php и весь чужой код, поэтому права на запись у неё нет. publish
@@ -16,22 +43,55 @@ name: Сборка и выкладка
 on:
   push:
     branches: [master]
+  # Каталог из админки: раз в 15 минут проверяем, не изменился ли он.
+  # Пока переменная CATALOG_SOURCE не «server», такой запуск ничего не делает.
+  schedule:
+    - cron: '*/15 * * * *'
   workflow_dispatch:
+    inputs:
+      allow_shrink:
+        description: 'Букетов стало намного меньше — так и задумано (салон удалил много букетов)'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
-# Два коммита подряд — собирается последний: в нём есть всё. Группа своя у
-# каждой ветки: ручной запуск из другой ветки не должен отменить сборку master.
-concurrency:
-  group: deploy-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  build:
+  # Запуск по расписанию при выключенном переключателе ничего не делает — и не
+  # должен даже вставать в очередь сборок: иначе он вытеснил бы из неё
+  # ожидающую сборку по коммиту, и коммит не выложился бы.
+  gate:
     # Ручной «Run workflow» из другой ветки иначе выложил бы эту ветку на боевой сайт.
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
+    outputs:
+      go: ${{ steps.gate.outputs.go }}
+    steps:
+      - id: gate
+        env:
+          EVENT: ${{ github.event_name }}
+          CATALOG_SOURCE: ${{ vars.CATALOG_SOURCE }}
+        run: |
+          if [ "$EVENT" = schedule ] && [ "$CATALOG_SOURCE" != server ]; then
+            echo "go=false" >> "$GITHUB_OUTPUT"; echo "Источник — снимок: по расписанию собирать нечего."
+          else
+            echo "go=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    # Ветку проверяет gate: если он пропущен или сказал «нет», сборки нет.
+    needs: gate
+    if: needs.gate.outputs.go == 'true'
+    runs-on: ubuntu-latest
+    # Одна сборка за раз. Новый коммит отменяет идущую сборку (в нём есть всё);
+    # запуск по расписанию идущую сборку не отменяет, а ждёт: иначе он мог бы
+    # снять сборку коммита и решить, что собирать нечего.
+    concurrency:
+      group: deploy-build
+      cancel-in-progress: ${{ github.event_name == 'push' }}
+    outputs:
+      publish: ${{ steps.source.outputs.build }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -43,32 +103,66 @@ jobs:
           node-version: '20'
           cache: npm
 
+      # Прошлая сборка: из неё — коммит и версия каталога, с которыми сравнивать.
+      # Нет ветки или файла — сравнивать не с чем, но шаг не падает.
+      - name: Прошлая сборка
+        run: |
+          git fetch -q --depth=1 origin server-build \
+            && git show FETCH_HEAD:build-info.json > "$RUNNER_TEMP/previous-build-info.json" \
+            || echo "Прошлой сборки нет — сравнивать не с чем."
+
+      # Решение: собирать ли и из чего. При CATALOG_SOURCE=server здесь же
+      # скачивается и проверяется выгрузка; ошибка — красный запуск.
+      - name: Каталог — собирать ли и из чего
+        id: source
+        env:
+          CATALOG_SOURCE: ${{ vars.CATALOG_SOURCE }}
+          ALLOW_SHRINK: ${{ inputs.allow_shrink }}
+          PREVIOUS_BUILD_INFO: ${{ runner.temp }}/previous-build-info.json
+          CATALOG_OUT: ${{ runner.temp }}/catalog-export.json
+        run: node scripts/catalog-source.mjs
+
       # PHP — та же версия, что на хостинге.
       - uses: shivammathur/setup-php@v2
+        if: steps.source.outputs.build == 'true'
         with:
           php-version: '8.2'
           coverage: none
 
-      - run: npm ci
-      - run: npm test
-      - run: find server-pay wp-theme -name '*.php' -print0 | xargs -0 -n1 php -l
-      - run: php tests/php/run.php
+      - if: steps.source.outputs.build == 'true'
+        run: npm ci
+      # Проверки — на закоммиченном снимке: они сверяют снимок с файлами Tilda.
+      - if: steps.source.outputs.build == 'true'
+        run: npm test
+      - if: steps.source.outputs.build == 'true'
+        run: find server-pay wp-theme -name '*.php' -print0 | xargs -0 -n1 php -l
+      - if: steps.source.outputs.build == 'true'
+        run: php tests/php/run.php
+
+      # Только теперь подменяем снимок выгрузкой с сервера; prebuild проверит её ещё раз.
+      - name: Каталог с сервера в сборку
+        if: steps.source.outputs.build == 'true' && steps.source.outputs.catalog == 'server'
+        run: cp "$RUNNER_TEMP/catalog-export.json" data/catalog-export.json
 
       # Боевая сборка. postbuild проверяет, что canonical, og, Schema и
       # sitemap указывают на pionperm.ru, и роняет сборку, если нет.
-      - run: npm run build
+      - if: steps.source.outputs.build == 'true'
+        run: npm run build
         env:
           SITE_URL: https://pionperm.ru
 
-      - run: node scripts/pack-build.mjs
+      - if: steps.source.outputs.build == 'true'
+        run: node scripts/pack-build.mjs
 
       # Те же проверки, что у сервера: расхождение останавливает публикацию здесь.
-      - run: php scripts/check-server-build.php build/pion-site.tar.gz build/pion-pay.tar.gz
+      - if: steps.source.outputs.build == 'true'
+        run: php scripts/check-server-build.php build/pion-site.tar.gz build/pion-pay.tar.gz
 
       # Готовые файлы для publish. Нужны только до его запуска, поэтому через
       # три дня GitHub удалит их сам. overwrite — чтобы «Re-run all jobs» не
       # упиралась в артефакт прошлой попытки.
       - uses: actions/upload-artifact@v4
+        if: steps.source.outputs.build == 'true'
         with:
           name: server-build
           path: |
@@ -80,9 +174,15 @@ jobs:
           overwrite: true
 
   publish:
-    # Если build пропущен или красный, publish не запускается.
+    # Если build пропущен, красный или решил, что собирать нечего, publish не запускается.
     needs: build
+    if: needs.build.outputs.publish == 'true'
     runs-on: ubuntu-latest
+    # Публикации по одной: две сразу спорили бы за server-build. Идущую не
+    # отменяем — сборка уже проверена, пусть ляжет.
+    concurrency:
+      group: deploy-publish
+      cancel-in-progress: false
     permissions:
       contents: write
     steps:
