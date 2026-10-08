@@ -5,13 +5,17 @@
  * Фото, на которые больше не ссылается ни один букет (кроме удалённых) и ни
  * один раздел, — заменили, убрали из карточки, букет удалён, — переезжают в
  * корзину images/catalog/_deleted/. Но не сразу: сначала фото становится
- * кандидатом, и уходит оно, только когда ссылок на него нет уже сутки и сайт,
- * выложенный на сервере, собран после того, как ссылки пропали: пока
- * выкладка не дошла, старая страница на сайте ещё показывает фото, и
- * задержка сборки не должна оставить на ней пустую картинку. Дошла ли
- * выкладка, решает вызывающий (см. catalog_deploy_covers). Корзина стирает
- * фото через 90 дней. Файлы, хозяина которых база не знает (uid букета ни в
- * базе, ни в журнале, раздела из имени нет), не трогаются никогда.
+ * кандидатом, и уходит оно, только когда ссылок на него нет уже сутки и на
+ * сайте выложен каталог той же версии, что в базе: пока выкладка не дошла,
+ * старая страница на сайте ещё показывает фото, и задержка сборки не должна
+ * оставить на ней пустую картинку. Версия, а не время правки, потому что фото,
+ * на которое снова сослались и снова убрали между двумя уборками, хранит
+ * старое время «без ссылок», и по времени сошла бы за выложенное сборка, что
+ * его ещё показывает. Цена — фото ждёт лишнюю ночь, если вечером были правки,
+ * а выкладка до ночи не дошла. Дошла ли выкладка, решает вызывающий (см.
+ * catalog_deploy_covers). Корзина стирает фото через 90 дней. Файлы, хозяина
+ * которых база не знает (uid букета ни в базе, ни в журнале, раздела из
+ * имени нет), не трогаются никогда.
  *
  * Корзина — не последнее слово: на фото в корзине могут ссылаться снова
  * (загрузили, прошли две уборки, и только потом сохранили карточку; или
@@ -101,45 +105,46 @@ function catalog_photo_owner_known(PDO $db, string $dir, string $name): bool
 }
 
 /**
- * Выложено ли на сайте всё, что было в базе к моменту $since. state.json пишет
- * deploy.php: версия выложенного каталога и время его последней правки. Пока
- * состояния нет (выкладка ещё не знает каталог) — считаем, что не выложено:
- * лучше подержать фото лишний день, чем показать на сайте пустую картинку.
+ * Выложен ли на сайте весь каталог из базы. state.json пишет deploy.php:
+ * current.catalogVersion — версия каталога, по которому собран выложенный
+ * сайт. Выложено только тогда, когда она та же, что в базе: тогда на сайте уже
+ * нет ни одной ссылки, которой нет в базе.
  *
- * Выложено, если версия выложенного каталога та же, что в базе (на сайте всё),
- * или выложенная сборка учла правки не раньше $since: ссылки на фото пропали
- * не позже $since, значит, и в ней их уже нет.
+ * По времени правки (current.catalogChangedAt) не судим. Фото, на которое
+ * снова сослались и снова убрали между двумя уборками, сохраняет старое время
+ * «без ссылок», и сборка из середины (ссылка уже есть, второй правки ещё нет)
+ * считалась бы выложенной без фото, хотя показывает его.
  *
- * @param array|null $current state.json → current: catalogVersion, catalogChangedAt
- *                            ('' или нет — каталог не менялся); null — состояния нет
- * @param string     $dbVersion версия каталога в базе (catalog_meta, ключ version)
- * @return Closure(int): bool принимает время, с которого у фото нет ссылок
+ * Нет состояния, версия в нём не строка или пуста (выкладка ещё не знает
+ * каталог), версии нет в базе — не выложено: лучше подержать фото лишнюю ночь,
+ * чем показать на сайте пустую картинку.
+ *
+ * @param array|null $current state.json → current; null — состояния нет
+ * @return Closure(string): bool принимает версию каталога в базе (catalog_meta, ключ version)
  */
-function catalog_deploy_covers(?array $current, string $dbVersion): Closure
+function catalog_deploy_covers(?array $current): Closure
 {
     $version = is_array($current) ? ($current['catalogVersion'] ?? null) : null;
-    $changed = is_array($current) && is_string($current['catalogChangedAt'] ?? null) ? strtotime($current['catalogChangedAt']) : false;
-    return static function (int $since) use ($version, $dbVersion, $changed): bool {
-        if (!is_string($version) || $version === '') {
-            return false;
-        }
-        return $version === $dbVersion || ($changed !== false && $changed >= $since);
-    };
+    return static fn (string $dbVersion): bool => is_string($version) && $version !== '' && $version === $dbVersion;
 }
 
 /**
  * Одна уборка. Порядок такой: сначала вернуть из корзины то, на что снова
  * ссылаются; потом найти фото без ссылок и, если их к переносу не слишком
- * много, унести те, что пробыли без ссылок сутки и ссылок на которые нет уже
- * и на выложенном сайте; потом стереть из корзины старое — кроме того, на что
+ * много, унести те, что пробыли без ссылок сутки, если на сайте выложен тот же
+ * каталог, что в базе; потом стереть из корзины старое — кроме того, на что
  * ссылаются.
  *
- * $published($since) отвечает, выложена ли уже правка, сделанная не позже
- * $since (время, с которого у фото нет ссылок): без «да» фото не уходит, как бы
- * давно оно ни лежало. Оно остаётся кандидатом со своим прежним $since и
- * уйдёт в одну из следующих уборок, когда выкладка дойдёт. null — выкладку не
- * учитывать, ждать только сутки. Предохранитель считает только то, что
- * действительно уходит, — выложенное.
+ * Ссылки на фото и версия каталога в базе читаются в одной транзакции чтения —
+ * из одного снимка базы: версия описывает ровно те ссылки, что прочитаны, и
+ * правка, сохранённая посреди чтения, не может попасть в одно без другого.
+ * $published($dbVersion) спрашивается один раз за уборку: выложен ли на сайте
+ * каталог именно этой версии. Без «да» ни одно фото не уходит, как бы давно
+ * оно ни лежало, но остаётся кандидатом со своим прежним временем и уйдёт в
+ * одну из следующих уборок, когда выкладка дойдёт (возвращение из корзины и
+ * стирание старого от выкладки не зависят). null — выкладку не учитывать,
+ * ждать только сутки. Предохранитель считает только то, что действительно
+ * уходит.
  *
  * Предохранитель сработал — RuntimeException: в корзину не уходит ничего и
  * из корзины ничего не стирается (при сбившихся ссылках защите «на это
@@ -148,13 +153,24 @@ function catalog_deploy_covers(?array $current, string $dbVersion): Closure
  * исправления все фото снова ждали бы сутки, а выбывшие из списка вернулись
  * бы в него со старым временем.
  *
- * @param (Closure(int): bool)|null $published
+ * @param (Closure(string): bool)|null $published версия каталога в базе → выложен ли он на сайте
  * @return array{candidates: int, moved: int, purged: int, returned: int}
  */
 function catalog_photos_sweep(PDO $db, string $webroot, string $candidatesFile, DateTimeImmutable $now, ?Closure $published = null): array
 {
     $time = $now->getTimestamp();
-    $referenced = catalog_photos_referenced($db);
+    $db->beginTransaction();
+    try {
+        $referenced = catalog_photos_referenced($db);
+        $dbVersion = (string)(catalog_meta($db)['version'] ?? '');
+        $db->commit();
+    } catch (Throwable $e) {
+        if ($db->inTransaction()) {
+            $db->rollBack();
+        }
+        throw $e;
+    }
+    $deployed = $published === null || $published($dbVersion);
 
     $returned = 0;
     foreach (array_keys($referenced) as $rel) {
@@ -189,7 +205,7 @@ function catalog_photos_sweep(PDO $db, string $webroot, string $candidatesFile, 
             $since = is_int($previous[$rel] ?? null) ? $previous[$rel] : $time;
             $candidates[$rel] = $since;
             // Кандидат, которому не хватает только выкладки, остаётся в списке со своим $since.
-            if ($time - $since >= CATALOG_PHOTO_GRACE && ($published === null || $published($since))) {
+            if ($time - $since >= CATALOG_PHOTO_GRACE && $deployed) {
                 $due[] = $rel;
             }
         }
@@ -254,4 +270,58 @@ function catalog_photo_candidates_save(string $file, array $candidates): void
         }
         throw new RuntimeException("Не записать список фото на уборку: $file");
     }
+}
+
+// --- Итог запуска для сторожа выкладки -------------------------------------
+
+/** Текст в одну строку не длиннее $max знаков (обрезанный кончается «…»), как его показывает сторож. */
+function maintenance_one_line(string $text, int $max = 300): string
+{
+    $text = trim((string)preg_replace('/\s+/u', ' ', mb_scrub($text)));
+    return mb_strlen($text) > $max ? rtrim(mb_substr($text, 0, $max - 1)) . '…' : $text;
+}
+
+/**
+ * Причина сбоя для итога — одна строка по-русски. Сообщение, где уже есть
+ * кириллица, наше, и говорит само, что не вышло («Уборка фото остановлена: …»).
+ * Остальное — чужие по-английски (PDO, SQLite, итераторы папок и прочее, даже
+ * если класс исключения — RuntimeException): им ставится впереди, на каком
+ * шаге это случилось.
+ */
+function maintenance_reason(Throwable $e, string $step): string
+{
+    $text = $e->getMessage();
+    return maintenance_one_line(preg_match('/\p{Cyrillic}/u', mb_scrub($text)) === 1 ? $text : $step . ': ' . $text);
+}
+
+/**
+ * Пишет итог запуска: maintenance.json — во временный файл и подменой, чтобы
+ * сторож не прочёл половину; maintenance.log — строкой в конец. Время ставится
+ * здесь: итог пишется в конце запуска, и «at» — время конца, по нему сторож
+ * решает, что сбой новый. Сообщение приводится к одной строке до 300 знаков.
+ * Возвращает текст ошибки записи или null.
+ */
+function maintenance_record(string $home, bool $ok, string $message): ?string
+{
+    $at = catalog_iso(new DateTimeImmutable());
+    $message = maintenance_one_line($message);
+    $errors = [];
+    $json = json_encode(
+        ['ok' => $ok, 'at' => $at, 'message' => $message],
+        JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE,
+    );
+    $json = is_string($json) ? $json . PHP_EOL : '';
+    $file = $home . '/maintenance.json';
+    $part = $file . '.part';
+    if ($json === '' || @file_put_contents($part, $json) !== strlen($json) || !@rename($part, $file)) {
+        if (is_file($part)) {
+            @unlink($part);
+        }
+        $errors[] = "не записать $file";
+    }
+    $line = $at . ' ' . ($ok ? 'ok' : 'ошибка: ' . $message) . PHP_EOL;
+    if (@file_put_contents($home . '/maintenance.log', $line, FILE_APPEND | LOCK_EX) !== strlen($line)) {
+        $errors[] = "не дописать $home/maintenance.log";
+    }
+    return $errors === [] ? null : 'Итог обслуживания не записан: ' . implode('; ', $errors);
 }

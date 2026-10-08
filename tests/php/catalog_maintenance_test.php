@@ -379,40 +379,42 @@ t_case('уборка ждёт, пока сайт выложен без фото'
     $uid = catalog_create_product($db, 'anna', t_fields(), t_now());
     $rel = "/images/catalog/bukety/buket-nezhnost-$uid-eeeeeeee.webp";
     t_put_files($webroot, [ltrim($rel, '/') => 'webp']);
-    catalog_photos_sweep($db, $webroot, $candidates, t_now(), fn (int $since): bool => false);
-    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+25 hours'), fn (int $since): bool => false);
+    catalog_photos_sweep($db, $webroot, $candidates, t_now(), fn (string $version): bool => false);
+    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+25 hours'), fn (string $version): bool => false);
     t_equal([$r['moved'], is_file($webroot . $rel)], [0, true], 'сутки прошли, но сайт ещё не выложен — фото на месте');
-    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+26 hours'), fn (int $since): bool => true);
+    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+26 hours'), fn (string $version): bool => true);
     t_equal([$r['moved'], is_file($webroot . $rel)], [1, false], 'сайт выложен — в корзину');
 });
 
-t_case('выложено ли: по версии и по времени', function (): void {
-    $covers = catalog_deploy_covers(['catalogVersion' => 'v1', 'catalogChangedAt' => '2026-10-05T14:00:00+05:00'], 'v1');
-    t_true($covers(PHP_INT_MAX), 'версии совпадают — выложено всё');
-    $covers = catalog_deploy_covers(['catalogVersion' => 'v1', 'catalogChangedAt' => '2026-10-05T14:00:00+05:00'], 'v2');
-    t_true($covers(strtotime('2026-10-05T13:59:00+05:00')), 'правка раньше выложенной — на сайте');
-    t_true(!$covers(strtotime('2026-10-05T14:01:00+05:00')), 'правка позже — ещё нет');
-    t_true(!catalog_deploy_covers(null, 'v1')(0), 'состояния нет — ничего не двигаем');
+t_case('выложено ли: только та же версия, что в базе', function (): void {
+    // Время правки в состоянии выкладки уборку не интересует: судим по версии.
+    $covers = catalog_deploy_covers(['catalogVersion' => 'v1', 'catalogChangedAt' => '2026-10-05T14:00:00+05:00']);
+    t_true($covers('v1'), 'версии совпадают — выложено всё');
+    t_true(!$covers('v2'), 'версия другая — не выложено, хоть время правки и стоит');
+    t_true(!catalog_deploy_covers(['catalogVersion' => 'v1', 'catalogChangedAt' => '2999-01-01T00:00:00+05:00'])('v2'), 'и время правки «из будущего» версию не заменяет');
+    t_true(catalog_deploy_covers(['catalogVersion' => 'v1', 'catalogChangedAt' => ''])('v1'), 'каталог не менялся, версии те же — выложено');
+    t_true(catalog_deploy_covers(['catalogVersion' => 'v1'])('v1'), 'времени в записи нет вовсе — версии те же, выложено');
+    t_true(!catalog_deploy_covers(null)('v1'), 'состояния нет — ничего не двигаем');
 });
 
 t_case('выложено ли: чего не знаем, того не двигаем', function (): void {
-    $at = '2026-10-05T14:00:00+05:00';
-    t_true(catalog_deploy_covers(['catalogVersion' => 'v1', 'catalogChangedAt' => $at], 'v2')(strtotime($at)), 'правка ровно в момент выложенной — на сайте');
-    t_true(catalog_deploy_covers(['catalogVersion' => 'v1', 'catalogChangedAt' => ''], 'v1')(PHP_INT_MAX), 'каталог не менялся, версии те же — выложено');
     $unknown = [
-        'времени правки нет' => ['catalogVersion' => 'v1', 'catalogChangedAt' => ''],
-        'ключа времени нет' => ['catalogVersion' => 'v1'],
-        'время не разбирается' => ['catalogVersion' => 'v1', 'catalogChangedAt' => 'когда-то'],
-        'время не строкой' => ['catalogVersion' => 'v1', 'catalogChangedAt' => 5],
-        'версии нет' => ['catalogChangedAt' => $at],
-        'версия пустая' => ['catalogVersion' => '', 'catalogChangedAt' => $at],
-        'версия не строкой' => ['catalogVersion' => 5, 'catalogChangedAt' => $at],
+        'состояния нет' => null,
         'в записи ничего нет' => [],
+        'версии нет' => ['catalogChangedAt' => '2026-10-05T14:00:00+05:00'],
+        'версия пустая' => ['catalogVersion' => '', 'catalogChangedAt' => '2026-10-05T14:00:00+05:00'],
+        'версия не строкой' => ['catalogVersion' => 5, 'catalogChangedAt' => ''],
+        'версия null' => ['catalogVersion' => null],
+        'версия массивом' => ['catalogVersion' => ['v1']],
     ];
     foreach ($unknown as $what => $current) {
-        t_true(!catalog_deploy_covers($current, 'v2')(0), "$what — не выложено, при любой правке");
+        t_true(!catalog_deploy_covers($current)('v1'), "$what — не выложено");
+        t_true(!catalog_deploy_covers($current)(''), "$what, версия в базе пуста — тоже не выложено");
     }
-    t_true(!catalog_deploy_covers(['catalogVersion' => '', 'catalogChangedAt' => $at], '')(0), 'пустая версия у обеих сторон — это «неизвестно», а не «совпало»');
+    t_true(!catalog_deploy_covers(['catalogVersion' => 'v1'])(''), 'в базе версии нет — сравнивать не с чем, не выложено');
+    t_true(!catalog_deploy_covers(['catalogVersion' => ''])(''), 'пустая версия у обеих сторон — это «неизвестно», а не «совпало»');
+    t_true(!catalog_deploy_covers(['catalogVersion' => 'V1'])('v1'), 'версии сравниваются точно');
+    t_true(!catalog_deploy_covers(['catalogVersion' => ' v1'])('v1'), 'пробел в версии — другая версия');
 });
 
 t_case('уборка: кандидат, что ждёт только выкладки, не теряет своё время', function (): void {
@@ -422,22 +424,139 @@ t_case('уборка: кандидат, что ждёт только выкла�
     $uid = catalog_create_product($db, 'anna', t_fields(), t_now());
     $rel = "/images/catalog/bukety/buket-nezhnost-$uid-e1e1e1e1.webp";
     t_photo_file($webroot, $rel);
+    $version = (string)(catalog_meta($db)['version'] ?? '');
+    t_true($version !== '', 'у базы с букетом есть версия');
     $asked = [];
-    $published = function (int $since) use (&$asked): bool {
-        $asked[] = $since;
+    $published = function (string $dbVersion) use (&$asked): bool {
+        $asked[] = $dbVersion;
         return false;
     };
     $first = t_now()->getTimestamp();
     catalog_photos_sweep($db, $webroot, $candidates, t_now(), $published);
-    t_equal($asked, [], 'сутки не прошли — о выкладке не спрашивают');
+    t_equal($asked, [$version], 'о выкладке спрашивают один раз за уборку и с версией базы');
     foreach (['+25 hours', '+49 hours', '+73 hours'] as $shift) {
         $r = catalog_photos_sweep($db, $webroot, $candidates, t_now($shift), $published);
         t_equal([$r['candidates'], $r['moved'], is_file($webroot . $rel)], [1, 0, true], "$shift: фото ждёт выкладки");
         t_equal(json_decode((string)file_get_contents($candidates), true), [$rel => $first], "$shift: в списке прежнее время, не сегодняшнее");
     }
-    t_equal($asked, [$first, $first, $first], 'о выкладке спрашивают с исходным временем «без ссылок»');
-    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+97 hours'), fn (int $since): bool => $since === $first);
+    t_equal($asked, [$version, $version, $version, $version], 'каждая уборка спрашивает ровно один раз');
+    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+97 hours'), fn (string $dbVersion): bool => $dbVersion === $version);
     t_equal([$r['moved'], $r['candidates'], is_file($webroot . $rel)], [1, 0, false], 'выкладка дошла — фото уходит с прежним временем, ждать ещё сутки не надо');
+});
+
+t_case('уборка: выкладке называют свежую версию базы, один раз за уборку', function (): void {
+    $db = t_catalog_with_sections();
+    $webroot = t_tmpdir();
+    $candidates = t_tmpdir() . '/photo-candidates.json';
+    $uid = catalog_create_product($db, 'anna', t_fields(), t_now());
+    for ($i = 0; $i < 3; $i++) {
+        t_photo_file($webroot, sprintf("/images/catalog/bukety/buket-nezhnost-$uid-d%07x.webp", $i));
+    }
+    $asked = [];
+    $published = function (string $dbVersion) use (&$asked): bool {
+        $asked[] = $dbVersion;
+        return false;
+    };
+    catalog_photos_sweep($db, $webroot, $candidates, t_now(), $published);
+    catalog_photos_sweep($db, $webroot, $candidates, t_now('+25 hours'), $published);
+    $db->exec("UPDATE meta SET value = 'после-правки' WHERE key = 'version'");
+    catalog_photos_sweep($db, $webroot, $candidates, t_now('+26 hours'), $published);
+    t_equal(count($asked), 3, 'три уборки — три вопроса, а не по вопросу на каждое из трёх фото');
+    t_equal($asked[2], 'после-правки', 'версия читается при каждой уборке заново');
+    t_true($asked[0] !== '' && $asked[0] === $asked[1], 'пока база не менялась, версия та же');
+    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+27 hours'), fn (string $dbVersion): bool => $dbVersion === 'после-правки');
+    t_equal($r['moved'], 3, 'выложена нынешняя версия базы — фото уходят');
+});
+
+t_case('уборка: сборка из середины суток не считается выложенной', function (): void {
+    // Фото без ссылок увидела первая ночь; днём на него сослались (сборка с этой правкой
+    // выложена), вечером убрали снова. Вторая ночь не видела ссылки между своими уборками
+    // и хранит старое время «без ссылок»: по времени правки та сборка сошла бы за выложенную
+    // «без фото», хотя на сайте оно есть.
+    $db = t_catalog_with_sections();
+    $webroot = t_tmpdir();
+    $candidates = t_tmpdir() . '/photo-candidates.json';
+    $uid = catalog_create_product($db, 'anna', t_fields(), t_now());
+    catalog_publish($db, 'anna', $uid, 1, t_now());
+    $rel = "/images/catalog/bukety/buket-nezhnost-$uid-c1c1c1c1.webp";
+    t_photo_file($webroot, $rel);
+    $since = t_now()->getTimestamp();
+    catalog_photos_sweep($db, $webroot, $candidates, t_now(), fn (string $dbVersion): bool => false);
+
+    catalog_update_product($db, 'anna', $uid, 2, t_fields(['images' => [$rel]]), t_now('+20 hours'));
+    $midday = catalog_meta($db);
+    $deployed = ['catalogVersion' => $midday['version'], 'catalogChangedAt' => $midday['changed_at']];
+    catalog_update_product($db, 'anna', $uid, 3, t_fields(['images' => []]), t_now('+30 hours'));
+    $evening = catalog_meta($db)['version'];
+    t_true($evening !== $midday['version'], 'вечерняя правка изменила версию выгрузки');
+    t_true(strtotime($midday['changed_at']) >= $since, 'время правки на выложенной сборке позже, чем «без ссылок» у фото: по времени это сошло бы за выложенное');
+
+    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+37 hours'), catalog_deploy_covers($deployed));
+    t_equal([$r['moved'], $r['candidates'], is_file($webroot . $rel)], [0, 1, true], 'выложена версия из середины суток, а не нынешняя — фото на месте');
+    t_equal(json_decode((string)file_get_contents($candidates), true), [$rel => $since], 'и ждёт со своим прежним временем');
+
+    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+38 hours'), catalog_deploy_covers(['catalogVersion' => $evening] + $deployed));
+    t_equal([$r['moved'], is_file($webroot . $rel)], [1, false], 'выложена нынешняя версия — в корзину');
+});
+
+t_case('уборка: ссылки и версия читаются одной транзакцией, она не остаётся открытой', function (): void {
+    $db = t_catalog_with_sections();
+    $webroot = t_tmpdir();
+    $candidates = t_tmpdir() . '/photo-candidates.json';
+    catalog_photos_sweep($db, $webroot, $candidates, t_now(), fn (string $dbVersion): bool => true);
+    t_true(!$db->inTransaction(), 'после уборки транзакции нет');
+    // Таблица букетов пропала — ссылки не прочитать: исключение наружу, транзакция отменена.
+    $db->exec('ALTER TABLE products RENAME TO products_ушла');
+    t_throws(fn () => catalog_photos_sweep($db, $webroot, $candidates, t_now(), null), PDOException::class, 'ссылки не прочитались — исключение наружу');
+    t_true(!$db->inTransaction(), 'транзакция после ошибки отменена, база не заперта');
+    $db->exec('ALTER TABLE products_ушла RENAME TO products');
+    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now(), null);
+    t_equal($r['candidates'], 0, 'после починки уборка идёт как прежде');
+});
+
+/**
+ * PDO, который между чтением ссылок на фото и чтением версии каталога
+ * пытается из второго соединения поменять версию: так проверяется, что обе
+ * половины читаются из одного снимка базы.
+ */
+class T_RacingPdo extends PDO
+{
+    public ?string $raceFile = null;
+    /** @var list<string> */
+    public array $raced = [];
+
+    public function query(string $query, ?int $fetchMode = null, mixed ...$fetchModeArgs): PDOStatement|false
+    {
+        if ($this->raceFile !== null && str_contains($query, 'FROM meta')) {
+            try {
+                $other = new PDO('sqlite:' . $this->raceFile, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+                $other->exec('PRAGMA busy_timeout = 0');
+                $other->exec("UPDATE meta SET value = 'гонка' WHERE key = 'version'");
+                $this->raced[] = 'записано';
+            } catch (PDOException) {
+                $this->raced[] = 'заперто';
+            }
+            $this->raceFile = null;
+        }
+        return $fetchMode === null ? parent::query($query) : parent::query($query, $fetchMode, ...$fetchModeArgs);
+    }
+}
+
+t_case('уборка: правка посреди чтения не раздвигает ссылки и версию', function (): void {
+    $file = t_tmpdir() . '/catalog.sqlite';
+    $plain = t_catalog_with_sections(catalog_db_open($file));
+    catalog_create_product($plain, 'anna', t_fields(), t_now());
+    $version = (string)(catalog_meta($plain)['version'] ?? '');
+    $plain = null;
+    $racing = new T_RacingPdo('sqlite:' . $file, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
+    $racing->raceFile = $file;
+    $asked = [];
+    catalog_photos_sweep($racing, t_tmpdir(), t_tmpdir() . '/c.json', t_now(), function (string $dbVersion) use (&$asked): bool {
+        $asked[] = $dbVersion;
+        return false;
+    });
+    t_equal(count($racing->raced), 1, 'попытка второй правки между чтением ссылок и версии была');
+    t_equal($asked, [$version], 'уборка получила ту версию, что была при чтении ссылок, а не «гонку»');
 });
 
 t_case('предохранитель считает только то, что выложено', function (): void {
@@ -448,12 +567,12 @@ t_case('предохранитель считает только то, что в
     for ($i = 0; $i < 60; $i++) {
         t_photo_file($webroot, sprintf("/images/catalog/bukety/buket-nezhnost-$uid-%08x.webp", $i));
     }
-    catalog_photos_sweep($db, $webroot, $candidates, t_now(), fn (int $since): bool => false);
-    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+25 hours'), fn (int $since): bool => false);
+    catalog_photos_sweep($db, $webroot, $candidates, t_now(), fn (string $version): bool => false);
+    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+25 hours'), fn (string $version): bool => false);
     t_equal([$r['candidates'], $r['moved']], [60, 0], 'ни одно не выложено — к переносу ничего, предохранитель молчит');
     t_equal(count(glob($webroot . '/images/catalog/bukety/*.webp') ?: []), 60, 'фото на месте');
     t_throws(
-        fn () => catalog_photos_sweep($db, $webroot, $candidates, t_now('+26 hours'), fn (int $since): bool => true),
+        fn () => catalog_photos_sweep($db, $webroot, $candidates, t_now('+26 hours'), fn (string $version): bool => true),
         RuntimeException::class,
         'выложено — и 60 из 60 к переносу: уборка останавливается',
     );
@@ -597,28 +716,48 @@ t_case('maintenance-cli.php: фото ждут выкладки', function (): v
     t_true($code === 0 && is_file($webroot . $rel) && (t_maintenance_result($home)['ok'] ?? null) === true, 'вместо файла папка — тоже без падения');
     rmdir("$deployHome/state.json");
 
-    // Выложена сборка, где каталог старше, чем «без ссылок», — рано.
+    // Выложена другая версия каталога — ждём, какое бы время правки ни стояло в состоянии выкладки.
     $state = fn (array $current): string => json_encode(['current' => $current], JSON_UNESCAPED_UNICODE) ?: '';
-    file_put_contents("$deployHome/state.json", $state(['catalogVersion' => 'old', 'catalogChangedAt' => catalog_iso(new DateTimeImmutable('@' . ($since - 3600)))]));
-    [$code] = $run();
-    t_true($code === 0 && is_file($webroot . $rel) && $listed() === [$rel => $since], 'выложена правка старше, чем «без ссылок», — фото ждёт, время прежнее');
+    $at = fn (int $time): string => catalog_iso(new DateTimeImmutable('@' . $time));
+    foreach (['правка старше, чем «без ссылок»' => $since - 3600, 'правка новее, чем «без ссылок»' => $since + 3600, 'правка «из будущего»' => time() + 86400, 'времени нет' => null] as $what => $changed) {
+        file_put_contents("$deployHome/state.json", $state(['catalogVersion' => 'old', 'catalogChangedAt' => $changed === null ? '' : $at($changed)]));
+        [$code] = $run();
+        t_true($code === 0 && is_file($webroot . $rel) && !is_file($webroot . $inTrash) && $listed() === [$rel => $since], "выложена другая версия ($what) — фото ждёт, время прежнее");
+    }
+    t_equal(t_maintenance_result($home)['ok'] ?? null, true, 'ожидание выкладки — не сбой: ok: true');
 
-    // Выложена правка новее — фото уходит.
-    file_put_contents("$deployHome/state.json", $state(['catalogVersion' => 'old', 'catalogChangedAt' => catalog_iso(new DateTimeImmutable('@' . ($since + 3600)))]));
+    // Версия выложенного та же, что в базе, — сутки прошли, фото уходит.
+    file_put_contents("$deployHome/state.json", $state(['catalogVersion' => $version, 'catalogChangedAt' => '']));
     [$code, $out] = $run();
-    t_true($code === 0 && !is_file($webroot . $rel) && is_file($webroot . $inTrash) && $listed() === [], 'выложена правка новее — фото в корзине');
+    t_true($code === 0 && !is_file($webroot . $rel) && is_file($webroot . $inTrash) && $listed() === [], 'версия выложенного равна версии базы — фото в корзине');
     t_true(str_contains($out, 'убрано в корзину 1') && !str_contains($out, 'неизвестно'), 'и вывод об этом говорит без жалоб на состояние');
 
-    // Версия выложенного та же, что в базе, — уходит и без времени.
+    // Сутки ещё не прошли — выложено или нет, фото не уходит.
     $rel2 = "/images/catalog/bukety/buket-nezhnost-$uid-a2a2a2a2.webp";
     t_photo_file($webroot, $rel2);
-    file_put_contents("$home/photo-candidates.json", json_encode([$rel2 => $since]));
-    file_put_contents("$deployHome/state.json", $state(['catalogVersion' => 'other', 'catalogChangedAt' => '']));
+    file_put_contents("$home/photo-candidates.json", json_encode([$rel2 => time() - 3600]));
     [$code] = $run();
-    t_true($code === 0 && is_file($webroot . $rel2), 'версия другая, времени нет — фото ждёт');
-    file_put_contents("$deployHome/state.json", $state(['catalogVersion' => $version, 'catalogChangedAt' => '']));
-    [$code] = $run();
-    t_true($code === 0 && !is_file($webroot . $rel2) && is_file($webroot . '/images/catalog/_deleted/bukety/' . basename($rel2)), 'версия выложенного равна версии базы — в корзину');
+    t_true($code === 0 && is_file($webroot . $rel2), 'версия та же, но «без ссылок» всего час — фото на месте');
+});
+
+t_case('maintenance-cli.php: без состояния выкладки возврат из корзины идёт', function (): void {
+    // Возврат того, на что снова сослались, от выкладки не зависит: это защита, а не уборка.
+    $scripts = t_catalog_scripts();
+    $home = t_tmpdir();
+    $webroot = t_tmpdir();
+    $deployHome = t_tmpdir();
+    $db = t_catalog_with_sections(t_catalog_db("$home/catalog.sqlite"));
+    $uid = catalog_create_product($db, 'anna', t_fields(), t_now());
+    $rel = "/images/catalog/bukety/buket-nezhnost-$uid-f1f1f1f1.webp";
+    $inTrash = '/images/catalog/_deleted/bukety/' . basename($rel);
+    t_photo_file($webroot, $inTrash);
+    catalog_update_product($db, 'anna', $uid, 1, t_fields(['images' => [$rel]]), t_now());
+    $db = null;
+    t_true(!is_file("$deployHome/state.json"), 'состояния выкладки нет');
+    [$code, $out] = t_maintenance_run($scripts, $home, $webroot, $deployHome);
+    t_true($code === 0 && str_contains($out, 'возвращено из корзины 1'), 'фото, на которое снова сослались, вернулось из корзины');
+    t_true(is_file($webroot . $rel) && !is_file($webroot . $inTrash), 'лежит на своём месте, в корзине его нет');
+    t_equal(t_maintenance_result($home)['ok'] ?? null, true, 'итог ok: true');
 });
 
 t_case('maintenance-cli.php: папка выкладки по умолчанию — как у админки', function (): void {
@@ -670,4 +809,106 @@ t_case('maintenance-cli.php: предохранитель', function (): void {
     t_equal($done['ok'] ?? null, false, 'итог: ok: false');
     t_true(str_starts_with((string)($done['message'] ?? ''), 'Уборка фото остановлена') && !str_contains((string)$done['message'], "\n"), 'причина — первой строкой и своими словами, без приставок');
     t_equal(count(t_maintenance_log($home)), 1, 'в журнале одна строка');
+});
+
+t_case('итог обслуживания: причина сбоя — по-русски и в одну строку', function (): void {
+    $own = new RuntimeException('Уборка фото остановлена: к переносу в корзину 60 фото — слишком много.');
+    t_equal(maintenance_reason($own, 'Уборка фото'), 'Уборка фото остановлена: к переносу в корзину 60 фото — слишком много.', 'своё сообщение по-русски — без приставки');
+    // RecursiveDirectoryIterator бросает UnexpectedValueException (это RuntimeException), текст по-английски.
+    $iterator = new UnexpectedValueException('RecursiveDirectoryIterator::__construct(/var/www/images/catalog/_deleted): Failed to open directory: Permission denied');
+    t_equal(
+        maintenance_reason($iterator, 'Уборка фото'),
+        'Уборка фото: RecursiveDirectoryIterator::__construct(/var/www/images/catalog/_deleted): Failed to open directory: Permission denied',
+        'RuntimeException по классу, но по-английски — с приставкой шага',
+    );
+    t_equal(maintenance_reason(new PDOException('SQLSTATE[HY000]: General error: 5 database is locked'), 'Открытие базы'), 'Открытие базы: SQLSTATE[HY000]: General error: 5 database is locked', 'PDOException — с приставкой');
+    t_equal(maintenance_reason(new Exception('Backup failed: 26, not an error'), 'Копия базы'), 'Копия базы: Backup failed: 26, not an error', 'Exception из SQLite — с приставкой');
+    t_equal(maintenance_reason(new ValueError('strlen(): bad'), 'Уборка фото'), 'Уборка фото: strlen(): bad', 'Error — с приставкой');
+    t_equal(maintenance_reason(new Exception('Не создать папку копий: /x'), 'Копия базы'), 'Не создать папку копий: /x', 'Exception, но сообщение по-русски — без приставки');
+    t_equal(maintenance_reason(new Exception("disk\n  full\r\n\tat line 5"), 'Копия базы'), 'Копия базы: disk full at line 5', 'перевод строк и отступы схлопнуты в пробелы');
+    $long = maintenance_reason(new RuntimeException(str_repeat('я', 400)), 'Уборка фото');
+    t_equal([mb_strlen($long), mb_substr($long, -1), mb_substr($long, 0, 299) === str_repeat('я', 299)], [300, '…', true], 'длинная причина — ровно 300 знаков, на конце «…»');
+    t_true(mb_check_encoding(maintenance_reason(new Exception("bad \xff byte"), 'Копия базы'), 'UTF-8'), 'битые байты в сообщении не ломают UTF-8');
+    t_equal(maintenance_one_line(str_repeat('я', 300)), str_repeat('я', 300), 'ровно 300 знаков — без «…»');
+});
+
+t_case('итог обслуживания: запись в папку каталога', function (): void {
+    $home = t_tmpdir();
+    $before = time();
+    t_equal(maintenance_record($home, true, 'Фото: ждут уборки 0.'), null, 'запись удалась — ошибки нет');
+    $done = json_decode((string)file_get_contents("$home/maintenance.json"), true);
+    t_equal([$done['ok'], $done['message']], [true, 'Фото: ждут уборки 0.'], 'ok и сообщение на месте');
+    t_true((int)strtotime($done['at']) >= $before && (int)strtotime($done['at']) <= time(), '«at» — момент записи');
+    t_equal(file("$home/maintenance.log", FILE_IGNORE_NEW_LINES), [$done['at'] . ' ok'], 'в журнале — "<время> ok"');
+
+    maintenance_record($home, false, "Копия базы: диск\nполон");
+    $done = json_decode((string)file_get_contents("$home/maintenance.json"), true);
+    t_equal([$done['ok'], $done['message']], [false, 'Копия базы: диск полон'], 'сообщение приведено к одной строке');
+    t_equal(count(file("$home/maintenance.log", FILE_IGNORE_NEW_LINES)), 2, 'в журнале две строки, а не три');
+    t_equal(glob("$home/*.part") ?: [], [], 'временных файлов нет');
+
+    $problem = maintenance_record("$home/нет-такой-папки", true, 'ok');
+    t_true(is_string($problem) && str_contains($problem, 'Итог обслуживания не записан'), 'папки нет — ошибка текстом, не исключением');
+});
+
+t_case('maintenance-cli.php: причина с приставкой шага для чужой ошибки', function (): void {
+    $scripts = t_catalog_scripts();
+    $home = t_tmpdir();
+    file_put_contents("$home/catalog.sqlite", str_repeat("это не база SQLite\n", 300));
+    t_maintenance_run($scripts, $home, t_tmpdir(), t_tmpdir());
+    $message = (string)(t_maintenance_result($home)['message'] ?? '');
+    t_true(str_starts_with($message, 'Копия базы: '), 'ошибку SQLite назвали по шагу: «Копия базы: …»');
+});
+
+/**
+ * То же, что t_maintenance_run, но PHP запускается с лимитом памяти — чтобы
+ * запуск оборвался фатальной ошибкой, мимо catch.
+ *
+ * @return array{0: int, 1: string} код выхода и вывод
+ */
+function t_maintenance_run_limited(string $scripts, string $home, string $webroot, string $deployHome, string $memoryLimit): array
+{
+    putenv('PION_CATALOG_HOME=' . $home);
+    putenv('PION_WEBROOT=' . $webroot);
+    putenv('PION_DEPLOY_HOME=' . $deployHome);
+    try {
+        exec(escapeshellarg(PHP_BINARY) . ' -d memory_limit=' . $memoryLimit . ' ' . escapeshellarg("$scripts/catalog/maintenance-cli.php") . ' 2>&1', $out, $code);
+    } finally {
+        putenv('PION_CATALOG_HOME');
+        putenv('PION_WEBROOT');
+        putenv('PION_DEPLOY_HOME');
+        clearstatcache();
+    }
+    return [$code, implode("\n", $out)];
+}
+
+t_case('maintenance-cli.php: оборванный фатальной ошибкой запуск оставляет итог', function (): void {
+    // Список кандидатов в 48 МБ при лимите памяти 32 МБ: file_get_contents падает фатально, catch этого не видит.
+    $scripts = t_catalog_scripts();
+    $home = t_tmpdir();
+    t_catalog_with_sections(t_catalog_db("$home/catalog.sqlite"));
+    $list = fopen("$home/photo-candidates.json", 'wb');
+    for ($i = 0; $i < 48; $i++) {
+        fwrite($list, str_repeat('x', 1024 * 1024));
+    }
+    fclose($list);
+    // Вчерашний удачный итог: без записи при обрыве сторож остался бы с ним.
+    file_put_contents("$home/maintenance.json", json_encode(['ok' => true, 'at' => catalog_iso(t_now()), 'message' => 'вчера']));
+    $started = time();
+    [$code, $out] = t_maintenance_run_limited($scripts, $home, t_tmpdir(), t_tmpdir(), '32M');
+    $finished = time();
+    t_true($code !== 0 && str_contains($out, 'Allowed memory size'), 'запуск оборвался из-за памяти (' . $code . ')');
+    $done = t_maintenance_result($home);
+    t_equal($done['ok'] ?? null, false, 'в итоге ok: false вместо вчерашнего ok: true');
+    $message = (string)($done['message'] ?? '');
+    t_true(str_starts_with($message, 'Обслуживание оборвалось: ') && str_contains($message, 'Allowed memory size') && !str_contains($message, "\n"), 'причина — «Обслуживание оборвалось» и текст фатальной ошибки, одной строкой');
+    $at = (int)strtotime((string)($done['at'] ?? ''));
+    t_true($at >= $started && $at <= $finished, 'время — когда запуск оборвался');
+    t_equal(t_maintenance_log($home), [($done['at'] ?? '') . ' ошибка: ' . $message], 'в журнале одна строка');
+    t_equal(count(glob("$home/backups/catalog-*.sqlite") ?: []), 1, 'копия к этому времени уже была сделана');
+
+    // Нормальный запуск после починки пишет итог один раз — обрыв не дописывается следом.
+    unlink("$home/photo-candidates.json");
+    [$code] = t_maintenance_run_limited($scripts, $home, t_tmpdir(), t_tmpdir(), '32M');
+    t_equal([$code, t_maintenance_result($home)['ok'] ?? null, count(t_maintenance_log($home))], [0, true, 2], 'починили — ok: true, и ровно одна новая строка в журнале');
 });

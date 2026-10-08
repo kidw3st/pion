@@ -256,6 +256,9 @@ t_true(mb_check_encoding($reasonText(str_repeat('х', 5000)), 'UTF-8'), 'при�
 t_true(str_contains($reasonText("Диск \xff полон"), 'Диск '), 'причина с битым байтом UTF-8 не пропадает');
 t_equal($reasonText(str_repeat('я', 300)), $prefix . str_repeat('я', 300) . '.', 'причина: ровно 300 знаков — без сокращения');
 t_equal($reasonText(str_repeat('я', 301)), $prefix . str_repeat('я', 299) . '…', 'причина: 301 знак — сокращена до 300 с «…», точки после «…» нет');
+// Обслуживание само режет причину до 300 знаков с «…» на конце: для сторожа это не «длиннее 300», и точки после «…» всё равно нет.
+t_equal($reasonText(str_repeat('я', 299) . '…'), $prefix . str_repeat('я', 299) . '…', 'причина: уже обрезана обслуживанием (ровно 300 знаков, «…» на конце) — «….» не выходит');
+t_equal($reasonText('Нужна проверка…'), $prefix . 'Нужна проверка…', 'причина: короткая, но кончается на «…» — без точки');
 t_equal($reasonText(str_repeat('ж', 5000) . "\nвторая строка"), $prefix . str_repeat('ж', 299) . '…', 'причина: длинная первая строка и вторая — одна сокращённая строка');
 t_equal(mb_strlen(deploy_alert_text('maintenance', $base, ['maintenance' => ['ok' => false, 'at' => 0, 'message' => str_repeat('я', 9000)]] + $fresh)), mb_strlen($prefix) + 300, 'причина: сообщение целиком не длиннее префикса и 300 знаков');
 t_true(str_contains(deploy_alert_text('maintenance', $base), 'ночное обслуживание не удалось'), 'текст про обслуживание без сторожа не падает');
