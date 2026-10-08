@@ -116,3 +116,18 @@ describe('занятые адреса', () => {
     expect(RESERVED_SLUGS).toEqual(list);
   });
 });
+
+describe('образец с трудными символами', () => {
+  const CHARS = path.join(root, 'tests/php/fixtures/catalog-export-chars.json');
+  it('версия та же, что считает PHP (tests/php/catalog_export_js_test.php)', () => {
+    const exp = JSON.parse(readFileSync(CHARS, 'utf8'));
+    expect(exportVersion(exp)).toBe('b89275b3a31a1449d1aeec4b4b4e2796d9b85eb94c3c3989b28d1f583183349d');
+    expect(validateExport(exp)).toEqual([]);
+    expect(exp.products[0].description).toContain('\t');
+    expect(exp.products[0].description).toContain('\u2028');
+    expect(exp.products[0].description).toContain('\u2029');
+    expect(exp.products[0].description).toContain('</script>');
+    expect(exp.sections[0].coverSub).toContain('\n');
+    expect(exp.products[0].title).toContain('🌷');
+  });
+});

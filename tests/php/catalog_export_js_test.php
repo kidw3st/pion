@@ -29,3 +29,12 @@ t_case('выгрузка-образец: база загружает и выгр
     $want = ['sections' => $e['sections'], 'tiles' => $e['tiles'], 'products' => $e['products'], 'redirects' => $e['redirects']];
     t_equal(json_encode(catalog_export_data($db), CATALOG_JSON), json_encode($want, CATALOG_JSON), 'выгрузка из базы — тот же JSON');
 });
+
+t_case('образец с трудными символами: та же версия и загрузка «туда-обратно»', function (): void {
+    $e = json_decode((string)file_get_contents(__DIR__ . '/fixtures/catalog-export-chars.json'), true, 64, JSON_THROW_ON_ERROR);
+    t_equal(catalog_export_version($e), 'b89275b3a31a1449d1aeec4b4b4e2796d9b85eb94c3c3989b28d1f583183349d', 'тот же sha256, что в vitest');
+    $db = t_catalog_db();
+    catalog_import($db, $e, t_now());
+    $want = ['sections' => $e['sections'], 'tiles' => $e['tiles'], 'products' => $e['products'], 'redirects' => $e['redirects']];
+    t_equal(json_encode(catalog_export_data($db), CATALOG_JSON), json_encode($want, CATALOG_JSON), 'выгрузка из базы — тот же JSON');
+});
