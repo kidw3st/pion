@@ -48,3 +48,20 @@ jobs:
       # Боевая сборка. Шаг postbuild проверяет, что canonical, og, Schema и
       # sitemap указывают на pionperm.ru, и роняет сборку, если нет.
       - run: npm run build
+
+  # Хостинг — AlmaLinux 8 с SQLite 3.26: свежая SQLite на ubuntu-latest не
+  # заметит SQL новее 3.26. Здесь те же проверки — на той же ОС и той же SQLite.
+  php-sqlite326:
+    runs-on: ubuntu-latest
+    container: almalinux:8
+    steps:
+      - run: |
+          dnf -y -q module enable php:8.2
+          dnf -y -q install php-cli php-pdo php-gd php-mbstring git tar gzip
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: SQLite — та же, что на хостинге
+        run: |
+          php -r 'echo SQLite3::version()["versionString"], PHP_EOL;' | tee /dev/stderr | grep -q '^3\.26\.'
+      - run: php tests/php/run.php
