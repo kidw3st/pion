@@ -53,6 +53,8 @@ jobs:
   # заметит SQL новее 3.26. Здесь те же проверки — на той же ОС и той же SQLite.
   php-sqlite326:
     runs-on: ubuntu-latest
+    # Обычно хватает нескольких минут; зависший dnf или проверка не должны держать раннер шесть часов.
+    timeout-minutes: 20
     container: almalinux:8
     steps:
       - run: |
