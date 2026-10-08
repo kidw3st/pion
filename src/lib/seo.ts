@@ -121,17 +121,20 @@ export function productPath(category: string, slug: string): string {
 }
 
 /**
- * Карточка товара для поисковика. `offers.url` ведёт на саму страницу товара —
- * до появления отдельных страниц все предложения указывали на раздел, и
- * поисковику было нечего показать по конкретному букету.
+ * Карточка товара для поисковика. `offers.url` ведёт на саму страницу
+ * товара: до появления отдельных страниц все предложения указывали на
+ * раздел, и поисковику нечего было показать по конкретному букету.
  *
- * Наличие не указываем жёстко: букеты собирают под заказ из того, что есть в
- * это утро, поэтому честнее сказать «под заказ», чем обещать склад.
+ * Наличие у букета в продаже не указываем жёстко: букеты собирают под заказ
+ * из того, что есть в это утро, поэтому честнее сказать «под заказ», чем
+ * обещать склад. У снятого с продажи — «нет в наличии», страница остаётся.
+ * Без цены (старые коробки из Tilda) предложения нет совсем.
  */
 export function productJsonLd(
   product: { title: string; description: string; price: number; images: string[] },
   category: string,
   slug: string,
+  available = true,
 ) {
   const url = absoluteUrl(productPath(category, slug));
   return {
@@ -142,15 +145,18 @@ export function productJsonLd(
     image: product.images.map((i) => absoluteUrl(i)),
     url,
     brand: { '@type': 'Brand', name: 'Пион' },
-    offers: {
-      '@type': 'Offer',
-      price: product.price,
-      priceCurrency: 'RUB',
-      url,
-      availability: 'https://schema.org/PreOrder',
-      seller: { '@type': 'Organization', name: 'Салон цветов и подарков «Пион»' },
-      areaServed: CITY,
-    },
+    offers:
+      product.price > 0
+        ? {
+            '@type': 'Offer',
+            price: product.price,
+            priceCurrency: 'RUB',
+            url,
+            availability: available ? 'https://schema.org/PreOrder' : 'https://schema.org/OutOfStock',
+            seller: { '@type': 'Organization', name: 'Салон цветов и подарков «Пион»' },
+            areaServed: CITY,
+          }
+        : undefined,
   };
 }
 

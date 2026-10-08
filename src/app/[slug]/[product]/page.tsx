@@ -2,14 +2,14 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
+import { getSite } from '@/lib/content';
 import {
-  CATEGORY_LABELS,
-  getProduct,
-  getRelatedProducts,
   getAllProductParams,
   getAmbiguousTitles,
-  getSite,
-} from '@/lib/content';
+  getProduct,
+  getRelatedProducts,
+  getSectionLabel,
+} from '@/lib/catalog';
 import { JsonLd } from '@/components/JsonLd/JsonLd';
 import { AddToCart } from '@/components/ProductPage/AddToCart';
 import { Gallery } from '@/components/Gallery/Gallery';
@@ -23,6 +23,9 @@ import styles from './page.module.css';
  * конкретный букет нельзя было ни зайти, ни сослаться, ни привести рекламу.
  * Поисковику было нечего показывать по запросам вроде «букет из пионов Пермь»,
  * потому что у нас под такой запрос не существовало страницы.
+ *
+ * Страницы есть у букетов в продаже и у снятых с продажи: снятый остаётся по
+ * тому же адресу с пометкой, чтобы ссылки на него не вели в пустоту.
  */
 
 export async function generateStaticParams() {
@@ -40,21 +43,21 @@ export async function generateMetadata({
 }: {
   params: { slug: string; product: string };
 }): Promise<Metadata> {
-  const product = await getProduct(params.slug, params.product);
+  const product = getProduct(params.slug, params.product);
   if (!product) return {};
 
   const composition = compositionLine(product.description);
-  // Одно и то же название бывает в двух разделах у разных товаров. Тогда в
+  const onSale = product.status === 'active';
+  // Одно и то же название бывает у разных букетов из разных разделов. Тогда в
   // заголовок добавляется раздел — иначе две страницы выглядят для поисковика
   // одинаково, и он показывает только одну из них.
-  const ambiguous = await getAmbiguousTitles();
-  const label = CATEGORY_LABELS[params.slug as keyof typeof CATEGORY_LABELS] ?? params.slug;
+  const label = getSectionLabel(product.mainSection);
   const short = product.title.trim().toLowerCase();
   // «Пион» в разделе «Пионы» подписывать нечем — вышло бы «Пион — пионы».
   // Достаточно, что подпись получит вторая страница пары: заголовки станут
   // разными, а этот останется коротким и читаемым.
   const needsLabel =
-    ambiguous.has(short) && !label.toLowerCase().includes(short) && !short.includes(label.toLowerCase());
+    getAmbiguousTitles().has(short) && !label.toLowerCase().includes(short) && !short.includes(label.toLowerCase());
   const name = needsLabel ? `${product.title} — ${label.toLowerCase()}` : product.title;
   const title = `${name} — купить в Перми | Салон «Пион»`;
 
@@ -62,13 +65,15 @@ export async function generateMetadata({
     ...buildMetadata({
       title,
       description: [
-        `${product.title} за ${product.price.toLocaleString('ru-RU')} ₽ с доставкой по Перми.`,
+        onSale
+          ? `${product.title} за ${product.price.toLocaleString('ru-RU')} ₽ с доставкой по Перми.`
+          : `${product.title} — сейчас нет в продаже, похожие букеты — в разделе «${label}».`,
         composition && `Состав: ${composition}.`,
-        'Фото букета перед доставкой, самовывоз со скидкой 5%.',
+        onSale ? 'Фото букета перед доставкой, самовывоз со скидкой 5%.' : 'Салон цветов «Пион», Пермь.',
       ]
         .filter(Boolean)
         .join(' '),
-      path: productPath(params.slug, params.product),
+      path: productPath(product.mainSection, product.slug),
       image: product.images[0],
     }),
     title: { absolute: title },
@@ -80,12 +85,13 @@ export default async function ProductPage({
 }: {
   params: { slug: string; product: string };
 }) {
-  const product = await getProduct(params.slug, params.product);
+  const product = getProduct(params.slug, params.product);
   if (!product) notFound();
 
-  const related = await getRelatedProducts(params.slug, params.product);
+  const onSale = product.status === 'active';
+  const related = getRelatedProducts(product);
   const site = getSite();
-  const label = CATEGORY_LABELS[params.slug as keyof typeof CATEGORY_LABELS] ?? params.slug;
+  const label = getSectionLabel(product.mainSection);
   const composition = compositionLine(product.description);
   const pickup = site.delivery.options.find((o) => o.id === 'pickup');
   const cheapest = site.delivery.options
@@ -101,18 +107,18 @@ export default async function ProductPage({
         data={breadcrumbJsonLd([
           { name: 'Главная', path: '/' },
           { name: 'Каталог', path: '/catalog/' },
-          { name: label, path: `/${params.slug}/` },
-          { name: product.title, path: productPath(params.slug, params.product) },
+          { name: label, path: `/${product.mainSection}/` },
+          { name: product.title, path: productPath(product.mainSection, product.slug) },
         ])}
       />
-      <JsonLd data={productJsonLd(product, params.slug, params.product)} />
+      <JsonLd data={productJsonLd(product, product.mainSection, product.slug, onSale)} />
 
       <nav className={styles.crumbs} aria-label="Вы здесь">
         <Link href="/">Главная</Link>
         <span aria-hidden="true">/</span>
         <Link href="/catalog">Каталог</Link>
         <span aria-hidden="true">/</span>
-        <Link href={`/${params.slug}`}>{label}</Link>
+        <Link href={`/${product.mainSection}`}>{label}</Link>
       </nav>
 
       <div className={styles.layout}>
@@ -125,7 +131,8 @@ export default async function ProductPage({
 
         <div className={styles.info}>
           <h1 className={styles.title}>{product.title}</h1>
-          <p className={styles.price}>{product.price.toLocaleString('ru-RU')} ₽</p>
+          {product.price > 0 && <p className={styles.price}>{product.price.toLocaleString('ru-RU')} ₽</p>}
+          {!onSale && <p className={styles.soldOut}>Сейчас нет в продаже</p>}
 
           {composition && (
             <div className={styles.block}>
@@ -134,12 +141,18 @@ export default async function ProductPage({
             </div>
           )}
 
-          <AddToCart product={product} />
+          {onSale ? (
+            <>
+              <AddToCart product={product} />
 
-          <p className={styles.assurance}>
-            Соберём и пришлём фото букета перед доставкой — если что-то не понравится,
-            переделаем.
-          </p>
+              <p className={styles.assurance}>
+                Соберём и пришлём фото букета перед доставкой — если что-то не понравится,
+                переделаем.
+              </p>
+            </>
+          ) : (
+            <p className={styles.assurance}>Посмотрите похожие букеты ниже — их можно заказать.</p>
+          )}
 
           <div className={styles.block}>
             <h2 className={styles.blockTitle}>Доставка и оплата</h2>
@@ -177,7 +190,7 @@ export default async function ProductPage({
           <ul className={styles.relatedGrid}>
             {related.map((p) => (
               <li key={p.uid}>
-                <Link href={productPath(params.slug, p.slug)} className={styles.relatedCard}>
+                <Link href={productPath(p.mainSection, p.slug)} className={styles.relatedCard}>
                   <span className={styles.relatedPhoto}>
                     {p.images[0] && (
                       <Image src={p.images[0]} alt={p.title} fill sizes="260px" className={styles.photoImg} />
@@ -189,7 +202,7 @@ export default async function ProductPage({
               </li>
             ))}
           </ul>
-          <Link href={`/${params.slug}`} className={styles.more}>
+          <Link href={`/${product.mainSection}`} className={styles.more}>
             Весь раздел «{label}»
           </Link>
         </section>
