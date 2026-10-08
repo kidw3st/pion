@@ -26,6 +26,9 @@
 <Files "catalog-redirect-lib.php">
   Require all denied
 </Files>
+<Files "cart-lib.php">
+  Require all denied
+</Files>
 
 # Счётчики частоты обращений — служебные файлы, наружу не отдаём.
 <IfModule mod_rewrite.c>

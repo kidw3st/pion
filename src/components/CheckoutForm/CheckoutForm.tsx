@@ -74,7 +74,8 @@ export function CheckoutForm() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          items: items.map((i) => ({ uid: i.uid, quantity: i.quantity })),
+          // Название — только для понятного сообщения, если букет успели снять с продажи.
+          items: items.map((i) => ({ uid: i.uid, quantity: i.quantity, title: i.title })),
           delivery: values.deliveryOption,
           payment: values.paymentMethod,
           udsToken: uds?.token ?? null,

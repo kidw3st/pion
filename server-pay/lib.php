@@ -11,6 +11,7 @@
 declare(strict_types=1);
 
 require __DIR__ . '/config.php';
+require_once __DIR__ . '/cart-lib.php';
 
 /** Все товары каталога: uid => ['title' =>, 'price' =>]. */
 function catalog_index(): array
@@ -145,7 +146,7 @@ function price_order(array $cartItems, string $deliveryId, ?DateTimeImmutable $n
             throw new InvalidArgumentException('Некорректная позиция заказа');
         }
         if (!isset($catalog[$uid])) {
-            throw new InvalidArgumentException('Товар не найден: ' . $uid);
+            throw new InvalidArgumentException(cart_unavailable_message($row));
         }
         $price = $catalog[$uid]['price'];
         $showcase = is_showcase_uid($uid);
