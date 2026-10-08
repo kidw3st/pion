@@ -11,7 +11,7 @@
     "test:php": "php tests/php/run.php",
     "pack": "node scripts/pack-build.mjs",
     "catalog:snapshot": "node scripts/make-catalog-export.mjs --out data/catalog-export.json",
-    "prebuild": "node scripts/build-agent-assets.mjs && node scripts/build-feed.mjs",
+    "prebuild": "node scripts/apply-catalog-export.mjs --check && node scripts/build-agent-assets.mjs && node scripts/build-feed.mjs",
     "postbuild": "node scripts/build-blog-theme.mjs && node scripts/check-build-urls.mjs"
   },
   "dependencies": {

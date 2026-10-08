@@ -18,7 +18,9 @@ npm run build    # production build (static export of all routes)
   `src/app/[slug]/page.tsx`, which resolves category and static-page slugs from `src/lib/content.ts`).
 - `src/components/` — UI components, colocated with their CSS modules and unit tests.
 - `data/` — site content as JSON: `data/site.json` (nav, footer, hero slides, etc.),
-  `data/catalog/*.json` (one file per product category), `data/pages/*.json` (static content pages).
+  `data/catalog-export.json` (the catalog the site reads: a snapshot built from
+  `data/catalog/*.json`, one file per product category, by `npm run catalog:snapshot`
+  until stage 3), `data/pages/*.json` (static content pages).
 - `public/images/` — downloaded product/site imagery referenced by the JSON above.
 
 ## Content pipeline
