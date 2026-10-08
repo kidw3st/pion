@@ -129,3 +129,37 @@ t_case('строка на страницах: сменился код выгру
     $db->exec("DELETE FROM meta");
     t_equal(admin_catalog_now($db), ['version' => null, 'changed_at' => null], 'правок ещё не было — ждать нечего');
 });
+
+t_case('строка на страницах: битая строка в базе не роняет админку', function (): void {
+    $ctx = t_admin_ctx();
+    $db = $ctx['db'];
+    catalog_touch($db, t_now('-30 days'));
+    $saved = catalog_meta($db)['version'];
+    // Так бывает только при правке базы руками: сохранения битый JSON не пропускают.
+    $db->exec("UPDATE sections SET covers = '{битый'");
+    $errors = t_tmpdir() . '/php-errors.log';
+    $old = ini_set('error_log', $errors);
+    try {
+        t_equal(admin_catalog_now($db), ['version' => $saved, 'changed_at' => catalog_iso(t_now('-30 days'))],
+            'выгрузка не считается — версия последнего сохранения, а не ошибка');
+        t_true(!$db->inTransaction(), 'транзакция чтения закрыта');
+        file_put_contents($ctx['deployHome'] . '/state.json', json_encode(['current' => ['catalogVersion' => $saved, 'catalogChangedAt' => '']]));
+        $seen = '';
+        $response = t_admin_call($ctx, 'products', function (array $req, array $c) use (&$seen): array {
+            $seen = $c['status'];
+            return admin_html('ok');
+        });
+        t_equal($response['status'], 200, 'страница открывается');
+        t_equal($seen, '<p class="status status-synced">Все изменения на сайте.</p>', 'и строка статуса на месте');
+    } finally {
+        ini_set('error_log', $old === false ? '' : $old);
+    }
+    t_true(str_contains((string)@file_get_contents($errors), 'выгрузка каталога не считается'), 'причина — в журнале ошибок PHP');
+});
+
+t_case('статус: время выкладки из будущего не откладывает «задерживается»', function (): void {
+    $deployed = ['version' => 'v1', 'changedAt' => '', 'deployedAt' => t_now('+1 day')->getTimestamp()];
+    $catalog = ['version' => 'v2', 'changed_at' => catalog_iso(t_now('-91 minutes'))];
+    t_equal(admin_deploy_status($catalog, $deployed, t_now())['kind'], 'late',
+        'deployedAt позже «сейчас» считается «сейчас»: правка 91 минуту назад — задерживается');
+});

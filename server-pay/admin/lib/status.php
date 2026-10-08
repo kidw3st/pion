@@ -60,7 +60,9 @@ function admin_deployed_catalog(string $deployHome): ?array
  * Каталог в базе для строки статуса, из одного снимка базы: version — что
  * выгрузка отдала бы сейчас (не meta.version, см. catalog_current_version),
  * changed_at — время последней правки выгрузки из meta. Правок ещё не было (в
- * meta нет версии) — version null: ждать выкладки нечего.
+ * meta нет версии) — version null: ждать выкладки нечего. Выгрузка не считается
+ * (строку в базе испортили руками) — version берётся из meta, одна строка уходит в
+ * error_log: статус не роняет страницы (так же поступает сторож, deploy_catalog_watch).
  *
  * @return array{version: ?string, changed_at: ?string}
  */
@@ -68,10 +70,19 @@ function admin_catalog_now(PDO $db): array
 {
     return catalog_read($db, static function () use ($db): array {
         $meta = catalog_meta($db);
-        return [
-            'version' => ($meta['version'] ?? '') !== '' ? catalog_current_version($db) : null,
-            'changed_at' => $meta['changed_at'] ?? null,
-        ];
+        $saved = (string)($meta['version'] ?? '');
+        if ($saved === '') {
+            return ['version' => null, 'changed_at' => $meta['changed_at'] ?? null];
+        }
+        try {
+            $version = catalog_current_version($db);
+        } catch (Throwable $e) {
+            // Выгрузка не считается (строку в базе испортили руками): строка статуса не должна
+            // ронять все страницы — сверяем версию последнего сохранения, как сторож (deploy_catalog_watch).
+            error_log('админка: выгрузка каталога не считается: ' . $e->getMessage());
+            $version = $saved;
+        }
+        return ['version' => $version, 'changed_at' => $meta['changed_at'] ?? null];
     });
 }
 
@@ -97,7 +108,9 @@ function admin_deploy_status(array $catalog, ?array $deployed, DateTimeImmutable
     }
     $since = admin_perm($catalog['changed_at']);
     $deployedAt = $deployed['deployedAt'] ?? null;
-    if (is_int($deployedAt) && $deployedAt > $since->getTimestamp()) {
+    // Время из будущего (не бывает: его пишет deploy.php через time()) отодвинуло бы «задерживается» до него —
+    // такое время считаем неизвестным, и ожидание идёт от правки. (Подмена его на «сейчас» обнулила бы ожидание.)
+    if (is_int($deployedAt) && $deployedAt > $since->getTimestamp() && $deployedAt <= $now->getTimestamp()) {
         $since = admin_perm('@' . $deployedAt);
     }
     if ($now->getTimestamp() - $since->getTimestamp() > ADMIN_DEPLOY_LATE_MINUTES * 60) {
