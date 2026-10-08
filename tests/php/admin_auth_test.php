@@ -182,23 +182,99 @@ t_case('сессия: 12 часов без действий', function (): void 
     t_equal(admin_session($ctx['db'], 'не токен', $now), null, 'мусор вместо токена — не вошли');
 });
 
+/**
+ * Одно значение из базы (первая колонка первой строки); false — строки нет. Чтение закрывается сразу,
+ * чтобы проверка сама не оставляла открытых запросов.
+ */
+function t_db_value(PDO $db, string $sql, array $args = []): mixed
+{
+    $q = $db->prepare($sql);
+    $q->execute($args);
+    $found = $q->fetchColumn();
+    $q->closeCursor();
+    return $found;
+}
+
+/**
+ * Вызов при чужой записи: должен подождать busy_timeout и только потом отказать «database is locked».
+ * Мгновенный отказ (ждали ~0 с) значит, что в соединении осталось открытое чтение.
+ *
+ * @return float сколько секунд вызов ждал
+ */
+function t_lock_waits(string $what, callable $call): float
+{
+    $start = microtime(true);
+    $error = '';
+    try {
+        $call();
+    } catch (PDOException $e) {
+        $error = $e->getMessage();
+    }
+    $took = microtime(true) - $start;
+    t_true($took >= 0.25 && str_contains($error, 'locked'), "$what: ждёт, пока запись освободится, и только потом отказывает (ждали " . round($took, 3) . ' с)');
+    return $took;
+}
+
+/**
+ * Соединение для проверки «вторая запись действия тоже ждёт». Чужую запись держат весь вызов, поэтому
+ * действие, которое пишет дважды, отказывает на первой записи и до второй не доходит. Здесь запись
+ * занимается другим соединением в тот момент, когда у этого прошёл первый COMMIT, — вторая запись
+ * встречает занятый замок.
+ */
+final class T_LockAfterCommit extends PDO
+{
+    private ?PDO $holder = null;
+    /** Занята ли запись: сработал ли первый COMMIT после включения. */
+    public bool $held = false;
+
+    /** Включить: после ближайшего COMMIT запись займёт $holder. */
+    public function lockAfterCommit(PDO $holder): void
+    {
+        $this->holder = $holder;
+        $this->held = false;
+    }
+
+    public function exec(string $statement): int|false
+    {
+        $result = parent::exec($statement);
+        if ($statement === 'COMMIT' && $this->holder !== null && !$this->held) {
+            $this->held = true;
+            $this->holder->exec('BEGIN IMMEDIATE');
+        }
+        return $result;
+    }
+
+    /** Отпустить запись, если она была занята, и выключить. */
+    public function release(): void
+    {
+        if ($this->held) {
+            $this->holder?->exec('ROLLBACK');
+        }
+        $this->holder = null;
+        $this->held = false;
+    }
+}
+
 t_case('занята запись: ожидание, а не мгновенный отказ', function (): void {
     // Пока другое соединение держит запись, наше обязано подождать busy_timeout. Но если в нём самом
     // ещё открыто чтение (запрос вернул строку и не закрыт), SQLite отвечает «database is locked» сразу,
     // не дожидаясь, — иначе два таких соединения зашли бы в тупик. Поэтому чтение закрывается до любой
     // записи. Ожидание сокращено до 0,3 с, чтобы проверка не тянулась.
     //
-    // Проверено каждое действие админки, которое пишет в базу: вход и выход, смена пароля, все действия
-    // с букетом (создать, сохранить, опубликовать, снять, вернуть, удалить, восстановить), новый раздел,
-    // порядок плиток и карточка раздела. Остальные страницы (списки, журнал, приём фото) в базу не пишут.
+    // Здесь проверена ПЕРВАЯ запись каждого действия админки, которое пишет в базу: вход и выход, смена пароля,
+    // все действия с букетом (создать, сохранить, опубликовать, снять, вернуть, удалить, восстановить), новый
+    // раздел, порядок плиток и карточка раздела. Чужая запись держится весь вызов, поэтому действие, которое
+    // пишет дважды, отказывает на первой записи, а вторая здесь не проверяется: вторые записи входа, смены
+    // пароля и публикации из карточки проверяет следующий случай. Остальные страницы (списки, журнал, приём
+    // фото) в базу не пишут.
     //
-    // Откуда известно, что вызов дошёл именно до записи страницы, а не отказал раньше или по другой причине:
+    // Откуда известно, что вызов дошёл именно до первой записи страницы, а не отказал раньше или по другой причине:
     //  1. «database is locked» может дать только запись: читать при чужой транзакции записи можно свободно;
     //  2. сам пропуск (admin_handle) не пишет: вызовы идут с тем же $now, что и вход, сессия свежая и не
     //     продлевается (проверено ниже), а просроченной сессии нет;
     //  3. в конце те же вызовы повторяются при свободной записи, и каждый действительно меняет базу (ответ 303
-    //     и другое состояние). Значит, до записи дошёл бы любой из них: снятие и удаление без confirm=1 только
-    //     переспросили бы и ничего не записали бы, а здесь подтверждение есть.
+    //     и другое состояние). Значит, до первой записи дошёл бы любой из них: снятие и удаление без confirm=1
+    //     только переспросили бы и ничего не записали бы, а здесь подтверждение есть.
     $file = t_tmpdir() . '/catalog.sqlite';
     $ctx = t_admin_ctx(t_catalog_with_sections(t_catalog_db($file)));
     $a = $ctx['db'];
@@ -207,14 +283,7 @@ t_case('занята запись: ожидание, а не мгновенны�
     $cookies = [ADMIN_COOKIE => admin_login($a, 'anna', 'секрет-анны', '127.0.0.1', $now)['token']];
     $csrf = admin_session($a, $cookies[ADMIN_COOKIE], $now)['csrf'];
 
-    /** Одно значение из базы (первая колонка первой строки); false — строки нет. Чтение закрыто сразу. */
-    $value = static function (string $sql, array $args = []) use ($a): mixed {
-        $q = $a->prepare($sql);
-        $q->execute($args);
-        $found = $q->fetchColumn();
-        $q->closeCursor();
-        return $found;
-    };
+    $value = static fn (string $sql, array $args = []): mixed => t_db_value($a, $sql, $args);
     t_equal($value('SELECT seen_at FROM sessions WHERE token_hash = ?', [hash('sha256', $cookies[ADMIN_COOKIE])]), $now,
         'сессия свежая: пропуск на страницы её не продлевает, то есть сам ничего не пишет');
 
@@ -242,20 +311,10 @@ t_case('занята запись: ожидание, а не мгновенны�
     $toUnhide = $make('Снятый букет', 'hidden');
     $toRestore = $make('Удалённый букет', 'deleted');
     $roses = (int)$value("SELECT id FROM tiles WHERE section = 'roses'");
+    t_true($roses > 0, 'в сетке есть плитка раздела «Розы»: без неё проверка переноса плитки ничего не докажет');
 
     $other = new PDO('sqlite:' . $file, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
     $other->exec('BEGIN IMMEDIATE');
-    /** @return array{0: float, 1: string} сколько секунд вызов ждал и чем кончил */
-    $wait = static function (callable $call): array {
-        $start = microtime(true);
-        $error = '';
-        try {
-            $call();
-        } catch (PDOException $e) {
-            $error = $e->getMessage();
-        }
-        return [microtime(true) - $start, $error];
-    };
     $change = ['csrf' => $csrf, 'current' => 'секрет-анны', 'new' => 'новый-пароль', 'repeat' => 'новый-пароль'];
     $calls = [
         'продление сессии' => fn () => admin_session($a, $cookies[ADMIN_COOKIE], $now + 120),
@@ -337,8 +396,7 @@ t_case('занята запись: ожидание, а не мгновенны�
     }
 
     foreach ($calls as $what => $call) {
-        [$took, $error] = $wait($call);
-        t_true($took >= 0.25 && str_contains($error, 'locked'), "$what: ждёт, пока запись освободится, и только потом отказывает (ждали " . round($took, 3) . ' с)');
+        t_lock_waits($what, $call);
     }
     $other->exec('ROLLBACK');
 
@@ -349,6 +407,80 @@ t_case('занята запись: ожидание, а не мгновенны�
         t_true($response['status'] === 303 && $changed() !== $was,
             "$what: при свободной записи доходит до записи и меняет базу (ответ " . $response['status'] . ')');
     }
+});
+
+t_case('занята запись после первой: вторая запись действия тоже ждёт', function (): void {
+    // Предыдущий случай держит чужую запись весь вызов, поэтому действие, которое пишет дважды, отказывает
+    // на первой записи, а до второй не доходит. Здесь запись занимается только после первого COMMIT
+    // действия (T_LockAfterCommit), так что вторая запись встречает занятый замок и обязана подождать.
+    // Между двумя записями эти действия читают базу (пароль, букет) — это чтение нужно закрыть.
+    $file = t_tmpdir() . '/catalog.sqlite';
+    $ctx = t_admin_ctx(t_catalog_with_sections(t_catalog_db($file)));
+    $a = $ctx['db'];
+    $now = $ctx['now']->getTimestamp();
+    $cookies = [ADMIN_COOKIE => admin_login($a, 'anna', 'секрет-анны', '127.0.0.1', $now)['token']];
+    $csrf = admin_session($a, $cookies[ADMIN_COOKIE], $now)['csrf'];
+    $draft = catalog_create_product($a, 'anna', t_fields(['title' => 'Черновик']), $ctx['now']);
+
+    // Страницы работают через $b: тот же файл и то же ожидание (0,3 с), что у $a в предыдущем случае.
+    $b = new T_LockAfterCommit('sqlite:' . $file, null, null, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    ]);
+    $b->exec('PRAGMA foreign_keys = ON');
+    $b->exec('PRAGMA busy_timeout = 300');
+    $other = new PDO('sqlite:' . $file, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
+    $at = ['db' => $b] + $ctx;
+    $value = static fn (string $sql, array $args = []): mixed => t_db_value($a, $sql, $args);
+    $attempts = static fn (): mixed => $value('SELECT COUNT(*) FROM login_attempts');
+
+    /** Включает замок после первой записи, проверяет ожидание второй и отпускает замок. */
+    $second = static function (string $what, callable $call) use ($b, $other): void {
+        $b->lockAfterCommit($other);
+        t_lock_waits($what, $call);
+        t_true($b->held, "$what: запись заняли после первой записи действия — ждала именно вторая");
+        $b->release();
+    };
+
+    // Вход: первая запись — занять попытку, вторая — завести сессию (верный пароль).
+    $login = static fn (): array => admin_handle(admin_request('POST', post: ['login' => 'anna', 'password' => 'секрет-анны']), $at, 'login', 'admin_page_login');
+    $sessions = $value('SELECT COUNT(*) FROM sessions');
+    $second('вход: сессия после занятой попытки', $login);
+    t_equal([$attempts(), $value('SELECT COUNT(*) FROM sessions')], [1, $sessions], 'попытка записана, сессии нет: отказала вторая запись');
+    $done = $login();
+    t_true($done['status'] === 303 && $value('SELECT COUNT(*) FROM sessions') === $sessions + 1, 'при свободной записи тот же вход доходит до сессии');
+
+    // Смена пароля: первая запись — занять попытку, вторая — сам пароль.
+    $change = ['csrf' => $csrf, 'current' => 'секрет-анны', 'new' => 'новый-пароль', 'repeat' => 'новый-пароль'];
+    $password = static fn (array $over = []): array => admin_handle(
+        admin_request('POST', post: $over + $change, cookies: $cookies), $at, 'password', 'admin_page_password');
+    $hash = static fn (): string => (string)$value("SELECT password_hash FROM users WHERE login = 'anna'");
+    t_equal($attempts(), 0, 'после удачного входа попыток нет');
+    $second('смена пароля: пароль после занятой попытки', $password);
+    t_true($attempts() === 1 && password_verify('секрет-анны', $hash()), 'попытка записана, пароль прежний: отказала вторая запись');
+
+    // Ошибка в новом пароле: вторая запись — снять занятую попытку (текущий пароль верен, это не подбор).
+    $short = ['new' => 'коротко', 'repeat' => 'коротко'];
+    $second('смена пароля: снятие попытки при ошибке в новом пароле', fn () => $password($short));
+    t_equal($attempts(), 2, 'снять попытку не удалось — осталась и она');
+    $again = $password($short);
+    t_true($again['status'] === 200 && str_contains($again['body'], 'не короче 8') && $attempts() === 2,
+        'при свободной записи ошибка показана, а снимается своя попытка (две прошлые остаются)');
+    $done = $password();
+    t_true($done['status'] === 303 && password_verify('новый-пароль', $hash()) && $attempts() === 0, 'при свободной записи пароль меняется, попытки стёрты');
+
+    // Публикация из карточки: первая запись — правки, вторая — сама публикация.
+    $publish = static fn (): array => admin_handle(admin_request('POST', post: [
+        'csrf' => $csrf, 'action' => 'publish', 'uid' => $draft, 'version' => (string)t_row($a, $draft)['version'],
+        'title' => 'Черновик', 'price' => '4400', 'description' => 'Розы', 'sections' => ['bukety'],
+        'images' => ['/images/catalog/bukety/buket-publikatsiya.webp'],
+    ], cookies: $cookies), $at, 'product', 'admin_page_product');
+    $state = static fn (): mixed => $value("SELECT status || ':' || version FROM products WHERE uid = ?", [$draft]);
+    t_equal($state(), 'draft:1', 'букет — черновик');
+    $second('публикация из карточки: публикация после правок', $publish);
+    t_equal($state(), 'draft:2', 'правки сохранены, публикации нет: отказала вторая запись');
+    $done = $publish();
+    t_true($done['status'] === 303 && $state() === 'active:4', 'при свободной записи тот же вызов доходит до публикации');
 });
 
 t_case('пропуск на страницы', function (): void {
