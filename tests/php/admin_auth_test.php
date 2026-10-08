@@ -8,6 +8,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/admin_fixture.php';
 require_once __DIR__ . '/../../server-pay/admin/lib/pages-auth.php';
 require_once __DIR__ . '/../../server-pay/admin/lib/pages-sections.php';
+require_once __DIR__ . '/../../server-pay/admin/lib/pages-products.php';
 
 /** Страница-заглушка: показывает, что до неё дошли, и кто вошёл. */
 function t_admin_probe(array $req, array $ctx): array
@@ -186,6 +187,18 @@ t_case('занята запись: ожидание, а не мгновенны�
     // ещё открыто чтение (запрос вернул строку и не закрыт), SQLite отвечает «database is locked» сразу,
     // не дожидаясь, — иначе два таких соединения зашли бы в тупик. Поэтому чтение закрывается до любой
     // записи. Ожидание сокращено до 0,3 с, чтобы проверка не тянулась.
+    //
+    // Проверено каждое действие админки, которое пишет в базу: вход и выход, смена пароля, все действия
+    // с букетом (создать, сохранить, опубликовать, снять, вернуть, удалить, восстановить), новый раздел,
+    // порядок плиток и карточка раздела. Остальные страницы (списки, журнал, приём фото) в базу не пишут.
+    //
+    // Откуда известно, что вызов дошёл именно до записи страницы, а не отказал раньше или по другой причине:
+    //  1. «database is locked» может дать только запись: читать при чужой транзакции записи можно свободно;
+    //  2. сам пропуск (admin_handle) не пишет: вызовы идут с тем же $now, что и вход, сессия свежая и не
+    //     продлевается (проверено ниже), а просроченной сессии нет;
+    //  3. в конце те же вызовы повторяются при свободной записи, и каждый действительно меняет базу (ответ 303
+    //     и другое состояние). Значит, до записи дошёл бы любой из них: снятие и удаление без confirm=1 только
+    //     переспросили бы и ничего не записали бы, а здесь подтверждение есть.
     $file = t_tmpdir() . '/catalog.sqlite';
     $ctx = t_admin_ctx(t_catalog_with_sections(t_catalog_db($file)));
     $a = $ctx['db'];
@@ -193,6 +206,42 @@ t_case('занята запись: ожидание, а не мгновенны�
     $now = $ctx['now']->getTimestamp();
     $cookies = [ADMIN_COOKIE => admin_login($a, 'anna', 'секрет-анны', '127.0.0.1', $now)['token']];
     $csrf = admin_session($a, $cookies[ADMIN_COOKIE], $now)['csrf'];
+
+    /** Одно значение из базы (первая колонка первой строки); false — строки нет. Чтение закрыто сразу. */
+    $value = static function (string $sql, array $args = []) use ($a): mixed {
+        $q = $a->prepare($sql);
+        $q->execute($args);
+        $found = $q->fetchColumn();
+        $q->closeCursor();
+        return $found;
+    };
+    t_equal($value('SELECT seen_at FROM sessions WHERE token_hash = ?', [hash('sha256', $cookies[ADMIN_COOKIE])]), $now,
+        'сессия свежая: пропуск на страницы её не продлевает, то есть сам ничего не пишет');
+
+    // Букеты для действий готовим сейчас, пока запись свободна (готовыми функциями 2А): по одному на действие,
+    // чтобы вызовы не зависели друг от друга и от порядка. Названия разные: «создать» не должно найти тёзку.
+    $make = static function (string $title, string $status) use ($a, $ctx): string {
+        $at = $ctx['now'];
+        $uid = catalog_create_product($a, 'anna', t_fields(['title' => $title]), $at);
+        if ($status !== 'draft') {
+            catalog_publish($a, 'anna', $uid, t_row($a, $uid)['version'], $at);
+        }
+        if ($status === 'hidden') {
+            catalog_hide($a, 'anna', $uid, t_row($a, $uid)['version'], $at);
+        }
+        if ($status === 'deleted') {
+            catalog_delete($a, 'anna', $uid, t_row($a, $uid)['version'], $at);
+        }
+        return $uid;
+    };
+    $toSave = $make('Черновик для сохранения', 'draft');
+    $toPublish = $make('Черновик для публикации', 'draft');
+    $toRemove = $make('Черновик для удаления', 'draft');
+    $toHide = $make('Букет для снятия', 'active');
+    $toDelete = $make('Букет для удаления', 'active');
+    $toUnhide = $make('Снятый букет', 'hidden');
+    $toRestore = $make('Удалённый букет', 'deleted');
+    $roses = (int)$value("SELECT id FROM tiles WHERE section = 'roses'");
 
     $other = new PDO('sqlite:' . $file, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
     $other->exec('BEGIN IMMEDIATE');
@@ -220,11 +269,86 @@ t_case('занята запись: ожидание, а не мгновенны�
             admin_request('POST', post: ['csrf' => $csrf, 'slug' => 'roses', 'label' => 'Розы поштучно'], cookies: $cookies),
             $ctx, 'section', 'admin_page_section'),
     ];
+
+    // Действия со страниц: [вызов, что в базе при свободной записи меняется]. Версию букета вызов берёт из базы
+    // в тот момент, когда его запускают. Выход — последним: он закрывает сессию, а ею пользуются остальные.
+    $product = static fn (array $post): array => admin_handle(
+        admin_request('POST', post: $post + ['csrf' => $csrf], cookies: $cookies), $ctx, 'product', 'admin_page_product');
+    $tiles = static fn (array $post): array => admin_handle(
+        admin_request('POST', post: $post + ['csrf' => $csrf], cookies: $cookies), $ctx, 'sections', 'admin_page_sections');
+    $version = static fn (string $uid): string => (string)t_row($a, $uid)['version'];
+    $state = static fn (string $uid): Closure => fn () => $value("SELECT status || ':' || version FROM products WHERE uid = ?", [$uid]);
+    $card = ['price' => '4400', 'description' => 'Розы', 'sections' => ['bukety']];
+    $writes = [
+        'вход через страницу входа' => [
+            fn () => admin_handle(admin_request('POST', post: ['login' => 'anna', 'password' => 'секрет-анны']), $ctx, 'login', 'admin_page_login'),
+            fn () => $value('SELECT COUNT(*) FROM sessions'),
+        ],
+        'новый букет' => [
+            fn () => $product(['action' => 'create', 'title' => 'Новый букет', 'price' => '4400', 'sections' => ['bukety']]),
+            fn () => $value('SELECT COUNT(*) FROM products'),
+        ],
+        'сохранение черновика' => [
+            fn () => $product(['action' => 'save', 'uid' => $toSave, 'version' => $version($toSave), 'title' => 'Черновик для сохранения'] + $card),
+            $state($toSave),
+        ],
+        // Публикация из карточки: сначала запись правок, потом публикация; фото — с путём, который принимает каталог.
+        'публикация черновика из карточки' => [
+            fn () => $product(['action' => 'publish', 'uid' => $toPublish, 'version' => $version($toPublish), 'title' => 'Черновик для публикации',
+                'images' => ['/images/catalog/bukety/buket-publikatsiya.webp']] + $card),
+            $state($toPublish),
+        ],
+        'снятие с продажи' => [
+            fn () => $product(['action' => 'hide', 'uid' => $toHide, 'version' => $version($toHide), 'confirm' => '1']),
+            $state($toHide),
+        ],
+        'возврат в продажу' => [
+            fn () => $product(['action' => 'unhide', 'uid' => $toUnhide, 'version' => $version($toUnhide)]),
+            $state($toUnhide),
+        ],
+        'удаление опубликованного букета' => [
+            fn () => $product(['action' => 'delete', 'uid' => $toDelete, 'version' => $version($toDelete), 'confirm' => '1']),
+            $state($toDelete),
+        ],
+        // У черновика удаление другое: строка стирается совсем, а не получает статус «удалён».
+        'удаление черновика' => [
+            fn () => $product(['action' => 'delete', 'uid' => $toRemove, 'version' => $version($toRemove), 'confirm' => '1']),
+            $state($toRemove),
+        ],
+        'восстановление букета' => [
+            fn () => $product(['action' => 'restore', 'uid' => $toRestore, 'version' => $version($toRestore)]),
+            $state($toRestore),
+        ],
+        'новый раздел' => [
+            fn () => $tiles(['action' => 'create', 'label' => 'Осень']),
+            fn () => $value('SELECT COUNT(*) FROM sections'),
+        ],
+        'порядок плиток' => [
+            fn () => $tiles(['action' => 'move', 'tile' => (string)$roses, 'dir' => 'up']),
+            fn () => $value('SELECT GROUP_CONCAT(id) FROM (SELECT id FROM tiles ORDER BY position, id)'),
+        ],
+        'выход' => [
+            fn () => admin_handle(admin_request('POST', post: ['csrf' => $csrf], cookies: $cookies), $ctx, 'logout', 'admin_page_logout'),
+            fn () => $value('SELECT COUNT(*) FROM sessions WHERE token_hash = ?', [hash('sha256', $cookies[ADMIN_COOKIE])]),
+        ],
+    ];
+    foreach ($writes as $what => [$call]) {
+        $calls[$what] = $call;
+    }
+
     foreach ($calls as $what => $call) {
         [$took, $error] = $wait($call);
         t_true($took >= 0.25 && str_contains($error, 'locked'), "$what: ждёт, пока запись освободится, и только потом отказывает (ждали " . round($took, 3) . ' с)');
     }
     $other->exec('ROLLBACK');
+
+    // Тот же набор вызовов при свободной записи: каждый меняет базу — значит, при занятой он упирался именно в запись.
+    foreach ($writes as $what => [$call, $changed]) {
+        $was = $changed();
+        $response = $call();
+        t_true($response['status'] === 303 && $changed() !== $was,
+            "$what: при свободной записи доходит до записи и меняет базу (ответ " . $response['status'] . ')');
+    }
 });
 
 t_case('пропуск на страницы', function (): void {
