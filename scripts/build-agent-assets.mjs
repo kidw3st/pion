@@ -8,7 +8,7 @@
 import { mkdir, writeFile, readFile, readdir } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
-import { dedupeProducts } from './lib/dedupeProducts.mjs';
+import { catalogTiles, redirectMap, sectionProducts, tildaMap } from './lib/catalog-view.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const PUB = path.join(ROOT, 'public');
@@ -28,8 +28,8 @@ const write = async (rel, contents) => {
 };
 
 const site = await readJson('data/site.json');
-const meta = await readJson('data/catalog-meta.json');
-const catalogFiles = (await readdir(path.join(ROOT, 'data/catalog'))).filter((f) => f.endsWith('.json'));
+// Каталог — снимок выгрузки (тот же, что читают страницы): data/catalog-export.json.
+const catalog = await readJson('data/catalog-export.json');
 
 // ---------------------------------------------------------------- robots.txt
 // Content Signals (contentsignals.org) declare how this content may be used.
@@ -113,7 +113,7 @@ const deliveryLines = site.delivery.options.map((o) => {
 const ORDER_NOTE = 'Заказ оформляется на сайте: оплата картой онлайн или при получении.';
 
 // ------------------------------------------------------------------ llms.txt
-const categoryLines = meta.tiles
+const categoryLines = catalogTiles(catalog)
   .filter((t) => !t.href.startsWith('#'))
   .map((t) => `- [${t.label}](${SITE_URL}${t.href}/)`);
 
@@ -160,31 +160,25 @@ await write(
 // Правило в .htaccess ищет страницу по slug из старого адреса и на таких
 // товарах промахивалось, отправляя человека и поисковик в раздел вместо
 // карточки. По uid промахнуться нельзя — отсюда эта карта.
-const tildaMap = {};
-for (const file of catalogFiles) {
-  const slug = file.replace(/.json$/, '');
-  for (const product of dedupeProducts(await readJson(`data/catalog/${file}`))) {
-    // uid витрины (cs-) и товаров главной (new-) в Tilda не существовало.
-    if (!/^[0-9]+$/.test(String(product.uid))) continue;
-    tildaMap[product.uid] =
-      product.published === false ? `/${slug}/` : `/${slug}/${product.slug}/`;
-  }
-}
-await write('api/tilda-map.json', JSON.stringify(tildaMap, null, 0) + '\n');
+await write('api/tilda-map.json', JSON.stringify(tildaMap(catalog), null, 0) + '\n');
+
+// ------------------------------------------- переадресации каталога (сервер)
+// Букет переехал в другой раздел или удалён — со старого адреса ведёт
+// pay/catalog-redirect.php по этому списку. Список пишет админка.
+await write('api/redirects.json', JSON.stringify(redirectMap(catalog), null, 0) + '\n');
 
 // ----------------------------------------------------- static JSON for agents
 // Not an HTTP API — plain files, but they give agents the catalogue without
 // scraping the rendered pages.
 const categories = [];
-for (const file of catalogFiles) {
-  const slug = file.replace(/\.json$/, '');
-  // Mirrors ONLY_ACTIVE_IN_STORE in src/lib/content.ts, which is off: agents
-  // are given the same full range the pages show, switched-off items included.
-  const products = dedupeProducts(await readJson(`data/catalog/${file}`));
-  const cat = meta.categories?.[slug] ?? null;
+for (const section of catalog.sections) {
+  const { slug } = section;
+  // Только букеты в продаже — те, что стоят в разделе на сайте и что можно заказать.
+  const products = sectionProducts(catalog, slug);
+  const title = section.coverTitle || section.label;
   categories.push({
     slug,
-    title: cat?.title ?? slug,
+    title,
     url: `${SITE_URL}/${slug}/`,
     productCount: products.length,
   });
@@ -193,7 +187,7 @@ for (const file of catalogFiles) {
     JSON.stringify(
       {
         slug,
-        title: cat?.title ?? slug,
+        title,
         url: `${SITE_URL}/${slug}/`,
         products: products.map((p) => ({
           id: p.uid,

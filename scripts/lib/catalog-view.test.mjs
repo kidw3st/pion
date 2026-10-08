@@ -10,9 +10,11 @@ import {
   newProducts,
   productPages,
   productPath,
+  redirectMap,
   relatedProducts,
   sectionMeta,
   sectionProducts,
+  tildaMap,
 } from './catalog-view.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -80,5 +82,21 @@ describe('catalog-view на выгрузке-образце', () => {
     const empty = load();
     empty.sections.find((s) => s.slug === 'novinki').products = ['100000000003'];
     expect(newProducts(empty)).toEqual([]);
+  });
+});
+
+describe('карты адресов для сервера', () => {
+  it('tilda-map: каждый букет — на его страницу по главному разделу, снятые тоже', () => {
+    expect(tildaMap(load())).toEqual({
+      100000000001: '/bukety/buket-a/',
+      100000000002: '/bukety/buket-b/',
+      100000000003: '/bukety/buket-v/',
+      100000000004: '/novinki/pion/',
+      100000000005: '/roses/pion/',
+    });
+  });
+
+  it('redirects: откуда → куда', () => {
+    expect(redirectMap(load())).toEqual({ '/korobki/buket-a/': '/bukety/buket-a/' });
   });
 });

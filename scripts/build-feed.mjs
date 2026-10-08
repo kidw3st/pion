@@ -9,10 +9,10 @@
  *
  * Адрес фида для личного кабинета 2ГИС: https://pionperm.ru/feed/products.xml
  */
-import { mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { dedupeProducts } from './lib/dedupeProducts.mjs';
+import { catalogTiles, sectionProducts } from './lib/catalog-view.mjs';
 import { buildCsv, buildYml, feedCategories } from './lib/yml-feed.mjs';
 
 const readJson = (file) => JSON.parse(readFileSync(file, 'utf8'));
@@ -22,25 +22,21 @@ const readJson = (file) => JSON.parse(readFileSync(file, 'utf8'));
  * @returns {{yml: string, csv: string}} YML-документ и CSV-файл
  */
 export function buildFeed({ root, siteUrl, date }) {
-  const catalogDir = path.join(root, 'data', 'catalog');
-  const sections = new Set(
-    readdirSync(catalogDir)
-      .filter((f) => f.endsWith('.json'))
-      .map((f) => f.replace(/\.json$/, '')),
-  );
-  const meta = readJson(path.join(root, 'data', 'catalog-meta.json'));
+  // Каталог — снимок выгрузки, тот же, что читают страницы.
+  const catalog = readJson(path.join(root, 'data', 'catalog-export.json'));
+  const sections = new Set(catalog.sections.map((s) => s.slug));
   const flowersPage = readJson(path.join(root, 'data', 'pages', 'flowers.json'));
   const flowerTiles = flowersPage.find((block) => block.kind === 'tiles')?.tiles ?? [];
 
-  const categories = feedCategories({ catalogTiles: meta.tiles, flowerTiles, sections });
-  // Те же товары, что видит покупатель: без дублей и «Copy:» из выгрузки Tilda.
+  const categories = feedCategories({ catalogTiles: catalogTiles(catalog), flowerTiles, sections });
+  // Те же товары, что видит покупатель: букеты в продаже, каждый один раз —
+  // в категории своего главного раздела (букет может стоять в нескольких).
   const products = categories
     .filter((category) => category.section)
     .flatMap((category) =>
-      dedupeProducts(readJson(path.join(catalogDir, `${category.section}.json`))).map((product) => ({
-        ...product,
-        section: category.section,
-      })),
+      sectionProducts(catalog, category.section)
+        .filter((product) => product.mainSection === category.section)
+        .map((product) => ({ ...product, section: category.section })),
     );
   return {
     yml: buildYml({ siteUrl, date, categories, products }),

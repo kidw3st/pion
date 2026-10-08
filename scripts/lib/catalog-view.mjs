@@ -111,3 +111,19 @@ export function newProducts(exp, limit = 3) {
   if (!findSection(exp, NEW_SECTION)) return null;
   return sectionProducts(exp, NEW_SECTION).slice(0, limit);
 }
+
+/**
+ * Старые адреса товаров Tilda (`…/tproduct/…-<uid>-…`) → страница букета.
+ * Uid при переезде не менялся. Снятые ведут на свою страницу; удалённых в
+ * выгрузке нет, их ведёт в раздел правило .htaccess.
+ */
+export function tildaMap(exp) {
+  return Object.fromEntries(
+    exp.products.filter((p) => /^[0-9]+$/.test(p.uid)).map((p) => [p.uid, productPath(p.mainSection, p.slug)]),
+  );
+}
+
+/** Переадресации каталога для pay/catalog-redirect.php: откуда → куда. */
+export function redirectMap(exp) {
+  return Object.fromEntries(exp.redirects.map((r) => [r.from, r.to]));
+}
