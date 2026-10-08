@@ -23,6 +23,9 @@
 <Files "feed-img-lib.php">
   Require all denied
 </Files>
+<Files "catalog-redirect-lib.php">
+  Require all denied
+</Files>
 
 # Счётчики частоты обращений — служебные файлы, наружу не отдаём.
 <IfModule mod_rewrite.c>

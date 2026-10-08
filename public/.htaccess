@@ -88,6 +88,16 @@ Options -Indexes
   RewriteCond %{HTTP_REFERER} !^https?://([a-z0-9-]+\.)?pionperm\.ru [NC]
   RewriteCond %{HTTP_REFERER} !(google|yandex|bing|duckduckgo|mail\.ru|vk\.com|t\.me|telegram|whatsapp|instagram|facebook|2gis) [NC]
   RewriteRule \.(jpe?g|png|webp|gif|svg)$ - [F,NC,L]
+
+  # --- Переадресации каталога ---------------------------------------------
+  # Букет переехал в другой раздел или удалён — его старый адрес вида
+  # /<раздел>/<букет>/ ведёт на новое место. Список приходит со сборкой
+  # (api/redirects.json); отвечает /pay/catalog-redirect.php: нашёл — 301,
+  # нет — наша страница 404 с кодом 404. Адреса, у которых страница есть,
+  # и служебные папки правило не трогает.
+  RewriteCond %{REQUEST_URI} !^/(blog|pay|api|images|md|_next|feed|fonts|\.well-known)/ [NC]
+  RewriteCond %{DOCUMENT_ROOT}/$1/$2/index.html !-f
+  RewriteRule ^([a-z0-9_-]+)/([a-z0-9_-]+)/?$ /pay/catalog-redirect.php [L]
 </IfModule>
 
 # Фото и статика неизменяемы (имена файлов версионированы) — кэшируем надолго.
