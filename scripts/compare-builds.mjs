@@ -1,38 +1,91 @@
 /**
  * Сравнение двух сборок сайта (папок out/): получился ли тот же сайт.
  *
- *   node scripts/compare-builds.mjs <до>/out <после>/out
+ *   node scripts/compare-builds.mjs [--report] <до>/out <после>/out
  *
  * Печатает:
  * - адреса карты сайта, которые пропали или появились;
  * - страницы (index.html), которые пропали или появились;
+ * - на общих страницах: <title>, <meta name="description">, canonical, первый
+ *   <h1> и список ссылок внутри <main> (адрес и текст) — так видны «Новинки» на
+ *   главной и плитки каталога;
  * - разделы, где поменялся список букетов в разметке (адрес и цена каждого);
  * - страницы букетов, где поменялись название, цена, наличие или фото;
- * - отличается ли фид (без даты).
+ * - файлы api/catalog/*.json (по разобранному содержимому: порядок ключей не
+ *   важен, порядок букетов важен);
+ * - отличается ли фид: feed/products.xml (без даты) и feed/products.csv.
  * Нужен при смене источника каталога (этапы 2В и 3): «тот же сайт» — это те
  * же адреса, цены, фото и порядок.
+ *
+ * Код выхода: 0 — отличий нет; 1 — сборки различаются (для этапа 3В: сравнение
+ * сборки из снимка со сборкой из выгрузки сервера); 2 — неверный вызов.
+ * С --report код выхода всегда 0: посмотреть отличия, ничего не останавливая.
+ *
+ * Из других скриптов и тестов: import { compareBuilds } from './compare-builds.mjs'
+ * — вернёт { lines, differences } и ничего не напечатает.
  */
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
+
+/** Сколько отличий каждого вида показывать подробно (счётчик считает все). */
+const SHOW = 25;
 
 function walk(dir, base = dir, out = []) {
-  for (const name of readdirSync(dir)) {
-    const full = path.join(dir, name);
-    if (statSync(full).isDirectory()) walk(full, base, out);
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) walk(full, base, out);
     else out.push(path.relative(base, full).split(path.sep).join('/'));
   }
   return out;
 }
 
-const sitemap = (root) =>
-  new Set([...readFileSync(path.join(root, 'sitemap.xml'), 'utf8').matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]));
+/** Текст файла сборки или null, если файла нет. */
+function readText(root, rel) {
+  try {
+    return readFileSync(path.join(root, rel), 'utf8');
+  } catch (error) {
+    if (error.code === 'ENOENT') return null;
+    throw error;
+  }
+}
 
+const sitemap = (root) =>
+  new Set([...(readText(root, 'sitemap.xml') ?? '').matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]));
+
+const pagesOf = (root) => new Set(walk(root).filter((f) => f.endsWith('index.html')));
+
+const diff = (a, b) => [[...a].filter((x) => !b.has(x)), [...b].filter((x) => !a.has(x))];
+
+/** Текст из разметки: без тегов и комментариев React, пробелы схлопнуты. */
+const plain = (html) => html.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+
+const firstMatch = (html, re) => html.match(re)?.[1] ?? null;
+
+const same = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]);
+
+/** Всё, что сравнивается на странице; страница читается и разбирается один раз. */
 function facts(root, rel) {
   const html = readFileSync(path.join(root, rel), 'utf8');
-  const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => JSON.parse(m[1]));
+  const blocks = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)]
+    .map((m) => {
+      try {
+        return JSON.parse(m[1]);
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
   const list = blocks.find((d) => d['@type'] === 'ItemList');
   const product = blocks.find((d) => d['@type'] === 'Product');
+  const h1 = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/);
+  const main = firstMatch(html, /<main[^>]*>([\s\S]*?)<\/main>/) ?? '';
   return {
+    title: firstMatch(html, /<title>([^<]*)<\/title>/),
+    description: firstMatch(html, /<meta name="description" content="([^"]*)"/),
+    canonical: firstMatch(html, /<link rel="canonical" href="([^"]*)"/),
+    h1: h1 ? plain(h1[1]) : null,
+    links: [...main.matchAll(/<a[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/g)].map((m) => `${m[1]} — ${plain(m[2])}`),
     list: list ? list.itemListElement.map((i) => `${i.item.url} ${i.item.offers?.price}`).join('\n') : null,
     product: product
       ? [product.name, product.offers?.price ?? '—', product.offers?.availability ?? '—', (product.image ?? []).join(',')].join(' | ')
@@ -40,40 +93,199 @@ function facts(root, rel) {
   };
 }
 
-const diff = (a, b) => [[...a].filter((x) => !b.has(x)), [...b].filter((x) => !a.has(x))];
+/** Поля страницы, сравниваемые как строки: [поле, как назвать в отчёте]. */
+const TEXT_FIELDS = [
+  ['title', '<title>'],
+  ['description', '<meta name="description">'],
+  ['canonical', 'canonical'],
+  ['h1', 'первый <h1>'],
+];
 
-const [before, after] = process.argv.slice(2);
-if (!before || !after || !existsSync(before) || !existsSync(after)) {
-  console.error('Как вызывать: node scripts/compare-builds.mjs <до>/out <после>/out');
-  process.exit(2);
+/** JSON с отсортированными ключами: одно и то же содержимое — одна и та же строка. */
+const canon = (value) =>
+  JSON.stringify(value, (_, x) =>
+    x && typeof x === 'object' && !Array.isArray(x)
+      ? Object.fromEntries(Object.entries(x).sort(([k], [l]) => (k < l ? -1 : k > l ? 1 : 0)))
+      : x,
+  );
+
+const parseJson = (text) => {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return { 'не JSON': text };
+  }
+};
+
+const apiFiles = (root) => {
+  const dir = path.join(root, 'api/catalog');
+  return existsSync(dir) ? readdirSync(dir).filter((n) => n.endsWith('.json')) : [];
+};
+
+/** Что именно поменялось в api/catalog/<имя>.json (букеты сверяются по id). */
+function describeApi(name, a, b) {
+  const head = `api/catalog/${name}:`;
+  if (!Array.isArray(a?.products) || !Array.isArray(b?.products)) return `${head} содержимое отличается.`;
+  const key = (p) => String(p?.id);
+  const byId = (products) => new Map(products.map((p) => [key(p), canon(p)]));
+  const ma = byId(a.products);
+  const mb = byId(b.products);
+  const gone = [...ma.keys()].filter((id) => !mb.has(id));
+  const added = [...mb.keys()].filter((id) => !ma.has(id));
+  const changed = [...ma.keys()].filter((id) => mb.has(id) && ma.get(id) !== mb.get(id));
+  const orderA = a.products.map(key).filter((id) => mb.has(id));
+  const orderB = b.products.map(key).filter((id) => ma.has(id));
+  const parts = [`букетов убрано ${gone.length}, добавлено ${added.length}, изменено ${changed.length}`];
+  if (changed.length) parts.push(`изменены id: ${changed.slice(0, 5).join(', ')}${changed.length > 5 ? ', …' : ''}`);
+  if (!same(orderA, orderB)) parts.push('поменялся порядок');
+  if (canon({ ...a, products: null }) !== canon({ ...b, products: null })) parts.push('поменялись другие поля раздела');
+  return `${head} ${parts.join('; ')}.`;
 }
 
-const [goneUrls, newUrls] = diff(sitemap(before), sitemap(after));
-console.log(`Карта сайта: было ${sitemap(before).size}, стало ${sitemap(after).size}.`);
-for (const u of goneUrls) console.log(`  − ${u}`);
-for (const u of newUrls) console.log(`  + ${u}`);
+/** До пяти строк «− …» или «+ …» с хвостом «…и ещё N». */
+const listed = (items, sign) =>
+  items
+    .slice(0, 5)
+    .map((x) => `\n  ${sign} ${x}`)
+    .join('') + (items.length > 5 ? `\n  ${sign} …и ещё ${items.length - 5}` : '');
 
-const pages = (root) => new Set(walk(root).filter((f) => f.endsWith('index.html')));
-const [gonePages, newPages] = diff(pages(before), pages(after));
-console.log(`Страницы: пропало ${gonePages.length}, появилось ${newPages.length}.`);
-for (const p of [...gonePages.map((x) => `  − ${x}`), ...newPages.map((x) => `  + ${x}`)].slice(0, 40)) console.log(p);
+const cut = (s) => (s === undefined ? '—' : s.length > 200 ? `${s.slice(0, 200)}…` : s);
 
-let listChanges = 0;
-let productChanges = 0;
-for (const rel of [...pages(before)].filter((p) => pages(after).has(p))) {
-  const a = facts(before, rel);
-  const b = facts(after, rel);
-  if (a.list !== b.list) {
-    listChanges++;
-    const [gone, added] = diff(new Set((a.list ?? '').split('\n')), new Set((b.list ?? '').split('\n')));
-    console.log(`Список букетов на ${rel}: убрано ${gone.length}, добавлено ${added.length}${gone.length + added.length === 0 ? ' (поменялся порядок)' : ''}.`);
+/** Первая отличающаяся строка двух текстов — чтобы было понятно, куда смотреть. */
+function firstDifference(a, b) {
+  const la = a.split('\n');
+  const lb = b.split('\n');
+  for (let i = 0; i < Math.max(la.length, lb.length); i++) {
+    if (la[i] !== lb[i]) return `\n  первое отличие, строка ${i + 1}:\n    было  ${cut(la[i])}\n    стало ${cut(lb[i])}`;
   }
-  if (a.product !== b.product) {
-    productChanges++;
-    if (productChanges <= 25) console.log(`Букет ${rel}:\n  было  ${a.product}\n  стало ${b.product}`);
+  return '';
+}
+
+/**
+ * Сравнивает две сборки. Возвращает строки отчёта и число найденных отличий
+ * (каждая пропавшая или новая страница и адрес карты сайта, каждое поле страницы,
+ * список, букет, файл api и фид — по одному). Ничего не печатает и не завершает процесс.
+ */
+export function compareBuilds(before, after) {
+  const lines = [];
+  let differences = 0;
+
+  const mapBefore = sitemap(before);
+  const mapAfter = sitemap(after);
+  const [goneUrls, newUrls] = diff(mapBefore, mapAfter);
+  differences += goneUrls.length + newUrls.length;
+  lines.push(`Карта сайта: было ${mapBefore.size}, стало ${mapAfter.size}.`);
+  for (const u of goneUrls) lines.push(`  − ${u}`);
+  for (const u of newUrls) lines.push(`  + ${u}`);
+
+  // Список страниц строится один раз: раньше его пересобирали на каждой странице (около 70 с).
+  const pagesBefore = pagesOf(before);
+  const pagesAfter = pagesOf(after);
+  const [gonePages, newPages] = diff(pagesBefore, pagesAfter);
+  differences += gonePages.length + newPages.length;
+  lines.push(`Страницы: пропало ${gonePages.length}, появилось ${newPages.length}.`);
+  for (const p of [...gonePages.map((x) => `  − ${x}`), ...newPages.map((x) => `  + ${x}`)].slice(0, 40)) lines.push(p);
+
+  let listChanges = 0;
+  let productChanges = 0;
+  let pagesChanged = 0;
+  const fieldChanges = { title: 0, description: 0, canonical: 0, h1: 0, links: 0 };
+  for (const rel of [...pagesBefore].filter((p) => pagesAfter.has(p))) {
+    const a = facts(before, rel);
+    const b = facts(after, rel);
+    let pageChanged = false;
+    for (const [field, label] of TEXT_FIELDS) {
+      if (a[field] === b[field]) continue;
+      pageChanged = true;
+      differences++;
+      if (++fieldChanges[field] <= SHOW) lines.push(`Страница ${rel}: ${label}\n  было  ${a[field] ?? '—'}\n  стало ${b[field] ?? '—'}`);
+    }
+    if (!same(a.links, b.links)) {
+      pageChanged = true;
+      differences++;
+      if (++fieldChanges.links <= SHOW) {
+        const [gone, added] = diff(new Set(a.links), new Set(b.links));
+        let note = '';
+        if (gone.length + added.length === 0) {
+          note = same([...a.links].sort(), [...b.links].sort()) ? ' (поменялся порядок)' : ' (поменялось число повторов)';
+        }
+        lines.push(`Ссылки в <main> на ${rel}: убрано ${gone.length}, добавлено ${added.length}${note}.${listed(gone, '−')}${listed(added, '+')}`);
+      }
+    }
+    if (pageChanged) pagesChanged++;
+    if (a.list !== b.list) {
+      listChanges++;
+      differences++;
+      const [gone, added] = diff(new Set((a.list ?? '').split('\n')), new Set((b.list ?? '').split('\n')));
+      lines.push(`Список букетов на ${rel}: убрано ${gone.length}, добавлено ${added.length}${gone.length + added.length === 0 ? ' (поменялся порядок)' : ''}.`);
+    }
+    if (a.product !== b.product) {
+      productChanges++;
+      differences++;
+      if (productChanges <= SHOW) lines.push(`Букет ${rel}:\n  было  ${a.product}\n  стало ${b.product}`);
+    }
+  }
+  lines.push(`Разделов с другим списком: ${listChanges}. Страниц букетов с другими данными: ${productChanges}.`);
+  lines.push(
+    `Страниц с другими данными в разметке: ${pagesChanged} (<title> — ${fieldChanges.title}, описание — ${fieldChanges.description}, ` +
+      `canonical — ${fieldChanges.canonical}, <h1> — ${fieldChanges.h1}, ссылки в <main> — ${fieldChanges.links}).`,
+  );
+
+  const names = [...new Set([...apiFiles(before), ...apiFiles(after)])].sort();
+  let apiChanges = 0;
+  for (const name of names) {
+    const textBefore = readText(before, `api/catalog/${name}`);
+    const textAfter = readText(after, `api/catalog/${name}`);
+    if (textBefore === null || textAfter === null) {
+      apiChanges++;
+      lines.push(`api/catalog/${name}: есть только в сборке «${textBefore === null ? 'после' : 'до'}».`);
+      continue;
+    }
+    const a = parseJson(textBefore);
+    const b = parseJson(textAfter);
+    if (canon(a) !== canon(b)) {
+      apiChanges++;
+      lines.push(describeApi(name, a, b));
+    }
+  }
+  differences += apiChanges;
+  lines.push(`Файлов api/catalog с другим содержимым: ${apiChanges} из ${names.length}.`);
+
+  // Фид: у XML дата выгрузки каждый раз новая, её не сравниваем; CSV даты не содержит.
+  const feeds = [
+    ['Фид', 'feed/products.xml', (text) => text.replace(/date="[^"]*"/, '')],
+    ['Фид CSV (feed/products.csv)', 'feed/products.csv', (text) => text],
+  ];
+  for (const [label, rel, normalize] of feeds) {
+    const textBefore = readText(before, rel);
+    const textAfter = readText(after, rel);
+    if (textBefore === null && textAfter === null) {
+      lines.push(`${label}: нет ни в одной сборке.`);
+    } else if (textBefore === null || textAfter === null) {
+      differences++;
+      lines.push(`${label}: ОТЛИЧАЕТСЯ — файла нет в сборке «${textBefore === null ? 'до' : 'после'}».`);
+    } else if (normalize(textBefore) === normalize(textAfter)) {
+      lines.push(`${label}: тот же.`);
+    } else {
+      differences++;
+      lines.push(`${label}: ОТЛИЧАЕТСЯ.${firstDifference(normalize(textBefore), normalize(textAfter))}`);
+    }
+  }
+
+  lines.push(differences === 0 ? 'Итого отличий: 0 — сборки одинаковые.' : `Итого отличий: ${differences} — сборки различаются.`);
+  return { lines, differences };
+}
+
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const args = process.argv.slice(2);
+  const report = args.includes('--report');
+  const [before, after] = args.filter((a) => a !== '--report');
+  if (!before || !after || !existsSync(before) || !existsSync(after)) {
+    console.error('Как вызывать: node scripts/compare-builds.mjs [--report] <до>/out <после>/out');
+    process.exitCode = 2;
+  } else {
+    const { lines, differences } = compareBuilds(before, after);
+    for (const line of lines) console.log(line);
+    process.exitCode = report || differences === 0 ? 0 : 1;
   }
 }
-console.log(`Разделов с другим списком: ${listChanges}. Страниц букетов с другими данными: ${productChanges}.`);
-
-const feed = (root) => readFileSync(path.join(root, 'feed/products.xml'), 'utf8').replace(/date="[^"]*"/, '');
-console.log(feed(before) === feed(after) ? 'Фид: тот же.' : 'Фид: ОТЛИЧАЕТСЯ.');
