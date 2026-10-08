@@ -235,7 +235,7 @@ export function validateExport(exp, { previousCount = null, allowShrink = false 
     const percent = Math.round((1 - exp.products.length / previousCount) * 100);
     errors.push(
       `Букетов ${exp.products.length} вместо ${previousCount} — меньше на ${percent}%. ` +
-        'Если салон и правда столько удалил, запустите сборку с allow_shrink.',
+        'Если салон и правда столько удалил, запустите сборку вручную с allow_shrink (в командной строке — флаг --allow-shrink).',
     );
   }
   return errors;

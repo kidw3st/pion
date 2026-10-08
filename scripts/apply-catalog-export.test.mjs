@@ -81,3 +81,64 @@ describe('запуск из командной строки', () => {
     expect(r.stderr).toContain('Как вызывать');
   });
 });
+
+describe('готовность к выгрузке с сервера', () => {
+  it('--previous-count важнее файла по --out', async () => {
+    const out = path.join(tmp(), 'catalog-export.json');
+    const stopped = await applyCatalogExport({ source: FIXTURE, out, previousCount: 10 });
+    expect(stopped).toMatchObject({ ok: false, kind: 'invalid' });
+    expect(stopped.errors.join('\n')).toContain('allow_shrink');
+    expect((await applyCatalogExport({ source: FIXTURE, out, previousCount: 6 })).ok).toBe(true);
+  });
+
+  it('не скачалось — вид ошибки unreachable', async () => {
+    const r = await applyCatalogExport({ source: path.join(tmp(), 'missing.json'), out: path.join(tmp(), 'x.json') });
+    expect(r).toMatchObject({ ok: false, kind: 'unreachable' });
+  });
+
+  it('не JSON — понятная ошибка', async () => {
+    const dir = tmp();
+    writeFileSync(path.join(dir, 'page.json'), '<!doctype html><title>503</title>');
+    const r = await applyCatalogExport({ source: path.join(dir, 'page.json'), out: path.join(dir, 'x.json') });
+    expect(r.kind).toBe('unreachable');
+    expect(r.errors[0]).toContain('не JSON');
+  });
+
+  it('запись атомарная: временный файл не остаётся', async () => {
+    const dir = tmp();
+    const out = path.join(dir, 'catalog-export.json');
+    expect((await applyCatalogExport({ source: FIXTURE, out })).ok).toBe(true);
+    expect(existsSync(`${out}.part`)).toBe(false);
+  });
+
+  it('не записать — вид ошибки write', async () => {
+    const r = await applyCatalogExport({ source: FIXTURE, out: path.join(tmp(), 'нет-папки', 'x.json') });
+    expect(r).toMatchObject({ ok: false, kind: 'write' });
+    expect(r.errors[0]).toMatch(/^Не удалось записать/);
+  });
+
+  it('битый прошлый файл — предупреждение, а не молчание', async () => {
+    const dir = tmp();
+    const out = path.join(dir, 'catalog-export.json');
+    writeFileSync(out, '<<<<<<< HEAD');
+    const r = spawnSync(process.execPath, [SCRIPT, FIXTURE, '--out', out], { encoding: 'utf8' });
+    expect(r.status).toBe(0);
+    expect(r.stderr).toContain('не читается');
+  });
+
+  const bad = [
+    ['--out без значения', ['--check', '--out']],
+    ['--out, за которым флаг', [FIXTURE, '--out', '--allow-shrink']],
+    ['одиночный дефис', ['-h']],
+    ['неизвестный флаг', [FIXTURE, '--force']],
+    ['--check вместе с --out', ['--check', FIXTURE, '--out', 'x.json']],
+    ['--previous-count не число', [FIXTURE, '--previous-count', 'много']],
+  ];
+  for (const [name, args] of bad) {
+    it(`неверный вызов: ${name} — код 2`, () => {
+      const r = spawnSync(process.execPath, [SCRIPT, ...args], { encoding: 'utf8', cwd: tmp() });
+      expect(r.status).toBe(2);
+      expect(r.stderr).toContain('Как вызывать');
+    });
+  }
+});
