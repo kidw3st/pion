@@ -273,6 +273,10 @@
   opacity: 0.7;
 }
 
+.empty a {
+  border-bottom: 1px solid var(--color-accent);
+}
+
 /* "Не нашли, что искали?" band (t185): light strip, 22px text left,
    outlined button right. */
 .notFound {

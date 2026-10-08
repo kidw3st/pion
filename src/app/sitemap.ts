@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
-import { CATEGORY_SLUGS, PAGE_SLUGS, getAllProductParams } from '@/lib/content';
+import { PAGE_SLUGS } from '@/lib/content';
+import { getAllProductParams, getSectionSlugs } from '@/lib/catalog';
 import { absoluteUrl } from '@/lib/seo';
 
 /**
@@ -17,14 +18,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: '/v-nalichii/', priority: 0.9 },
     // Подборка по цене: ищут «букеты до 5000» и «недорогие букеты».
     { path: '/bukety-do-5000/', priority: 0.8 },
-    ...CATEGORY_SLUGS.map((slug) => ({ path: `/${slug}/`, priority: 0.8 })),
+    ...getSectionSlugs().map((slug) => ({ path: `/${slug}/`, priority: 0.8 })),
     ...PAGE_SLUGS.map((slug) => ({ path: `/${slug}/`, priority: 0.6 })),
     { path: '/checkout/', priority: 0.3 },
   ];
 
   // Страницы товаров — основной объём карты: под каждый букет свой адрес,
   // иначе поисковику нечего сопоставить с запросом вроде «букет из пионов».
-  const products = (await getAllProductParams()).map(({ slug, product }) => ({
+  const products = getAllProductParams().map(({ slug, product }) => ({
     path: `/${slug}/${product}/`,
     priority: 0.7,
   }));

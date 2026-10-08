@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Gallery } from '@/components/Gallery/Gallery';
 import { useCart } from '@/components/Cart/CartContext';
 import { EVENING_PERCENT, isShowcaseUid } from '@/lib/promo';
@@ -7,7 +8,7 @@ import { useEveningDiscount } from '@/lib/useEveningDiscount';
 import type { Product } from '@/lib/types';
 import styles from './ProductCard.module.css';
 
-export function ProductCard({ product, isNew = false }: { product: Product; isNew?: boolean }) {
+export function ProductCard({ product, isNew = false, href }: { product: Product; isNew?: boolean; href?: string }) {
   const { addItem } = useCart();
   // Вечерняя скидка — только на витрину: у постоянного каталога цена своя.
   // В корзину кладём цену по прайсу: скидку считает сервер при оформлении,
@@ -30,7 +31,8 @@ export function ProductCard({ product, isNew = false }: { product: Product; isNe
         />
         {isNew && <span className={styles.badge}>NEW</span>}
       </div>
-      <h3 className={styles.title}>{product.title}</h3>
+      {/* У букета каталога есть своя страница — название ведёт на неё. У витрины из CRM своих страниц нет. */}
+      <h3 className={styles.title}>{href ? <Link href={href}>{product.title}</Link> : product.title}</h3>
       <p className={styles.description}>{product.description}</p>
       <span className={styles.price}>
         {price.toLocaleString('ru-RU')} р.

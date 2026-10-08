@@ -162,8 +162,8 @@ export function productListJsonLd(
     price: number;
     images: string[];
     slug: string;
+    mainSection: string;
   }[],
-  categoryPath: string,
 ) {
   return {
     '@context': 'https://schema.org',
@@ -177,13 +177,14 @@ export function productListJsonLd(
         description: p.description || undefined,
         image: p.images[0] ? absoluteUrl(p.images[0]) : undefined,
         // Ссылка на страницу самого товара, а не на раздел: иначе поисковик
-        // видит список из ста предложений по одному адресу.
-        url: absoluteUrl(productPath(categoryPath.replace(/\//g, ''), p.slug)),
+        // видит список из ста предложений по одному адресу. Адрес — по главному
+        // разделу букета, даже если список собран в другом разделе.
+        url: absoluteUrl(productPath(p.mainSection, p.slug)),
         offers: {
           '@type': 'Offer',
           price: p.price,
           priceCurrency: 'RUB',
-          url: absoluteUrl(productPath(categoryPath.replace(/\//g, ''), p.slug)),
+          url: absoluteUrl(productPath(p.mainSection, p.slug)),
         },
       },
     })),

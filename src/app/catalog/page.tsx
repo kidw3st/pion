@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { getCatalogTiles } from '@/lib/content';
+import { getCatalogTiles } from '@/lib/catalog';
 import { CatalogTiles } from '@/components/CatalogTiles/CatalogTiles';
 import { JsonLd } from '@/components/JsonLd/JsonLd';
 import { buildMetadata, breadcrumbJsonLd } from '@/lib/seo';

@@ -115,8 +115,7 @@ export function CategoryGrid({
   title: string;
   subtitle: string;
   showNotFoundBand?: boolean;
-  /** Раздел, к которому принадлежат товары. Задан — карточки ведут на свои
-   *  страницы; не задан — остаётся окно с описанием. */
+  /** Раздел, в котором показаны товары. Задан — карточки ведут на страницы букетов (по их главному разделу); не задан — остаётся окно с описанием. */
   category?: string;
   /** Categories that open with a cover already have their h1 there. */
   headingLevel?: 'h1' | 'h2';
@@ -173,7 +172,9 @@ export function CategoryGrid({
 
       <section className={styles.store}>
         {products.length === 0 ? (
-          <p className={styles.empty}>В этой категории сейчас нет товаров</p>
+          <p className={styles.empty}>
+            Сейчас здесь пусто. <Link href="/catalog">Посмотрите весь каталог</Link>
+          </p>
         ) : (
           <div className={styles.inner}>
             <div className={styles.toolbar}>
@@ -244,7 +245,7 @@ export function CategoryGrid({
                 <StoreCard
                   key={p.uid}
                   product={p}
-                  href={category ? productPath(category, p.slug) : null}
+                  href={category ? productPath(p.mainSection ?? category, p.slug) : null}
                   onShow={() => setShown(p)}
                   onBuy={() => buy(p)}
                 />

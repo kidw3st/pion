@@ -1,13 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import {
-  CATEGORY_SLUGS,
-  PAGE_SLUGS,
-  CATEGORY_LABELS,
-  getCatalog,
-  getPage,
-  getCategoryMeta,
-} from '@/lib/content';
+import { PAGE_SLUGS, getPage } from '@/lib/content';
+import { getCatalog, getCategoryMeta, getSection, getSectionSlugs } from '@/lib/catalog';
 import { CategoryGrid } from '@/components/CategoryGrid/CategoryGrid';
 import { PageCover } from '@/components/PageSections/PageCover';
 import { PageSections } from '@/components/PageSections/PageSections';
@@ -15,7 +9,7 @@ import { JsonLd } from '@/components/JsonLd/JsonLd';
 import { buildMetadata, breadcrumbJsonLd, productListJsonLd } from '@/lib/seo';
 
 export function generateStaticParams() {
-  return [...CATEGORY_SLUGS, ...PAGE_SLUGS].map((slug) => ({ slug }));
+  return [...getSectionSlugs(), ...PAGE_SLUGS].map((slug) => ({ slug }));
 }
 
 /**
@@ -60,25 +54,6 @@ const PAGE_SEO: Record<string, { title: string; description: string }> = {
     description:
       'Политика обработки персональных данных салона цветов и подарков «Пион», Пермь: какие данные мы собираем, зачем они нужны и как мы их защищаем.',
   },
-  // «Букет невесты» и «свадебный букет» — это один и тот же товар, но люди
-  // ищут его двумя разными словами, причём первое втрое чаще. На странице не
-  // было ни одного упоминания невесты, а H1 обещал «свадебный сезон 2025» —
-  // по более частотному запросу зацепиться было не за что.
-  wedding: {
-    title: 'Букет невесты и свадебные букеты в Перми | «Пион»',
-    description:
-      'Букет невесты, бутоньерка жениха и цветы для церемонии от салона «Пион» в Перми. Собираем в день свадьбы, привозим ко времени сбора невесты.',
-  },
-  valentinesday: {
-    title: 'Букеты на 14 февраля в Перми | Салон «Пион»',
-    description:
-      'Букеты и подарочные боксы к 14 февраля от салона «Пион» в Перми. Композиции из свежих цветов, доставка по городу и самовывоз со скидкой 5%.',
-  },
-  'new-year-2025': {
-    title: 'Новогодние букеты 2025 в Перми | Салон «Пион»',
-    description:
-      'Новогодняя коллекция 2025 салона цветов «Пион» в Перми: еловые композиции, зимние букеты и подарочные боксы с доставкой по городу.',
-  },
   doza_endorfina: {
     title: 'Доза эндорфина — охапки цветов в Перми',
     description:
@@ -101,18 +76,17 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
 
   // Titles are absolute so the layout's " | Салон цветов «Пион», Пермь" suffix
   // cannot push them past the length a search result shows.
-  if ((CATEGORY_SLUGS as readonly string[]).includes(slug)) {
-    const label = CATEGORY_LABELS[slug as keyof typeof CATEGORY_LABELS] ?? slug;
-    // Seasonal sections carry hand-written titles in PAGE_SEO (they used to be
-    // content pages); the template covers the rest.
-    const custom = PAGE_SEO[slug];
-    const title = custom?.title ?? `${label} с доставкой в Перми | Салон «Пион»`;
+  const section = getSection(slug);
+  if (section) {
+    // Заголовок и описание для поиска ведутся в карточке раздела; пустые —
+    // по шаблону.
+    const title = section.seoTitle || `${section.label} с доставкой в Перми | Салон «Пион»`;
     return {
       ...buildMetadata({
         title,
         description:
-          custom?.description ??
-          `${label} от салона «Пион» в Перми. Авторские композиции из свежих цветов, фото букета перед доставкой, самовывоз со скидкой 5%.`,
+          section.seoDescription ||
+          `${section.label} от салона «Пион» в Перми. Авторские композиции из свежих цветов, фото букета перед доставкой, самовывоз со скидкой 5%.`,
         path: `/${slug}/`,
       }),
       title: { absolute: title },
@@ -138,10 +112,11 @@ export function generateMetadata({ params }: { params: { slug: string } }): Meta
 export default async function SlugPage({ params }: { params: { slug: string } }) {
   const { slug } = params;
 
-  if ((CATEGORY_SLUGS as readonly string[]).includes(slug)) {
-    const products = (await getCatalog(slug)) ?? [];
+  const section = getSection(slug);
+  if (section) {
+    const products = getCatalog(slug) ?? [];
     const meta = getCategoryMeta(slug);
-    const label = CATEGORY_LABELS[slug as keyof typeof CATEGORY_LABELS] ?? slug;
+    const label = section.label;
     const coverTitle = meta?.covers.length ? meta.title : null;
 
     return (
@@ -153,7 +128,7 @@ export default async function SlugPage({ params }: { params: { slug: string } })
             { name: label, path: `/${slug}/` },
           ])}
         />
-        {products.length > 0 && <JsonLd data={productListJsonLd(products, `/${slug}/`)} />}
+        {products.length > 0 && <JsonLd data={productListJsonLd(products)} />}
 
         {coverTitle && (
           <PageCover title={coverTitle} subtitle={meta?.sub ?? ''} images={meta!.covers} />

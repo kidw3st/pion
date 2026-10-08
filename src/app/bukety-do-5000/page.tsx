@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { getCatalog } from '@/lib/content';
+import { getCatalog } from '@/lib/catalog';
 import { buildMetadata, breadcrumbJsonLd, productListJsonLd } from '@/lib/seo';
 import { JsonLd } from '@/components/JsonLd/JsonLd';
 import { CategoryGrid } from '@/components/CategoryGrid/CategoryGrid';
@@ -32,7 +32,8 @@ export const metadata: Metadata = {
  * Поштучные цветы сюда не попадают — розу за 540 ₽ букетом не назовёшь.
  */
 export default async function BudgetBouquetsPage() {
-  const bouquets = ((await getCatalog('bukety')) ?? [])
+  // Только букеты в продаже: снятые в разделах не показываются.
+  const bouquets = (getCatalog('bukety') ?? [])
     .filter((p) => p.price > 0 && p.price <= MAX_PRICE)
     .sort((a, b) => a.price - b.price);
 
@@ -46,7 +47,7 @@ export default async function BudgetBouquetsPage() {
         ])}
       />
       {/* Адреса товаров в разметке — их настоящие страницы в разделе букетов. */}
-      {bouquets.length > 0 && <JsonLd data={productListJsonLd(bouquets, '/bukety/')} />}
+      {bouquets.length > 0 && <JsonLd data={productListJsonLd(bouquets)} />}
 
       <h1 className={styles.title}>Букеты до 5 000 ₽</h1>
       <p className={styles.lead}>
