@@ -58,7 +58,7 @@ t_case('сборка с каталогом: версия и время дохо�
     ));
     t_equal($release, t_contract_base() + ['catalogVersion' => str_repeat('d', 64), 'catalogChangedAt' => $changed, 'catalogProducts' => 487],
         'запись о сборке: версия, время и число товаров, под своими именами');
-    t_equal($deployed, ['version' => str_repeat('d', 64), 'changedAt' => $changed], 'админка видит ту же версию и время');
+    t_equal($deployed, ['version' => str_repeat('d', 64), 'changedAt' => $changed, 'deployedAt' => 1000], 'админка видит ту же версию, время правки и время выкладки');
 });
 
 t_case('каталог ещё не менялся (changedAt: null — как в нынешнем снимке)', function (): void {
@@ -68,7 +68,7 @@ t_case('каталог ещё не менялся (changedAt: null — как в
     t_equal($release['catalogChangedAt'] ?? 'нет ключа', '', 'null в build-info — пустая строка в записи о сборке');
     t_equal($release['catalogVersion'] ?? null, str_repeat('d', 64), 'версия сохранена');
     t_equal($release['catalogProducts'] ?? null, 487, 'число товаров сохранено');
-    t_equal($deployed, ['version' => str_repeat('d', 64), 'changedAt' => ''], 'админка знает версию, а время — нет');
+    t_equal($deployed, ['version' => str_repeat('d', 64), 'changedAt' => '', 'deployedAt' => 1000], 'админка знает версию, а время правки — нет');
 });
 
 t_case('сборка без каталога', function (): void {
@@ -83,7 +83,7 @@ t_case('мусор в блоке catalog', function (): void {
     [$release, $deployed] = t_contract_chain(t_contract_build_info('{"version": "' . $version . '", "changedAt": ["2026-10-05T14:00:00+05:00"], "products": "12"}'));
     t_equal($release, t_contract_base() + ['catalogVersion' => $version, 'catalogChangedAt' => '', 'catalogProducts' => 12],
         'время-массив — пустая строка, число товаров строкой — число, версия сохранена');
-    t_equal($deployed, ['version' => $version, 'changedAt' => ''], 'админка знает версию, а время — нет');
+    t_equal($deployed, ['version' => $version, 'changedAt' => '', 'deployedAt' => 1000], 'админка знает версию, а время правки — нет');
 
     foreach (['7', 'null', 'true', '["' . $version . '"]', '{"v": 1}'] as $badVersion) {
         [$release, $deployed] = t_contract_chain(t_contract_build_info('{"version": ' . $badVersion . ', "changedAt": "2026-10-05T14:00:00+05:00", "products": 487}'));

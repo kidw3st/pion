@@ -674,7 +674,8 @@ function deploy_pending_build_alerts(array $state, int $now): array
  * deploy_catalog_watch (базы нет — сюда не попадаем).
  *
  *   catalog     — версия каталога в базе не та, что на сайте, и последняя
- *                 правка старше 90 минут. Если выкладка сбоит, не пишем: о ней
+ *                 правка и выкладка текущей сборки (current.deployedAt) обе
+ *                 старше 90 минут. Если выкладка сбоит, не пишем: о ней
  *                 и так пишут. Не пишем и когда сравнивать не с чем — как и
  *                 админка («Сайт пока собирается из прежнего каталога»): на
  *                 сайте нет версии каталога (ещё ничего не выкладывалось или
@@ -695,10 +696,22 @@ function deploy_pending_catalog_alerts(array $state, int $now, array $watch): ar
     $kinds = [];
     $deployed = $state['current']['catalogVersion'] ?? null;
     $version = (string)($watch['version'] ?? '');
+    // 90 минут отсчитываются от последней правки, но не раньше выкладки текущей
+    // сборки. Расхождение бывает и без правки: новый код выгрузки едет в /pay/
+    // той же сборкой, что собрана по выгрузке старого кода, и с её выкладки
+    // версия базы уже другая. Ближайшая сборка по расписанию (до 15 минут)
+    // возьмёт выгрузку новым кодом, следующий запуск выкладки её привезёт —
+    // меньше 90 минут, а от старой правки тревога ушла бы сразу. Настоящее
+    // отставание так не прячется: при включённом переключателе каждая сборка
+    // берёт живую выгрузку, и выкладка после правки сдвигает отсчёт самое
+    // большее на одну сборку; пока сборки не выкладываются, он не сдвигается.
+    // Времени выкладки в состоянии нет — отсчёт только от правки.
+    $deployedAt = $state['current']['deployedAt'] ?? null;
+    $since = max((int)($watch['changedAt'] ?? 0), is_int($deployedAt) ? $deployedAt : 0);
     if (!is_array($state['failure'] ?? null)
         && is_string($deployed) && $deployed !== ''
         && $version !== '' && $version !== $deployed
-        && $now - (int)($watch['changedAt'] ?? 0) >= DEPLOY_LAG_ALERT_AFTER
+        && $now - $since >= DEPLOY_LAG_ALERT_AFTER
         && deploy_alert_due($state, 'catalog', $now)) {
         $kinds[] = 'catalog';
     }
@@ -774,8 +787,10 @@ function deploy_alert_text(string $kind, array $state, ?array $watch = null): st
 
 /**
  * Что сторож каталога видит в папке каталога (pion-catalog):
- *   version, changedAt — версия выгрузки и время последней правки из meta
- *                        базы (секунды; нет правок — '' и 0);
+ *   version, changedAt — версия, которую выгрузка отдала бы сейчас
+ *                        (catalog_current_version), и время последней правки
+ *                        из meta базы (секунды); правок не было (в meta нет
+ *                        версии) — '' и 0. Оба — из одного снимка базы;
  *   backupAt           — время самой свежей копии backups/catalog-*.sqlite;
  *                        null — копий нет;
  *   maintenance        — итог ночного обслуживания из maintenance.json
@@ -792,12 +807,17 @@ function deploy_alert_text(string $kind, array $state, ?array $watch = null): st
  * журнал пишет вызывающий. Иначе нечитаемая база заглушила бы и тревогу о том,
  * что копии не делаются.
  *
+ * Выгрузка не считается (например, испорченный JSON в строке базы — сайт её
+ * тогда тоже не получит) — версия из meta, то есть последнего сохранения, а
+ * текст ошибки — в $dbError: так сторож о каталоге не замолкает.
+ *
  * Базу открывает общая catalog_db_open, поэтому «только читает» неточно: она
  * переводит старую схему на текущую и создаёт недостающие таблицы — и в пустом
  * файле тоже. Данные базы сторож не меняет.
  *
  * Код базы подключается здесь, а не вверху файла: deploy-lib.php подключает и
- * scripts/check-server-build.php, которому каталог не нужен.
+ * scripts/check-server-build.php, которому каталог не нужен. Код выгрузки — только
+ * когда файл базы есть.
  *
  * @param string|null $dbError сюда кладётся текст ошибки базы; null — база прочиталась
  * @return array{version:string,changedAt:int,backupAt:?int,maintenance:?array{ok:bool,at:int,message:string}}|null
@@ -809,16 +829,30 @@ function deploy_catalog_watch(string $catalogHome, string $dbFile, ?string &$dbE
     if (!is_file($dbFile)) {
         return null;
     }
+    require_once __DIR__ . '/catalog/export.php';
     $text = static fn(mixed $value): string => is_scalar($value) ? (string)$value : '';
     $version = '';
     $changedAt = 0;
     try {
         $db = catalog_db_open($dbFile);
-        $meta = catalog_meta($db);
+        [$version, $changedAt, $exportError] = catalog_read($db, static function () use ($db, $text): array {
+            $meta = catalog_meta($db);
+            $saved = $text($meta['version'] ?? '');
+            $changedAt = (int)strtotime($text($meta['changed_at'] ?? ''));
+            if ($saved === '') {
+                return ['', $changedAt, null];
+            }
+            try {
+                return [catalog_current_version($db), $changedAt, null];
+            } catch (Throwable $e) {
+                return [$saved, $changedAt, 'выгрузка каталога не считается: ' . $e->getMessage()];
+            }
+        });
         $db = null;
-        $version = $text($meta['version'] ?? '');
-        $changedAt = (int)strtotime($text($meta['changed_at'] ?? ''));
+        $dbError = $exportError;
     } catch (Throwable $e) {
+        $version = '';
+        $changedAt = 0;
         $dbError = $e->getMessage();
     }
 

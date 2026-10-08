@@ -118,6 +118,25 @@ t_equal(deploy_pending_alerts($unknownDeployed, $now, $late), [], 'выложе�
 t_equal(deploy_pending_alerts(deploy_empty_state(), $now, $late), [], 'ещё ничего не выкладывалось — о каталоге молчим');
 t_equal(deploy_pending_alerts($base, $now, ['version' => '', 'changedAt' => 0] + $fresh), [], 'в базе ещё не было правок (версии нет) — выкладывать нечего');
 
+// Сторож каталога: 90 минут — не раньше выкладки текущей сборки. Выложили новый код
+// выгрузки: версия базы другая без единой правки, а последняя правка была давно.
+$deployedAt = static fn(?int $at): array => ['current' => ['deployedAt' => $at] + $base['current']] + $base;
+$oldEdit = ['version' => 'v2', 'changedAt' => $now - 30 * 86400] + $fresh;
+t_equal(deploy_pending_alerts($deployedAt($now - 600), $now, $oldEdit), [], 'выкладка 10 минут назад, правка месяц назад — ещё рано, а не тревога сразу');
+t_equal(deploy_pending_alerts($deployedAt($now - 5399), $now, $oldEdit), [], 'выкладка 89 минут 59 секунд назад — ещё рано');
+t_equal(deploy_pending_alerts($deployedAt($now - 5400), $now, $oldEdit), ['catalog'], 'выкладка 90 минут назад, а версии всё разные — пишем');
+t_equal(deploy_pending_alerts($deployedAt($now - 86400), $now, ['version' => 'v2', 'changedAt' => $now - 600] + $fresh), [], 'правка позже выкладки — отсчёт от правки');
+t_equal(deploy_pending_alerts($deployedAt($now - 86400), $now, ['version' => 'v2', 'changedAt' => $now - 5400] + $fresh), ['catalog'], 'правка позже выкладки и старше 90 минут — пишем');
+t_equal(deploy_pending_alerts($deployedAt($now - 600), $now, ['version' => 'v1'] + $oldEdit), [], 'выложенная версия равна версии базы — молчим, как бы давно ни была правка');
+$noDeployTime = $base;
+unset($noDeployTime['current']['deployedAt']);
+t_equal(deploy_pending_alerts($noDeployTime, $now, $oldEdit), ['catalog'], 'времени выкладки в состоянии нет — отсчёт только от правки');
+foreach (['вчера', (string)($now - 600), $now - 600.5, true, [$now - 600]] as $junk) {
+    $state = $deployedAt(null);
+    $state['current']['deployedAt'] = $junk;
+    t_equal(deploy_pending_alerts($state, $now, $oldEdit), ['catalog'], 'время выкладки не целым числом (' . json_encode($junk) . ') — неизвестно, отсчёт от правки');
+}
+
 // Сторож каталога: сбой выкладки.
 $ripeFailure = deploy_state_after_failure($base, 'fatal', 'нет robots.txt', str_repeat('f', 40), $now - 60);
 t_equal(deploy_pending_alerts($ripeFailure, $now, $late), ['fatal'], 'выкладка стоит — пишем о ней одной, а не ещё и о каталоге');
@@ -284,7 +303,7 @@ t_case('сторож каталога: чтение папки', function (): vo
     t_equal(
         deploy_catalog_watch($home, "$home/catalog.sqlite"),
         ['version' => $version, 'changedAt' => t_now()->getTimestamp(), 'backupAt' => null, 'maintenance' => null],
-        'версия и время правки — из meta, в секундах',
+        'версия — та, что отдаёт выгрузка, время правки — из meta, в секундах',
     );
 
     mkdir("$home/backups");
@@ -394,6 +413,37 @@ t_case('сторож каталога: база не читается', function
     $db = new PDO('sqlite:' . "$empty/catalog.sqlite");
     t_equal((string)$db->query("SELECT name FROM sqlite_master WHERE name = 'meta'")->fetchColumn(), 'meta', 'пустой файл базы: таблицы созданы');
     $db = null;
+});
+
+t_case('сторож каталога: сменился код выгрузки', function (): void {
+    // Сборка считает версию новым кодом, а meta.version осталась от последней правки и
+    // посчитана старым: содержимое то же. Сторож сверяет с выложенным версию выгрузки.
+    $home = t_tmpdir();
+    $db = t_catalog_with_sections(t_catalog_db("$home/catalog.sqlite"));
+    catalog_touch($db, t_now('-30 days'));
+    $live = catalog_current_version($db);
+    $db->exec("UPDATE meta SET value = 'старый-код-выгрузки' WHERE key = 'version'");
+    $db = null;
+    $error = 'прежнее значение';
+    $watch = deploy_catalog_watch($home, "$home/catalog.sqlite", $error);
+    t_equal([$watch['version'], $watch['changedAt'], $error], [$live, t_now('-30 days')->getTimestamp(), null], 'версия — по выгрузке, а не из meta; время правки — из meta');
+    $deployed = static fn(string $version, int $at): array => deploy_state_after_success(deploy_empty_state(),
+        ['sha' => str_repeat('1', 40), 'commit' => str_repeat('a', 40), 'paySha256' => '', 'catalogVersion' => $version], $at);
+    $now = t_now()->getTimestamp();
+    t_equal(deploy_pending_alerts($deployed($live, $now - 86400), $now, $watch), ['backup'], 'выложена версия выгрузки — о каталоге молчим, хоть meta другая и правка давняя');
+    // Сборка с новым кодом выложена, а каталог в ней посчитан ещё старым: ждём следующую.
+    t_equal(deploy_pending_alerts($deployed('старый-код-выгрузки', $now - 600), $now, $watch), ['backup'], 'код выложен 10 минут назад — ещё рано');
+    t_equal(deploy_pending_alerts($deployed('старый-код-выгрузки', $now - 5400), $now, $watch), ['catalog', 'backup'], 'через 90 минут после выкладки версии всё разные — пишем');
+
+    // Выгрузка не считается (испорченный JSON в строке) — версия последнего сохранения, причина — в $dbError.
+    $db = new PDO('sqlite:' . "$home/catalog.sqlite");
+    $db->exec("UPDATE sections SET covers = 'не json' WHERE slug = 'bukety'");
+    $db = null;
+    $watch = deploy_catalog_watch($home, "$home/catalog.sqlite", $error);
+    t_equal($watch['version'], 'старый-код-выгрузки', 'выгрузка не считается — версия из meta: сторож о каталоге не замолкает');
+    t_equal($watch['changedAt'], t_now('-30 days')->getTimestamp(), 'время правки на месте');
+    t_true(is_string($error) && str_starts_with($error, 'выгрузка каталога не считается: '), "причина — в \$dbError ($error)");
+    t_equal(deploy_pending_alerts($deployed($live, $now - 86400), $now, $watch), ['catalog', 'backup'], 'выложенное не равно последнему сохранению — пишем');
 });
 // deploy-lib.php подключается и из scripts/check-server-build.php, которому каталог не нужен.
 // Копия во временной папке: путь без кириллицы надёжно запускается отдельным процессом на Windows.

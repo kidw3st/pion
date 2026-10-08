@@ -138,11 +138,13 @@ function deploy_telegram(string $text): string
 function deploy_read_catalog_watch(string $home): ?array
 {
     try {
-        $code = __DIR__ . '/catalog/db.php';
-        if (!is_file($code)) {
-            throw new RuntimeException("нет $code");
+        // Нет файла — require_once упал бы мимо catch и уронил бы выкладку. export.php сторож подключает сам.
+        foreach (['db.php', 'export.php'] as $name) {
+            if (!is_file(__DIR__ . '/catalog/' . $name)) {
+                throw new RuntimeException('нет ' . __DIR__ . '/catalog/' . $name);
+            }
         }
-        require_once $code;
+        require_once __DIR__ . '/catalog/db.php';
         $watch = deploy_catalog_watch(catalog_home(), catalog_db_path(), $dbError);
         if ($dbError !== null) {
             deploy_log($home, 'не прочитать базу каталога для сторожа: ' . $dbError);

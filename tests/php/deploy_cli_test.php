@@ -18,6 +18,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../../server-pay/deploy-lib.php';
 require_once __DIR__ . '/catalog_fixture.php';
+require_once __DIR__ . '/../../server-pay/catalog/export.php';
 
 /**
  * Копия deploy.php с библиотекой и кодом базы каталога во временной папке;
@@ -31,7 +32,7 @@ function t_cli_sandbox(): array
 {
     $root = t_tmpdir();
     mkdir("$root/catalog");
-    foreach (['deploy.php', 'deploy-lib.php', 'catalog/db.php'] as $name) {
+    foreach (['deploy.php', 'deploy-lib.php', 'catalog/db.php', 'catalog/export.php'] as $name) {
         if (!copy(dirname(__DIR__, 2) . '/server-pay/' . $name, "$root/$name")) {
             throw new RuntimeException("не скопировать $name");
         }
@@ -225,17 +226,20 @@ function t_cli_set_head(array $box, string $sha): void
 }
 
 /**
- * База каталога для сторожа в папке каталога песочницы: версия и время правки
- * в meta, свежая копия (если нужна) и итог обслуживания (если задан).
+ * База каталога для сторожа в папке каталога песочницы: разделы из
+ * t_catalog_with_sections (их версия выгрузки — t_cli_db_version()), время
+ * правки в meta, свежая копия (если нужна) и итог обслуживания (если задан).
+ * meta.version — будто записанная прежним кодом выгрузки: сторож сверяет с
+ * выложенным версию выгрузки, а не её.
  *
  * @param array{catalogHome:string} $box
  * @param array{ok:bool,at:string,message:string}|null $maintenance
  */
-function t_cli_catalog(array $box, string $version, int $changedAt, bool $backup = true, ?array $maintenance = null): void
+function t_cli_catalog(array $box, int $changedAt, bool $backup = true, ?array $maintenance = null): void
 {
-    $db = catalog_db_open($box['catalogHome'] . '/catalog.sqlite');
+    $db = t_catalog_with_sections(catalog_db_open($box['catalogHome'] . '/catalog.sqlite'));
     $set = $db->prepare('INSERT INTO meta (key, value) VALUES (?, ?)');
-    $set->execute(['version', $version]);
+    $set->execute(['version', 'прежний-код-выгрузки']);
     $set->execute(['changed_at', catalog_iso(new DateTimeImmutable('@' . $changedAt))]);
     $db = null;
     if ($backup) {
@@ -244,6 +248,12 @@ function t_cli_catalog(array $box, string $version, int $changedAt, bool $backup
     if ($maintenance !== null) {
         file_put_contents($box['catalogHome'] . '/maintenance.json', json_encode($maintenance, JSON_UNESCAPED_UNICODE));
     }
+}
+
+/** Версия выгрузки базы, которую кладёт t_cli_catalog. */
+function t_cli_db_version(): string
+{
+    return catalog_current_version(t_catalog_with_sections());
 }
 
 // --- Статус, неизвестный ключ, откат без истории: ничего не выложено ---------
@@ -449,7 +459,7 @@ t_equal([$code, $out], [0, ''], 'сторож: базы каталога нет 
 t_equal(t_snapshot($box['catalogHome']), [], 'сторож: в папку каталога ничего не пишет');
 
 // Правка сохранена 2 часа назад, а на сайте прежний каталог; копия свежая.
-t_cli_catalog($box, $v2, time() - 7200);
+t_cli_catalog($box, time() - 7200);
 [$code, $out] = t_cli_run($box, '');
 t_equal($code, 0, 'сторож: правка не выложена — код выхода');
 t_true(str_contains($out, $say('catalog')), "сторож: правка не выложена 2 часа — сообщение ($out)");
@@ -466,13 +476,31 @@ t_cli_alerted_at($box, 'catalog', time() - DEPLOY_ALERT_COOLDOWN - 60);
 [$code, $out] = t_cli_run($box, '');
 t_true(str_contains($out, $say('catalog')), "сторож: через 3 часа о каталоге напоминаем ($out)");
 
-// Всё выложено — тишина, даже если правка свежая.
+// Всё выложено — тишина, как бы давно ни была правка. meta.version при этом от
+// прежнего кода выгрузки (t_cli_catalog): сверяется версия выгрузки.
+$box = t_cli_fake_github(t_cli_rollback_box(t_cli_db_version()));
+t_cli_set_head($box, $bBuild);
+t_cli_catalog($box, time() - 7200);
+[$code, $out] = t_cli_run($box, '');
+t_equal([$code, $out], [0, ''], 'сторож: выложена версия выгрузки базы — молчим, хоть meta.version и другая');
+t_equal(deploy_state_load($box['home'])['alerts'], [], 'сторож: в state.json ничего не записано');
+
+// Версии разные, правка месяц назад, но текущую сборку выложили 10 минут назад
+// (например, с новым кодом выгрузки): 90 минут — от выкладки.
 $box = t_cli_fake_github(t_cli_rollback_box($v1));
 t_cli_set_head($box, $bBuild);
-t_cli_catalog($box, $v1, time() - 7200);
+t_cli_catalog($box, time() - 30 * 86400);
+$deployedAgo = static function (array $box, int $ago): void {
+    $state = deploy_state_load($box['home']);
+    $state['current']['deployedAt'] = time() - $ago;
+    deploy_state_save($box['home'], $state);
+};
+$deployedAgo($box, 600);
 [$code, $out] = t_cli_run($box, '');
-t_equal([$code, $out], [0, ''], 'сторож: версия в базе выложена — молчим');
-t_equal(deploy_state_load($box['home'])['alerts'], [], 'сторож: в state.json ничего не записано');
+t_equal([$code, $out], [0, ''], 'сторож: сборка выложена 10 минут назад, правка месяц назад — ещё рано');
+$deployedAgo($box, 5400 + 60);
+[$code, $out] = t_cli_run($box, '');
+t_true(str_contains($out, $say('catalog')), "сторож: через 90 минут после выкладки версии всё разные — сообщение ($out)");
 
 // База не читается: выкладка идёт, в журнале строка. Молчит только о каталоге:
 // о копиях и обслуживании сторож пишет, как обычно (иначе испорченная база
@@ -509,7 +537,7 @@ t_equal(array_keys(deploy_state_load($box['home'])['alerts']), ['maintenance'], 
 // Обслуживание: одно сообщение на каждый неудавшийся запуск (а не по сроку).
 $box = t_cli_fake_github(t_cli_rollback_box($v1));
 t_cli_set_head($box, $bBuild);
-t_cli_catalog($box, $v1, time() - 60, true, $maintenanceFailed());
+t_cli_catalog($box, time() - 60, true, $maintenanceFailed());
 [$code, $out] = t_cli_run($box, '');
 t_true(str_contains($out, $say('maintenance')), "сторож: неудавшийся запуск — сообщение ($out)");
 // Прошло несколько часов: запуск кончился 6 часов назад, сообщение ушло 5 часов назад.
@@ -524,7 +552,7 @@ t_true(str_contains($out, $say('maintenance')), "сторож: новый неу
 // Копии нет: напоминаем раз в сутки, а не раз в 3 часа.
 $box = t_cli_fake_github(t_cli_rollback_box($v1));
 t_cli_set_head($box, $bBuild);
-t_cli_catalog($box, $v1, time() - 60, false);
+t_cli_catalog($box, time() - 60, false);
 [$code, $out] = t_cli_run($box, '');
 t_true(str_contains($out, $say('backup')), "сторож: копий нет — сообщение ($out)");
 t_cli_alerted_at($box, 'backup', time() - 4 * 3600);
@@ -563,7 +591,7 @@ $paths = [
 ];
 foreach ($paths as $name => [$wantCode, $setup]) {
     $box = t_cli_fake_github(t_cli_rollback_box($v1));
-    t_cli_catalog($box, $v1, time() - 60, true, $maintenanceFailed());
+    t_cli_catalog($box, time() - 60, true, $maintenanceFailed());
     $setup($box);
     [$code, $out] = t_cli_run($box, '');
     t_equal($code, $wantCode, "сторож ($name): код выхода ($out)");

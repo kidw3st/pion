@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/backup.php';
+require_once __DIR__ . '/export.php';
 require_once __DIR__ . '/photo-files.php';
 
 /** Сколько фото должно пробыть без ссылок, прежде чем уйти в корзину. */
@@ -107,8 +108,9 @@ function catalog_photo_owner_known(PDO $db, string $dir, string $name): bool
 /**
  * Выложен ли на сайте весь каталог из базы. state.json пишет deploy.php:
  * current.catalogVersion — версия каталога, по которому собран выложенный
- * сайт. Выложено только тогда, когда она та же, что в базе: тогда на сайте уже
- * нет ни одной ссылки, которой нет в базе.
+ * сайт. Выложено только тогда, когда она та же, что выгрузка базы отдала бы
+ * сейчас (catalog_current_version): тогда на сайте уже нет ни одной ссылки,
+ * которой нет в базе.
  *
  * По времени правки (current.catalogChangedAt) не судим. Фото, на которое
  * снова сослались и снова убрали между двумя уборками, сохраняет старое время
@@ -116,11 +118,11 @@ function catalog_photo_owner_known(PDO $db, string $dir, string $name): bool
  * считалась бы выложенной без фото, хотя показывает его.
  *
  * Нет состояния, версия в нём не строка или пуста (выкладка ещё не знает
- * каталог), версии нет в базе — не выложено: лучше подержать фото лишнюю ночь,
+ * каталог), версия базы пуста — не выложено: лучше подержать фото лишнюю ночь,
  * чем показать на сайте пустую картинку.
  *
  * @param array|null $current state.json → current; null — состояния нет
- * @return Closure(string): bool принимает версию каталога в базе (catalog_meta, ключ version)
+ * @return Closure(string): bool принимает версию каталога в базе (catalog_current_version)
  */
 function catalog_deploy_covers(?array $current): Closure
 {
@@ -138,13 +140,16 @@ function catalog_deploy_covers(?array $current): Closure
  * Ссылки на фото и версия каталога в базе читаются в одной транзакции чтения —
  * из одного снимка базы: версия описывает ровно те ссылки, что прочитаны, и
  * правка, сохранённая посреди чтения, не может попасть в одно без другого.
+ * Версия — та, что выгрузка отдала бы сейчас (catalog_current_version), а не
+ * meta.version: после смены кода выгрузки та не совпала бы с выложенной ни
+ * разу до первой правки, и фото не уходили бы совсем.
  * $published($dbVersion) спрашивается один раз за уборку: выложен ли на сайте
  * каталог именно этой версии. Без «да» ни одно фото не уходит, как бы давно
  * оно ни лежало, но остаётся кандидатом со своим прежним временем и уйдёт в
  * одну из следующих уборок, когда выкладка дойдёт (возвращение из корзины и
  * стирание старого от выкладки не зависят). null — выкладку не учитывать,
- * ждать только сутки. Предохранитель считает только то, что действительно
- * уходит.
+ * ждать только сутки; параметр обязательный, чтобы каждый вызывающий сказал
+ * это явно. Предохранитель считает только то, что действительно уходит.
  *
  * Предохранитель сработал — RuntimeException: в корзину не уходит ничего и
  * из корзины ничего не стирается (при сбившихся ссылках защите «на это
@@ -156,20 +161,10 @@ function catalog_deploy_covers(?array $current): Closure
  * @param (Closure(string): bool)|null $published версия каталога в базе → выложен ли он на сайте
  * @return array{candidates: int, moved: int, purged: int, returned: int}
  */
-function catalog_photos_sweep(PDO $db, string $webroot, string $candidatesFile, DateTimeImmutable $now, ?Closure $published = null): array
+function catalog_photos_sweep(PDO $db, string $webroot, string $candidatesFile, DateTimeImmutable $now, ?Closure $published): array
 {
     $time = $now->getTimestamp();
-    $db->beginTransaction();
-    try {
-        $referenced = catalog_photos_referenced($db);
-        $dbVersion = (string)(catalog_meta($db)['version'] ?? '');
-        $db->commit();
-    } catch (Throwable $e) {
-        if ($db->inTransaction()) {
-            $db->rollBack();
-        }
-        throw $e;
-    }
+    [$referenced, $dbVersion] = catalog_read($db, static fn (): array => [catalog_photos_referenced($db), catalog_current_version($db)]);
     $deployed = $published === null || $published($dbVersion);
 
     $returned = 0;

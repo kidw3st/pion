@@ -33,11 +33,11 @@ t_case('уборка фото', function (): void {
     }
     catalog_update_product($db, 'anna', $uid, 1, t_fields(['images' => [$kept]]), t_now());
 
-    $first = catalog_photos_sweep($db, $webroot, $candidates, t_now());
+    $first = catalog_photos_sweep($db, $webroot, $candidates, t_now(), null);
     t_equal($first, ['candidates' => 1, 'moved' => 0, 'purged' => 0, 'returned' => 0], 'фото без ссылок — пока только кандидат');
     t_true(is_file($webroot . $dropped), 'сразу не уносится: старая страница на сайте может его ещё показывать');
 
-    $second = catalog_photos_sweep($db, $webroot, $candidates, t_now('+25 hours'));
+    $second = catalog_photos_sweep($db, $webroot, $candidates, t_now('+25 hours'), null);
     t_equal($second['moved'], 1, 'через сутки — в корзину');
     t_true(!is_file($webroot . $dropped) && is_file($webroot . '/images/catalog/_deleted/bukety/' . basename($dropped)), 'лежит в _deleted');
     t_true(is_file($webroot . $kept), 'фото со ссылкой не тронуто');
@@ -51,9 +51,9 @@ t_case('снова нужное фото', function (): void {
     $uid = catalog_create_product($db, 'anna', t_fields(), t_now());
     $rel = "/images/catalog/bukety/buket-nezhnost-$uid-cccccccc.webp";
     t_photo_file($webroot, $rel);
-    catalog_photos_sweep($db, $webroot, $candidates, t_now());
+    catalog_photos_sweep($db, $webroot, $candidates, t_now(), null);
     catalog_update_product($db, 'anna', $uid, 1, t_fields(['images' => [$rel]]), t_now('+1 hour'));
-    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+25 hours'));
+    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+25 hours'), null);
     t_equal([$r['moved'], $r['candidates'], is_file($webroot . $rel)], [0, 0, true], 'на фото снова ссылаются — остаётся, из кандидатов выбывает');
 });
 
@@ -74,8 +74,8 @@ t_case('фото удалённого букета и разделов', functio
         t_photo_file($webroot, $file);
     }
     catalog_update_section($db, 'anna', 'roses', ['tileImage' => $tileNow], t_now());
-    catalog_photos_sweep($db, $webroot, $candidates, t_now());
-    catalog_photos_sweep($db, $webroot, $candidates, t_now('+25 hours'));
+    catalog_photos_sweep($db, $webroot, $candidates, t_now(), null);
+    catalog_photos_sweep($db, $webroot, $candidates, t_now('+25 hours'), null);
     t_true(!is_file($webroot . $rel), 'фото удалённого букета — в корзине');
     t_true(!is_file($webroot . $tileOld) && is_file($webroot . $tileNow), 'заменённая плитка раздела — в корзине, нынешняя — на месте');
     t_true(is_file($webroot . $alien), 'плитка неизвестного раздела не тронута');
@@ -98,8 +98,8 @@ t_case('фото черновика, удалённого насовсем', fun
     catalog_delete($db, 'anna', $uid, 2, t_now());
     t_equal((int)$db->query('SELECT COUNT(*) FROM products')->fetchColumn(), 0, 'черновик удалён совсем — строки в products нет');
 
-    catalog_photos_sweep($db, $webroot, $candidates, t_now());
-    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+25 hours'));
+    catalog_photos_sweep($db, $webroot, $candidates, t_now(), null);
+    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+25 hours'), null);
     t_equal($r['moved'], 1, 'фото удалённого черновика — в корзину');
     t_true(!is_file($webroot . $rel) && is_file($webroot . '/images/catalog/_deleted/bukety/' . basename($rel)), 'лежит в _deleted');
     t_true(is_file($webroot . $foreign) && is_file($webroot . $foreignHash), 'uid, которого база не видела, — файлы не тронуты');
@@ -132,12 +132,12 @@ t_case('список кандидатов пишется целиком', functi
     t_photo_file($webroot, $rel);
     // Обрыв прошлого запуска: недописанный временный файл не должен мешать.
     file_put_contents($candidates . '.part', '{"/images/catalog/bukety/obr');
-    catalog_photos_sweep($db, $webroot, $candidates, t_now());
+    catalog_photos_sweep($db, $webroot, $candidates, t_now(), null);
     $saved = json_decode((string)file_get_contents($candidates), true);
     t_equal($saved, [$rel => t_now()->getTimestamp()], 'в файле — целый список с временем, когда фото стало кандидатом');
     t_equal(glob($dir . '/*'), [$candidates], 'временного файла не осталось');
     t_throws(
-        fn () => catalog_photos_sweep($db, $webroot, $dir . '/нет-такой-папки/c.json', t_now()),
+        fn () => catalog_photos_sweep($db, $webroot, $dir . '/нет-такой-папки/c.json', t_now(), null),
         RuntimeException::class,
         'список не записать — об этом говорят, а не молчат',
     );
@@ -153,16 +153,16 @@ t_case('фото загрузили, две уборки прошли, карт�
     $rel = "/images/catalog/bukety/buket-nezhnost-$uid-12ab34cd.webp";
     $inTrash = '/images/catalog/_deleted/bukety/' . basename($rel);
     t_photo_file($webroot, $rel);
-    catalog_photos_sweep($db, $webroot, $candidates, t_now());
-    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+25 hours'));
+    catalog_photos_sweep($db, $webroot, $candidates, t_now(), null);
+    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+25 hours'), null);
     t_true($r['moved'] === 1 && is_file($webroot . $inTrash), 'две уборки — и фото в корзине');
 
     catalog_update_product($db, 'anna', $uid, 1, t_fields(['images' => [$rel]]), t_now('+26 hours'));
-    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+27 hours'));
+    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+27 hours'), null);
     t_equal($r, ['candidates' => 0, 'moved' => 0, 'purged' => 0, 'returned' => 1], 'на фото сослались — оно вернулось из корзины');
     t_true(is_file($webroot . $rel) && !is_file($webroot . $inTrash), 'лежит на своём месте, в корзине его нет');
 
-    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+93 days'));
+    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+93 days'), null);
     t_equal([$r['purged'], $r['returned'], is_file($webroot . $rel)], [0, 0, true], 'и через 90 дней фото живого букета на месте');
 });
 
@@ -179,14 +179,14 @@ t_case('корзина не стирает то, на что ссылаются'
     touch($webroot . $other, t_now('-91 days')->getTimestamp());
     catalog_update_product($db, 'anna', $uid, 1, t_fields(['images' => [$rel]]), t_now('-2 days'));
 
-    $r = catalog_photos_sweep($db, $webroot, t_tmpdir() . '/c.json', t_now());
+    $r = catalog_photos_sweep($db, $webroot, t_tmpdir() . '/c.json', t_now(), null);
     t_equal([$r['returned'], $r['purged'], is_file($webroot . $rel), is_file($webroot . $inTrash), is_file($webroot . $other)],
         [1, 1, true, false, false], 'старое фото со ссылкой вернулось, а не стёрлось; без ссылки — стёрто');
 
     // Место занято (вернуть нельзя): корзинный экземпляр всё равно не стирается.
     t_photo_file($webroot, $inTrash);
     touch($webroot . $inTrash, t_now('-91 days')->getTimestamp());
-    $r = catalog_photos_sweep($db, $webroot, t_tmpdir() . '/c.json', t_now());
+    $r = catalog_photos_sweep($db, $webroot, t_tmpdir() . '/c.json', t_now(), null);
     t_equal([$r['returned'], $r['purged'], is_file($webroot . $inTrash)], [0, 0, true], 'вернуть некуда — в корзине остаётся, пока на фото ссылаются');
 
     // Фото раздела — то же самое.
@@ -194,7 +194,7 @@ t_case('корзина не стирает то, на что ссылаются'
     t_photo_file($webroot, '/images/catalog/_deleted/_sections/roses-tile-0a0a0a0a.webp');
     touch($webroot . '/images/catalog/_deleted/_sections/roses-tile-0a0a0a0a.webp', t_now('-100 days')->getTimestamp());
     catalog_update_section($db, 'anna', 'roses', ['tileImage' => $tile], t_now());
-    $r = catalog_photos_sweep($db, $webroot, t_tmpdir() . '/c.json', t_now());
+    $r = catalog_photos_sweep($db, $webroot, t_tmpdir() . '/c.json', t_now(), null);
     t_equal([$r['returned'], is_file($webroot . $tile)], [1, true], 'плитка раздела из корзины тоже возвращается');
 });
 
@@ -212,10 +212,10 @@ t_case('предохранитель: слишком много к перено�
     $db->prepare('UPDATE products SET images = ? WHERE uid = ?')
         ->execute([json_encode(array_map(fn (string $p): string => ltrim($p, '/'), $paths)), $uid]);
 
-    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now());
+    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now(), null);
     t_equal($r['candidates'], 60, 'первый раз — просто кандидаты: суток ещё не прошло');
     $e = t_throws(
-        fn () => catalog_photos_sweep($db, $webroot, $candidates, t_now('+25 hours')),
+        fn () => catalog_photos_sweep($db, $webroot, $candidates, t_now('+25 hours'), null),
         RuntimeException::class,
         'через сутки 60 из 60 к переносу — уборка останавливается',
     );
@@ -226,7 +226,7 @@ t_case('предохранитель: слишком много к перено�
 
     // Починили пути — уборка идёт дальше, и фото остаются на месте.
     $db->prepare('UPDATE products SET images = ? WHERE uid = ?')->execute([json_encode($paths), $uid]);
-    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+26 hours'));
+    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+26 hours'), null);
     t_equal([$r['moved'], $r['candidates']], [0, 0], 'после исправления фото со ссылками остаются');
 });
 
@@ -250,13 +250,13 @@ t_case('предохранитель: доля от всех фото', function
             t_photo_file($webroot, $stray[$i]);
         }
         $file = t_tmpdir() . '/c.json';
-        catalog_photos_sweep($db, $webroot, $file, t_now());
+        catalog_photos_sweep($db, $webroot, $file, t_now(), null);
         $total = 520 + $count;
         if ($count === 55) {
-            $r = catalog_photos_sweep($db, $webroot, $file, t_now('+25 hours'));
+            $r = catalog_photos_sweep($db, $webroot, $file, t_now('+25 hours'), null);
             t_equal([$r['moved'], $r['candidates']], [55, 0], "$total фото, $count без ссылок — меньше 10 %, уборка идёт");
         } else {
-            t_throws(fn () => catalog_photos_sweep($db, $webroot, $file, t_now('+50 hours')), RuntimeException::class,
+            t_throws(fn () => catalog_photos_sweep($db, $webroot, $file, t_now('+50 hours'), null), RuntimeException::class,
                 "$total фото, $count без ссылок — больше 10 %, уборка останавливается");
         }
     }
@@ -271,10 +271,10 @@ t_case('корзина не стирает ничего, пока предохр
     for ($i = 0; $i < 51; $i++) {
         t_photo_file($webroot, sprintf("/images/catalog/bukety/buket-nezhnost-$uid-%08x.webp", $i));
     }
-    catalog_photos_sweep($db, $webroot, $candidates, t_now());
+    catalog_photos_sweep($db, $webroot, $candidates, t_now(), null);
     t_photo_file($webroot, $old);
     touch($webroot . $old, t_now('-91 days')->getTimestamp());
-    t_throws(fn () => catalog_photos_sweep($db, $webroot, $candidates, t_now('+25 hours')), RuntimeException::class, 'остановились');
+    t_throws(fn () => catalog_photos_sweep($db, $webroot, $candidates, t_now('+25 hours'), null), RuntimeException::class, 'остановились');
     t_true(is_file($webroot . $old), 'и старое в корзине не стёрто: ссылкам, что сбились, верить нельзя');
 });
 
@@ -319,8 +319,8 @@ t_case('имя фото: последняя группа из 12 цифр и а�
         t_photo_file($webroot, $file);
     }
     $candidates = t_tmpdir() . '/c.json';
-    $r1 = catalog_photos_sweep($db, $webroot, $candidates, t_now());
-    $r2 = catalog_photos_sweep($db, $webroot, $candidates, t_now('+25 hours'));
+    $r1 = catalog_photos_sweep($db, $webroot, $candidates, t_now(), null);
+    $r2 = catalog_photos_sweep($db, $webroot, $candidates, t_now('+25 hours'), null);
     t_equal([$r1['candidates'], $r2['moved'], is_file($webroot . $odd[0]), is_file($webroot . $odd[1])], [0, 0, true, true], 'файлы с чужими именами уборка не трогает');
 
     t_throws(fn () => catalog_photo_candidates_save(t_tmpdir() . '/c.json', ["/images/catalog/bukety/\xff.webp" => 1]), RuntimeException::class,
@@ -338,14 +338,14 @@ t_case('скрытый букет и восстановление удалённ
     catalog_update_product($db, 'anna', $uid, 1, t_fields(['images' => [$rel]]), t_now());
     catalog_publish($db, 'anna', $uid, 2, t_now());
     catalog_hide($db, 'anna', $uid, 3, t_now());
-    catalog_photos_sweep($db, $webroot, $candidates, t_now());
-    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+25 hours'));
+    catalog_photos_sweep($db, $webroot, $candidates, t_now(), null);
+    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+25 hours'), null);
     t_equal([$r['candidates'], $r['moved'], is_file($webroot . $rel)], [0, 0, true], 'фото скрытого букета остаются: он ещё может вернуться в продажу');
 
     catalog_unhide($db, 'anna', $uid, 4, t_now('+26 hours'));
     catalog_delete($db, 'anna', $uid, 5, t_now('+26 hours'));
-    catalog_photos_sweep($db, $webroot, $candidates, t_now('+27 hours'));
-    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+52 hours'));
+    catalog_photos_sweep($db, $webroot, $candidates, t_now('+27 hours'), null);
+    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+52 hours'), null);
     t_true($r['moved'] === 1 && is_file($webroot . $inTrash) && !is_file($webroot . $rel), 'удалили — через две уборки фото в корзине');
 
     // Восстановление, как в admin_product_action: букет в базе, затем фото из корзины.
@@ -353,9 +353,9 @@ t_case('скрытый букет и восстановление удалённ
     foreach (json_decode(t_row($db, $uid)['images'], true) as $path) {
         t_true(catalog_photo_untrash($webroot, $path), 'фото вернулось из корзины');
     }
-    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+54 hours'));
+    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+54 hours'), null);
     t_equal($r, ['candidates' => 0, 'moved' => 0, 'purged' => 0, 'returned' => 0], 'после восстановления уборка ничего не переносит');
-    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+80 hours'));
+    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+80 hours'), null);
     t_equal([$r['moved'], is_file($webroot . $rel), is_file($webroot . $inTrash)], [0, true, false], 'и на следующий день фото на месте');
 });
 
@@ -368,7 +368,7 @@ t_case('корзина стирается через 90 дней', function (): 
     t_photo_file($webroot, $fresh);
     touch($webroot . $old, t_now('-91 days')->getTimestamp());
     touch($webroot . $fresh, t_now('-89 days')->getTimestamp());
-    $r = catalog_photos_sweep($db, $webroot, t_tmpdir() . '/c.json', t_now());
+    $r = catalog_photos_sweep($db, $webroot, t_tmpdir() . '/c.json', t_now(), null);
     t_equal([$r['purged'], is_file($webroot . $old), is_file($webroot . $fresh)], [1, false, true], 'старше 90 дней — стёрто, остальное ждёт');
 });
 
@@ -424,7 +424,7 @@ t_case('уборка: кандидат, что ждёт только выкла�
     $uid = catalog_create_product($db, 'anna', t_fields(), t_now());
     $rel = "/images/catalog/bukety/buket-nezhnost-$uid-e1e1e1e1.webp";
     t_photo_file($webroot, $rel);
-    $version = (string)(catalog_meta($db)['version'] ?? '');
+    $version = catalog_current_version($db);
     t_true($version !== '', 'у базы с букетом есть версия');
     $asked = [];
     $published = function (string $dbVersion) use (&$asked): bool {
@@ -459,13 +459,34 @@ t_case('уборка: выкладке называют свежую верси�
     };
     catalog_photos_sweep($db, $webroot, $candidates, t_now(), $published);
     catalog_photos_sweep($db, $webroot, $candidates, t_now('+25 hours'), $published);
-    $db->exec("UPDATE meta SET value = 'после-правки' WHERE key = 'version'");
+    // Правка выгрузки прямо в базе: версию считает уборка, а не берёт из meta.
+    $db->exec("UPDATE sections SET label = 'Букеты после правки' WHERE slug = 'bukety'");
+    $after = catalog_current_version($db);
     catalog_photos_sweep($db, $webroot, $candidates, t_now('+26 hours'), $published);
     t_equal(count($asked), 3, 'три уборки — три вопроса, а не по вопросу на каждое из трёх фото');
-    t_equal($asked[2], 'после-правки', 'версия читается при каждой уборке заново');
-    t_true($asked[0] !== '' && $asked[0] === $asked[1], 'пока база не менялась, версия та же');
-    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+27 hours'), fn (string $dbVersion): bool => $dbVersion === 'после-правки');
+    t_equal($asked[2], $after, 'версия читается при каждой уборке заново');
+    t_true($asked[0] !== '' && $asked[0] === $asked[1] && $asked[1] !== $after, 'пока база не менялась, версия та же');
+    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+27 hours'), fn (string $dbVersion): bool => $dbVersion === $after);
     t_equal($r['moved'], 3, 'выложена нынешняя версия базы — фото уходят');
+});
+
+t_case('уборка: после смены кода выгрузки фото уходят по версии выгрузки, а не meta', function (): void {
+    // Код выгрузки поменяли: сборка считает версию новым кодом, а meta.version осталась от
+    // последней правки и посчитана старым. Содержимое базы то же — то же и на сайте.
+    $db = t_catalog_with_sections();
+    $webroot = t_tmpdir();
+    $candidates = t_tmpdir() . '/photo-candidates.json';
+    $uid = catalog_create_product($db, 'anna', t_fields(), t_now());
+    $rel = "/images/catalog/bukety/buket-nezhnost-$uid-c0dec0de.webp";
+    t_photo_file($webroot, $rel);
+    $live = catalog_current_version($db);
+    $db->exec("UPDATE meta SET value = 'старый-код-выгрузки' WHERE key = 'version'");
+    t_equal(catalog_meta($db)['version'], 'старый-код-выгрузки', 'проверка: meta.version другая');
+    t_equal(catalog_current_version($db), $live, 'проверка: содержимое и версия выгрузки те же');
+    $deployed = catalog_deploy_covers(['catalogVersion' => $live, 'catalogChangedAt' => '']);
+    catalog_photos_sweep($db, $webroot, $candidates, t_now(), $deployed);
+    $r = catalog_photos_sweep($db, $webroot, $candidates, t_now('+25 hours'), $deployed);
+    t_equal([$r['moved'], is_file($webroot . $rel)], [1, false], 'выложенная версия равна версии выгрузки — фото в корзине, хоть meta и старая');
 });
 
 t_case('уборка: сборка из середины суток не считается выложенной', function (): void {
@@ -514,10 +535,34 @@ t_case('уборка: ссылки и версия читаются одной �
     t_equal($r['candidates'], 0, 'после починки уборка идёт как прежде');
 });
 
+/** PDO, у которого откат отвечает ошибкой — как когда SQLite уже сам завершил транзакцию. */
+class T_RollbackFailsPdo extends PDO
+{
+    public function rollBack(): bool
+    {
+        parent::rollBack();
+        throw new PDOException('откатывать нечего');
+    }
+}
+
+t_case('уборка: ошибка отката не заслоняет настоящую', function (): void {
+    $file = t_tmpdir() . '/catalog.sqlite';
+    $plain = t_catalog_with_sections(catalog_db_open($file));
+    $plain->exec('ALTER TABLE products RENAME TO products_ушла');
+    $plain = null;
+    $db = new T_RollbackFailsPdo('sqlite:' . $file, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
+    $e = t_throws(fn () => catalog_photos_sweep($db, t_tmpdir(), t_tmpdir() . '/c.json', t_now(), null), PDOException::class, 'ссылки не прочитались — исключение наружу');
+    $message = $e === null ? '' : $e->getMessage();
+    t_true(str_contains($message, 'products') && !str_contains($message, 'откатывать нечего'), "наружу — исходная ошибка, а не ошибка отката ($message)");
+    t_true(!$db->inTransaction(), 'транзакции после этого нет');
+    $db = null;
+});
+
 /**
- * PDO, который между чтением ссылок на фото и чтением версии каталога
- * пытается из второго соединения поменять версию: так проверяется, что обе
- * половины читаются из одного снимка базы.
+ * PDO, который между чтением ссылок на фото и подсчётом версии выгрузки
+ * пытается из второго соединения поменять выгрузку: так проверяется, что обе
+ * половины читаются из одного снимка базы. Версию выгрузки уборка считает сама
+ * (catalog_current_version), и первый её запрос — к product_sections.
  */
 class T_RacingPdo extends PDO
 {
@@ -527,11 +572,11 @@ class T_RacingPdo extends PDO
 
     public function query(string $query, ?int $fetchMode = null, mixed ...$fetchModeArgs): PDOStatement|false
     {
-        if ($this->raceFile !== null && str_contains($query, 'FROM meta')) {
+        if ($this->raceFile !== null && str_contains($query, 'FROM product_sections')) {
             try {
                 $other = new PDO('sqlite:' . $this->raceFile, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
                 $other->exec('PRAGMA busy_timeout = 0');
-                $other->exec("UPDATE meta SET value = 'гонка' WHERE key = 'version'");
+                $other->exec("UPDATE sections SET label = 'гонка' WHERE slug = 'bukety'");
                 $this->raced[] = 'записано';
             } catch (PDOException) {
                 $this->raced[] = 'заперто';
@@ -546,7 +591,7 @@ t_case('уборка: правка посреди чтения не раздви
     $file = t_tmpdir() . '/catalog.sqlite';
     $plain = t_catalog_with_sections(catalog_db_open($file));
     catalog_create_product($plain, 'anna', t_fields(), t_now());
-    $version = (string)(catalog_meta($plain)['version'] ?? '');
+    $version = catalog_current_version($plain);
     $plain = null;
     $racing = new T_RacingPdo('sqlite:' . $file, null, null, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION, PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC]);
     $racing->raceFile = $file;
@@ -684,7 +729,7 @@ t_case('maintenance-cli.php: фото ждут выкладки', function (): v
     mkdir($deployHome);
     $db = t_catalog_with_sections(t_catalog_db("$home/catalog.sqlite"));
     $uid = catalog_create_product($db, 'anna', t_fields(), t_now());
-    $version = (string)(catalog_meta($db)['version'] ?? '');
+    $version = catalog_current_version($db);
     $db = null;
     t_true($version !== '', 'у базы с букетом есть версия');
     $rel = "/images/catalog/bukety/buket-nezhnost-$uid-a1a1a1a1.webp";
@@ -770,7 +815,7 @@ t_case('maintenance-cli.php: папка выкладки по умолчанию
     mkdir("$root/pion-deploy");
     $db = t_catalog_with_sections(t_catalog_db("$home/catalog.sqlite"));
     $uid = catalog_create_product($db, 'anna', t_fields(), t_now());
-    $version = (string)(catalog_meta($db)['version'] ?? '');
+    $version = catalog_current_version($db);
     $db = null;
     $rel = "/images/catalog/bukety/buket-nezhnost-$uid-b1b1b1b1.webp";
     t_photo_file($webroot, $rel);
@@ -789,7 +834,7 @@ t_case('maintenance-cli.php: предохранитель', function (): void {
     $deployHome = t_tmpdir();
     $db = t_catalog_with_sections(t_catalog_db("$home/catalog.sqlite"));
     $uid = catalog_create_product($db, 'anna', t_fields(), t_now());
-    $version = (string)(catalog_meta($db)['version'] ?? '');
+    $version = catalog_current_version($db);
     $db = null;
     // Всё выложено: без этого фото не были бы «к переносу», и предохранителю нечего считать.
     file_put_contents("$deployHome/state.json", json_encode(['current' => ['catalogVersion' => $version, 'catalogChangedAt' => '']]));

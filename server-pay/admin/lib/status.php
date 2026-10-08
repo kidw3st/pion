@@ -1,22 +1,30 @@
 <?php
 /**
  * Строка статуса вверху каждого экрана: на сайте ли то, что сохранили.
- * Сравнивается версия каталога в базе (catalog_meta) с версией, по которой
- * собрана выложенная сборка: её пишет выкладка в pion-deploy/state.json —
- * current.catalogVersion и current.catalogChangedAt (этап 3). Пока этих полей
- * нет, сайт собирается из прежнего каталога, и строка честно это говорит.
- * Сравнение — по версии, а не по времени: правка туда и обратно оставляет
- * новое время при том же содержимом.
+ * Сравнивается версия, которую выгрузка базы отдала бы сейчас
+ * (catalog_current_version), с версией, по которой собрана выложенная сборка:
+ * её пишет выкладка в pion-deploy/state.json — current.catalogVersion и
+ * current.catalogChangedAt (этап 3). Пока этих полей нет, сайт собирается из
+ * прежнего каталога, и строка честно это говорит. Сравнение — по версии, а не
+ * по времени: правка туда и обратно оставляет новое время при том же
+ * содержимом.
  */
 
 declare(strict_types=1);
 
 require_once __DIR__ . '/view.php';
+require_once __DIR__ . '/../../catalog/export.php';
 
 /** Через сколько минут ожидания выкладка считается задержавшейся. */
 const ADMIN_DEPLOY_LATE_MINUTES = 90;
 
-/** @return array{version: string, changedAt: string}|null */
+/**
+ * Что выложено: версия и время правки каталога выложенной сборки и когда её
+ * выложили (deployedAt, секунды; null — неизвестно). Мусор в state.json не
+ * роняет страницы: такое значение считается неизвестным.
+ *
+ * @return array{version: string, changedAt: string, deployedAt: ?int}|null
+ */
 function admin_deployed_catalog(string $deployHome): ?array
 {
     $state = json_decode((string)@file_get_contents($deployHome . '/state.json'), true);
@@ -39,23 +47,59 @@ function admin_deployed_catalog(string $deployHome): ?array
     } catch (Throwable) {
         $changed = '';
     }
-    return ['version' => $current['catalogVersion'], 'changedAt' => $changed];
+    // deployedAt пишет deploy.php целым числом (deploy_state_after_success, после отката — тоже); иное — неизвестно.
+    $deployedAt = $current['deployedAt'] ?? null;
+    return [
+        'version' => $current['catalogVersion'],
+        'changedAt' => $changed,
+        'deployedAt' => is_int($deployedAt) && $deployedAt > 0 ? $deployedAt : null,
+    ];
 }
 
 /**
- * @param array<string, string> $meta catalog_meta(): version и changed_at последнего изменения выгрузки
+ * Каталог в базе для строки статуса, из одного снимка базы: version — что
+ * выгрузка отдала бы сейчас (не meta.version, см. catalog_current_version),
+ * changed_at — время последней правки выгрузки из meta. Правок ещё не было (в
+ * meta нет версии) — version null: ждать выкладки нечего.
+ *
+ * @return array{version: ?string, changed_at: ?string}
+ */
+function admin_catalog_now(PDO $db): array
+{
+    return catalog_read($db, static function () use ($db): array {
+        $meta = catalog_meta($db);
+        return [
+            'version' => ($meta['version'] ?? '') !== '' ? catalog_current_version($db) : null,
+            'changed_at' => $meta['changed_at'] ?? null,
+        ];
+    });
+}
+
+/**
+ * Ждать выкладки — с последней правки, но не раньше выкладки текущей сборки:
+ * расхождение версий бывает и без правки, когда выложили новый код выгрузки, а
+ * сборку по нему привезёт следующий запуск (подробно — в
+ * deploy_pending_catalog_alerts, server-pay/deploy-lib.php; сторож считает так же).
+ * Времени выкладки нет — только от правки.
+ *
+ * @param array{version: ?string, changed_at: ?string} $catalog admin_catalog_now()
+ * @param array{version: string, changedAt: string, deployedAt?: ?int}|null $deployed admin_deployed_catalog()
  * @return array{kind: string, text: string}
  */
-function admin_deploy_status(array $meta, ?array $deployed, DateTimeImmutable $now): array
+function admin_deploy_status(array $catalog, ?array $deployed, DateTimeImmutable $now): array
 {
     if ($deployed === null) {
         return ['kind' => 'offline', 'text' => 'Сайт пока собирается из прежнего каталога — изменения отсюда на нём не появятся.'];
     }
-    $version = $meta['version'] ?? null;
+    $version = $catalog['version'] ?? null;
     if ($version === null || $version === $deployed['version']) {
         return ['kind' => 'synced', 'text' => 'Все изменения на сайте.'];
     }
-    $since = admin_perm($meta['changed_at']);
+    $since = admin_perm($catalog['changed_at']);
+    $deployedAt = $deployed['deployedAt'] ?? null;
+    if (is_int($deployedAt) && $deployedAt > $since->getTimestamp()) {
+        $since = admin_perm('@' . $deployedAt);
+    }
     if ($now->getTimestamp() - $since->getTimestamp() > ADMIN_DEPLOY_LATE_MINUTES * 60) {
         return ['kind' => 'late', 'text' => 'Выкладка задерживается — разработчик уведомлён.'];
     }

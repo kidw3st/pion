@@ -59,7 +59,7 @@ function admin_handle(array $req, array $ctx, string $name, callable $page): arr
     $ctx['user'] = $user;
     if ($user !== null) {
         $ctx['deployed'] = admin_deployed_catalog($ctx['deployHome']);
-        $status = admin_deploy_status(catalog_meta($ctx['db']), $ctx['deployed'], $ctx['now']);
+        $status = admin_deploy_status(admin_catalog_now($ctx['db']), $ctx['deployed'], $ctx['now']);
         $ctx['inSync'] = $status['kind'] === 'synced';
         $ctx['status'] = admin_status_line($status);
     }

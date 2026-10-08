@@ -23,13 +23,34 @@ t_case('статус по версии', function (): void {
         ['kind' => 'synced', 'text' => 'Все изменения на сайте.'], 'та же версия, но новое время — считается синхронизировано (версия, не время)');
 });
 
+t_case('статус: ждать — не раньше выкладки текущей сборки', function (): void {
+    // Выложили новый код выгрузки: версии разные без единой правки, а последняя правка была давно.
+    $old = ['version' => 'v2', 'changed_at' => '2026-09-05T10:00:00+05:00'];
+    $deployedAt = fn (string $shift): array => ['version' => 'v1', 'changedAt' => '', 'deployedAt' => t_now($shift)->getTimestamp()];
+    t_equal(admin_deploy_status($old, $deployedAt('-10 minutes'), t_now()),
+        ['kind' => 'pending', 'text' => 'Ждёт выкладки с 13:50 — обычно до получаса.'], 'выкладка 10 минут назад, правка месяц назад — ждёт с выкладки, а не «задерживается»');
+    t_equal(admin_deploy_status($old, $deployedAt('-90 minutes'), t_now())['kind'], 'pending', 'ровно 90 минут после выкладки — ещё ждёт');
+    t_equal(admin_deploy_status($old, $deployedAt('-91 minutes'), t_now())['kind'], 'late', 'больше 90 минут после выкладки — задерживается');
+    t_equal(admin_deploy_status(['version' => 'v2', 'changed_at' => '2026-10-05T13:55:00+05:00'], $deployedAt('-1 day'), t_now()),
+        ['kind' => 'pending', 'text' => 'Ждёт выкладки с 13:55 — обычно до получаса.'], 'правка позже выкладки — ждёт с правки');
+    t_equal(admin_deploy_status($old, ['version' => 'v1', 'changedAt' => '', 'deployedAt' => null], t_now())['kind'], 'late', 'времени выкладки нет — по правке');
+    t_equal(admin_deploy_status($old, ['version' => 'v1', 'changedAt' => ''], t_now())['kind'], 'late', 'ключа времени выкладки нет — по правке');
+    t_equal(admin_deploy_status(['version' => 'v1'] + $old, $deployedAt('-10 minutes'), t_now())['kind'], 'synced', 'версии совпали — на сайте, время не важно');
+});
+
 t_case('что выложено', function (): void {
     $home = t_tmpdir();
     t_equal(admin_deployed_catalog($home), null, 'нет state.json — неизвестно');
     file_put_contents("$home/state.json", json_encode(['current' => ['sha' => 'abc', 'commit' => 'def']]));
     t_equal(admin_deployed_catalog($home), null, 'сборка этапа 1 о каталоге не знает');
     file_put_contents("$home/state.json", json_encode(['current' => ['sha' => 'abc', 'catalogVersion' => 'v7', 'catalogChangedAt' => '2026-10-05T13:00:00+05:00']]));
-    t_equal(admin_deployed_catalog($home), ['version' => 'v7', 'changedAt' => '2026-10-05T13:00:00+05:00'], 'версия и время выложенного каталога');
+    t_equal(admin_deployed_catalog($home), ['version' => 'v7', 'changedAt' => '2026-10-05T13:00:00+05:00', 'deployedAt' => null], 'версия и время выложенного каталога; времени выкладки нет — null');
+    file_put_contents("$home/state.json", json_encode(['current' => ['sha' => 'abc', 'catalogVersion' => 'v7', 'catalogChangedAt' => '', 'deployedAt' => 1_790_000_000]]));
+    t_equal(admin_deployed_catalog($home)['deployedAt'] ?? 'нет', 1_790_000_000, 'время выкладки — как записала выкладка');
+    foreach (['вчера', '1790000000', 1_790_000_000.5, 0, -5, true, [1_790_000_000], null] as $junk) {
+        file_put_contents("$home/state.json", json_encode(['current' => ['catalogVersion' => 'v7', 'catalogChangedAt' => '', 'deployedAt' => $junk]]));
+        t_equal(admin_deployed_catalog($home), ['version' => 'v7', 'changedAt' => '', 'deployedAt' => null], 'время выкладки ' . json_encode($junk) . ' — неизвестно, без падения');
+    }
 });
 
 t_case('отметки у изменений', function (): void {
@@ -76,4 +97,35 @@ t_case('строка на страницах', function (): void {
             'когда версии совпадают — статус synced');
         t_equal($seen['inSync'], true, 'inSync — true когда версии совпадают');
     }
+});
+
+t_case('строка на страницах: сменился код выгрузки', function (): void {
+    // meta.version осталась от последней правки и посчитана прежним кодом выгрузки;
+    // содержимое то же, и сборка выложена с версией, которую выгрузка отдаёт сейчас.
+    $ctx = t_admin_ctx();
+    $db = $ctx['db'];
+    catalog_touch($db, t_now('-30 days'));
+    $live = catalog_current_version($db);
+    $db->exec("UPDATE meta SET value = 'прежний-код-выгрузки' WHERE key = 'version'");
+    t_equal(admin_catalog_now($db), ['version' => $live, 'changed_at' => catalog_iso(t_now('-30 days'))], 'для статуса — версия выгрузки, время — из meta');
+    t_true(!$db->inTransaction(), 'чтение для статуса транзакцию не оставляет');
+    $seen = ['status' => '', 'inSync' => ''];
+    $page = function (array $req, array $c) use (&$seen): array {
+        $seen = ['status' => $c['status'], 'inSync' => $c['inSync']];
+        return admin_html('ok');
+    };
+    $state = fn (string $version): string => (string)json_encode(['current' => [
+        'catalogVersion' => $version, 'catalogChangedAt' => catalog_iso(t_now('-30 days')), 'deployedAt' => t_now('-10 minutes')->getTimestamp(),
+    ]]);
+    file_put_contents($ctx['deployHome'] . '/state.json', $state($live));
+    t_admin_call($ctx, 'products', $page);
+    t_equal($seen, ['status' => '<p class="status status-synced">Все изменения на сайте.</p>', 'inSync' => true],
+        'выложена версия выгрузки — «Все изменения на сайте.», хоть meta.version другая');
+    // Сборка с новым кодом выложена 10 минут назад, а каталог в ней посчитан прежним кодом: ждём следующую.
+    file_put_contents($ctx['deployHome'] . '/state.json', $state('прежний-код-выгрузки'));
+    t_admin_call($ctx, 'products', $page);
+    t_equal($seen['status'], '<p class="status status-pending">Ждёт выкладки с 13:50 — обычно до получаса.</p>',
+        'версии разные, правка месяц назад, выкладка 10 минут назад — ждёт, а не «задерживается»');
+    $db->exec("DELETE FROM meta");
+    t_equal(admin_catalog_now($db), ['version' => null, 'changed_at' => null], 'правок ещё не было — ждать нечего');
 });

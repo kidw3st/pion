@@ -93,6 +93,27 @@ function catalog_export_version(array $export): string
     return hash('sha256', json_encode($canonical, CATALOG_JSON));
 }
 
+/**
+ * Версия, которую выгрузка отдала бы сейчас: ровно то, что сообщит
+ * pay/catalog-export.php и с чем сборка выложит сайт (current.catalogVersion
+ * в state.json).
+ *
+ * Зачем она, если есть meta.version: ту записывает catalog_touch() при
+ * последней правке, посчитанную кодом выгрузки того времени. Код выгрузки
+ * поменяли — сборка считает версию уже новым кодом, а meta хранит старую до
+ * первого сохранения в админке. Сравнение с meta.version тогда показывало бы
+ * расхождение без единой правки: сторож слал бы «изменения не на сайте»,
+ * админка писала бы «Выкладка задерживается», а уборка фото ждала бы вечно.
+ * Поэтому всё, что сверяется с выложенной версией, сверяется с этой.
+ *
+ * Читает несколько таблиц: если нужен один снимок вместе с другими данными,
+ * вызывать внутри catalog_read().
+ */
+function catalog_current_version(PDO $db): string
+{
+    return catalog_export_version(catalog_export_data($db));
+}
+
 function catalog_export(PDO $db): array
 {
     $data = catalog_export_data($db);
