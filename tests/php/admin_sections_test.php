@@ -80,6 +80,7 @@ t_case('новый раздел', function (): void {
 t_case('карточка раздела', function (): void {
     $ctx = t_admin_ctx();
     $db = $ctx['db'];
+    t_put_tile($db, 'roses'); // раздел в каталоге обязан быть с фото плитки
     $card = t_admin_call($ctx, 'section', 'admin_page_section', query: ['slug' => 'roses'])['body'];
     t_true(str_contains($card, 'value="Розы"') && str_contains($card, 'name="orig[label]" value="Розы"'), 'поля и их исходные значения');
     t_true(str_contains($card, 'data-kind="tile"') && str_contains($card, 'data-kind="cover"') && str_contains($card, 'data-limit="3"'), 'фото плитки и обложки (до трёх)');
@@ -121,9 +122,14 @@ t_case('фото в карточке раздела', function (): void {
     t_equal(json_decode(t_section($db, 'roses')['covers'], true), $covers, 'обложки — в новом порядке');
     t_equal((string)t_section($db, 'roses')['tile_image'], '/images/site/catalog-tiles/tile-0.webp', 'плитка не тронута');
 
-    // Убрали фото плитки: поля tileImage в форме просто нет — это значит «пусто».
+    // Убрали фото плитки: поля tileImage в форме просто нет — это значит «пусто». Раздел в каталоге без фото нельзя.
     $post = t_section_post($db, 'roses', []);
     unset($post['tileImage']);
+    $refused = t_admin_call($ctx, 'section', 'admin_page_section', 'POST', post: $post);
+    t_true($refused['status'] === 422 && str_contains($refused['body'], 'сначала добавьте фото плитки'), 'видимый раздел без фото плитки не сохранить');
+    t_equal(t_section($db, 'roses')['tile_image'], '/images/site/catalog-tiles/tile-0.webp', 'фото плитки осталось');
+    // Убрали фото плитки и галочку «Показывать в каталоге» — так можно.
+    unset($post['visible']);
     t_admin_call($ctx, 'section', 'admin_page_section', 'POST', post: $post);
     t_equal(t_section($db, 'roses')['tile_image'], '', 'фото плитки убрано');
     t_equal(json_decode(t_section($db, 'roses')['covers'], true), $covers, 'обложки при этом остались');
@@ -138,6 +144,7 @@ t_case('фото в карточке раздела', function (): void {
 t_case('переводы строк в полях карточки', function (): void {
     $ctx = t_admin_ctx();
     $db = $ctx['db'];
+    t_put_tile($db, 'roses'); // раздел в каталоге обязан быть с фото плитки
     // Настоящие данные: подзаголовок обложки с переносом (сайт показывает его с white-space: pre-line).
     catalog_update_section($db, 'olga', 'roses', ['coverSub' => "a\nb", 'seoTitle' => "x\ny"], t_now());
     $audit = (int)$db->query('SELECT COUNT(*) FROM audit')->fetchColumn();

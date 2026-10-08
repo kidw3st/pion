@@ -159,15 +159,15 @@ t_case('фото — словами, а не «1 фото → 1 фото»', fun
     t_true(str_contains($page, 'Фото: 3 фото → 1 фото'), 'убрали — числа');
     t_true(!str_contains($page, '2 фото → 2 фото'), 'одинаковых чисел «было → стало» нет');
 
-    // Плитка и обложки раздела.
+    // Плитка и обложки раздела. Берём скрытый: у видимого раздела плитка обязательна, убрать её нельзя.
     $tile = fn (string $name): string => '/images/site/catalog-tiles/' . $name . '.webp';
     $cover = fn (string $name): string => '/images/site/category-covers/' . $name . '.webp';
-    catalog_update_section($db, 'anna', 'roses', ['tileImage' => $tile('x')], t_now('+10 minutes'));
-    catalog_update_section($db, 'anna', 'roses', ['tileImage' => $tile('y')], t_now('+11 minutes'));
-    catalog_update_section($db, 'anna', 'roses', ['tileImage' => ''], t_now('+12 minutes'));
-    catalog_update_section($db, 'anna', 'roses', ['covers' => [$cover('a'), $cover('b')]], t_now('+13 minutes'));
-    catalog_update_section($db, 'anna', 'roses', ['covers' => [$cover('b'), $cover('a')]], t_now('+14 minutes'));
-    catalog_update_section($db, 'anna', 'roses', ['covers' => [$cover('b'), $cover('c')]], t_now('+15 minutes'));
+    catalog_update_section($db, 'anna', 'novinki', ['tileImage' => $tile('x')], t_now('+10 minutes'));
+    catalog_update_section($db, 'anna', 'novinki', ['tileImage' => $tile('y')], t_now('+11 minutes'));
+    catalog_update_section($db, 'anna', 'novinki', ['tileImage' => ''], t_now('+12 minutes'));
+    catalog_update_section($db, 'anna', 'novinki', ['covers' => [$cover('a'), $cover('b')]], t_now('+13 minutes'));
+    catalog_update_section($db, 'anna', 'novinki', ['covers' => [$cover('b'), $cover('a')]], t_now('+14 minutes'));
+    catalog_update_section($db, 'anna', 'novinki', ['covers' => [$cover('b'), $cover('c')]], t_now('+15 minutes'));
     $page = t_admin_call($ctx, 'log', 'admin_page_log')['body'];
     t_true(str_contains($page, 'Фото плитки: — → есть фото'), 'плитки не было, появилась');
     t_true(str_contains($page, 'Фото плитки: заменено'), 'плитку заменили');

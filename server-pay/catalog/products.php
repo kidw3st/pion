@@ -336,7 +336,7 @@ function catalog_hide(PDO $db, string $login, string $uid, int $version, DateTim
 /**
  * Вернуть в продажу — на прежнее место, по тому же адресу. Только с ценой:
  * у коробок из Tilda её нет (0 ₽), а букет в продаже за 0 ₽ сайт не примет —
- * сборка остановится целиком.
+ * сборка остановится целиком. И только с фото: без него на сайте пустая картинка.
  */
 function catalog_unhide(PDO $db, string $login, string $uid, int $version, DateTimeImmutable $now): void
 {
@@ -345,6 +345,9 @@ function catalog_unhide(PDO $db, string $login, string $uid, int $version, DateT
         static function (array $p): void {
             if ((int)$p['price'] < CATALOG_PRICE_MIN) {
                 throw new CatalogError('Сначала укажите цену в карточке — от ' . CATALOG_PRICE_MIN . ' ₽, потом возвращайте букет в продажу.');
+            }
+            if ((json_decode((string)$p['images'], true) ?: []) === []) {
+                throw new CatalogError('Сначала добавьте фото в карточке, потом возвращайте букет в продажу.');
             }
         },
     );

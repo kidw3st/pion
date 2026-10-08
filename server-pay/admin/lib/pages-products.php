@@ -244,6 +244,10 @@ function admin_product_save(array $req, array $ctx, string $action): array
         if ($action === 'publish' && $fields['images'] === []) {
             throw new CatalogError('Добавьте хотя бы одно фото — без него букет не опубликовать.');
         }
+        // Букет в продаже без фото — пустая картинка на сайте. Черновику и снятому фото пока не нужны.
+        if ($action !== 'publish' && $p['status'] === 'active' && $fields['images'] === []) {
+            throw new CatalogError('Добавьте хотя бы одно фото — у букета в продаже оно должно быть.');
+        }
         // Теперь проверяем цену: привязываем подтверждение к конкретной сумме.
         $confirmPrice = (int)admin_str($post, 'confirm_price');
         if ($confirmPrice !== $fields['price'] && admin_price_jump((int)$p['price'], $fields['price'])) {

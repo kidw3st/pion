@@ -102,6 +102,15 @@ function t_catalog_cli(string $script, string $home, array $args = []): array
     return [$code, implode("\n", $out)];
 }
 
+/**
+ * Фото плитки раздела прямо в базе, мимо журнала. Раздел в каталоге без него
+ * не сохранить, а разделы из t_catalog_with_sections() стоят в каталоге без фото.
+ */
+function t_put_tile(PDO $db, string $slug, string $path = '/images/site/catalog-tiles/tile-0.webp'): void
+{
+    $db->prepare('UPDATE sections SET tile_image = ? WHERE slug = ?')->execute([$path, $slug]);
+}
+
 /** Поля букета по умолчанию; $over — что поменять. */
 function t_fields(array $over = []): array
 {

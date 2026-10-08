@@ -115,7 +115,11 @@ function catalog_create_section(PDO $db, string $login, string $label, DateTimeI
     });
 }
 
-/** Карточка раздела: меняются только переданные поля, каждое изменённое — в журнал. */
+/**
+ * Карточка раздела: меняются только переданные поля, каждое изменённое — в журнал.
+ * Раздел в каталоге обязан иметь фото плитки: без него на сайте пустая картинка.
+ * Проверяется итог правки (переданное поле или то, что уже в базе), до журнала и записи.
+ */
 function catalog_update_section(PDO $db, string $login, string $slug, array $fields, DateTimeImmutable $now): void
 {
     catalog_tx($db, function () use ($db, $login, $slug, $fields, $now): void {
@@ -127,8 +131,16 @@ function catalog_update_section(PDO $db, string $login, string $slug, array $fie
         }
         $sets = [];
         $args = [];
+        $log = [];
+        $visible = (int)$row['visible'];
+        $tile = (string)$row['tile_image'];
         foreach ($fields as $field => $value) {
             $new = catalog_section_value((string)$field, $value);
+            if ($field === 'visible') {
+                $visible = (int)$new;
+            } elseif ($field === 'tileImage') {
+                $tile = (string)$new;
+            }
             $column = CATALOG_SECTION_COLUMNS[$field];
             $old = $row[$column];
             if ($old === $new) {
@@ -136,11 +148,16 @@ function catalog_update_section(PDO $db, string $login, string $slug, array $fie
             }
             $sets[] = "$column = ?";
             $args[] = $new;
-            catalog_audit($db, $login, $now, 'section', $slug, (string)$field,
-                $old === null ? null : (string)$old, $new === null ? null : (string)$new);
+            $log[] = [(string)$field, $old === null ? null : (string)$old, $new === null ? null : (string)$new];
         }
         if ($sets === []) {
             return;
+        }
+        if ($visible === 1 && $tile === '') {
+            throw new CatalogError('Чтобы показать раздел в каталоге, сначала добавьте фото плитки.');
+        }
+        foreach ($log as [$field, $old, $new]) {
+            catalog_audit($db, $login, $now, 'section', $slug, $field, $old, $new);
         }
         $args[] = catalog_iso($now);
         $args[] = $slug;

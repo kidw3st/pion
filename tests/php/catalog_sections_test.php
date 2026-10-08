@@ -21,7 +21,7 @@ t_case('новый раздел', function (): void {
     );
     t_true(!in_array(['type' => 'section', 'slug' => $slug], $data['tiles'], true), 'скрытого раздела в сетке нет');
     // Фото плитки добавили, раздел показали — плитка встаёт в конец сетки.
-    catalog_update_section($db, 'anna', $slug, ['visible' => true], t_now());
+    catalog_update_section($db, 'anna', $slug, ['visible' => true, 'tileImage' => '/images/site/catalog-tiles/tile-1.webp'], t_now());
     $tiles = catalog_export_data($db)['tiles'];
     t_equal($tiles[count($tiles) - 1], ['type' => 'section', 'slug' => $slug], 'показали — плитка в конце сетки');
 });

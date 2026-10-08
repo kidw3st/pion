@@ -46,8 +46,10 @@ t_case('опубликованный — первым в разделе', functi
 
 t_case('снять и вернуть', function (): void {
     $db = t_catalog_with_sections();
-    $a = catalog_create_product($db, 'anna', t_fields(['title' => 'Букет А']), t_now());
-    $b = catalog_create_product($db, 'anna', t_fields(['title' => 'Букет Б']), t_now());
+    // Вернуть в продажу можно только букет с фото.
+    $photo = fn (string $name): array => ['images' => ['/images/catalog/bukety/' . $name . '.webp']];
+    $a = catalog_create_product($db, 'anna', t_fields(['title' => 'Букет А'] + $photo('buket-a')), t_now());
+    $b = catalog_create_product($db, 'anna', t_fields(['title' => 'Букет Б'] + $photo('buket-b')), t_now());
     catalog_publish($db, 'anna', $b, 1, t_now());
     catalog_publish($db, 'anna', $a, 1, t_now());
     catalog_hide($db, 'anna', $a, 2, t_now('+1 hour'));

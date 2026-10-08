@@ -31,7 +31,8 @@ t_case('опубликовать из карточки', function (): void {
 
 t_case('снять с продажи и вернуть', function (): void {
     $ctx = t_admin_ctx();
-    $uid = catalog_create_product($ctx['db'], 'anna', t_fields(), t_now());
+    // Вернуть в продажу можно только букет с фото.
+    $uid = catalog_create_product($ctx['db'], 'anna', t_fields(['images' => ['/images/catalog/bukety/buket-nezhnost.webp']]), t_now());
     catalog_publish($ctx['db'], 'anna', $uid, 1, t_now());
     $ask = t_action($ctx, $uid, 'hide', 2);
     t_true($ask['status'] === 200 && str_contains($ask['body'], 'с продажи?') && str_contains($ask['body'], 'name="confirm" value="1"'), 'сначала — вопрос');

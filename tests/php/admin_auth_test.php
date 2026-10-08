@@ -291,7 +291,7 @@ t_case('занята запись: ожидание, а не мгновенны�
     // чтобы вызовы не зависели друг от друга и от порядка. Названия разные: «создать» не должно найти тёзку.
     $make = static function (string $title, string $status) use ($a, $ctx): string {
         $at = $ctx['now'];
-        $uid = catalog_create_product($a, 'anna', t_fields(['title' => $title]), $at);
+        $uid = catalog_create_product($a, 'anna', t_fields(['title' => $title, 'images' => ['/images/catalog/bukety/buket-test.webp']]), $at);
         if ($status !== 'draft') {
             catalog_publish($a, 'anna', $uid, t_row($a, $uid)['version'], $at);
         }
