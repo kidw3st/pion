@@ -24,7 +24,12 @@ function admin_deployed_catalog(string $deployHome): ?array
     if (!is_array($current) || !is_string($current['catalogVersion'] ?? null)) {
         return null;
     }
-    return ['version' => $current['catalogVersion'], 'changedAt' => (string)($current['catalogChangedAt'] ?? '')];
+    $changed = $current['catalogChangedAt'] ?? '';
+    // Мусор вместо даты не должен ронять журнал и карточки: такую отметку считаем неизвестной.
+    if (!is_string($changed) || ($changed !== '' && DateTimeImmutable::createFromFormat(DATE_ATOM, $changed) === false)) {
+        $changed = '';
+    }
+    return ['version' => $current['catalogVersion'], 'changedAt' => $changed];
 }
 
 /**

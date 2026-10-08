@@ -239,6 +239,10 @@ function admin_product_save(array $req, array $ctx, string $action): array
             return $show('', 'Цена была ' . admin_rub((int)$p['price']) . ', станет ' . admin_rub($fields['price']) . '. Всё верно?', $fields['price'], 200);
         }
         catalog_update_product($ctx['db'], $ctx['user']['login'], $p['uid'], $version, $fields, $ctx['now']);
+        // Ночная уборка могла унести в корзину фото, которое загрузили давно, а сохранили только сейчас.
+        foreach ($fields['images'] as $path) {
+            catalog_photo_untrash($ctx['webroot'], $path);
+        }
         if ($action === 'publish') {
             // «Опубликовать» из карточки черновика: сначала правки, потом публикация — версия уже на один больше.
             catalog_publish($ctx['db'], $ctx['user']['login'], $p['uid'], $version + 1, $ctx['now']);

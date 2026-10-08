@@ -52,3 +52,34 @@ t_case('новый раздел создаётся скрытым', function ():
     t_true(!in_array(['type' => 'section', 'slug' => $slug], catalog_export_data($db)['tiles'], true), 'в сетке выгрузки его нет');
     t_true(str_contains(ADMIN_NOTICES['section-created'], 'скрыт'), 'сотруднику объяснено, что раздел пока скрыт');
 });
+
+t_case('сохранение карточки возвращает фото из корзины', function (): void {
+    $ctx = t_admin_ctx();
+    $uid = catalog_create_product($ctx['db'], 'anna', t_fields(), t_now());
+    $path = '/images/catalog/bukety/buket-nezhnost-' . $uid . '-bbbbbbbb.webp';
+    t_put_files($ctx['webroot'], [ltrim($path, '/') => 'webp']);
+    // Фото загрузили, но карточку не сохраняли больше суток — ночная уборка унесла файл в корзину.
+    catalog_photo_trash($ctx['webroot'], $path, t_now());
+    t_true(!is_file($ctx['webroot'] . $path), 'файл в корзине');
+    $r = t_admin_call($ctx, 'product', 'admin_page_product', 'POST', post: [
+        'action' => 'save', 'uid' => $uid, 'version' => (string)t_row($ctx['db'], $uid)['version'],
+        'title' => 'Букет «Нежность»', 'price' => '4400', 'description' => 'Розы', 'sections' => ['bukety'],
+        'images' => [$path],
+    ]);
+    t_equal($r['status'], 303, 'сохранено');
+    t_true(is_file($ctx['webroot'] . $path), 'фото вернулось на место');
+});
+
+t_case('мусор вместо даты выкладки не роняет страницы', function (): void {
+    $ctx = t_admin_ctx();
+    foreach (['вчера вечером', 12345, ['2026'], ''] as $junk) {
+        file_put_contents($ctx['deployHome'] . '/state.json', json_encode(['current' => [
+            'catalogVersion' => 'v1', 'catalogChangedAt' => $junk,
+        ]]));
+        t_equal(admin_deployed_catalog($ctx['deployHome'])['changedAt'], '', 'значение ' . json_encode($junk, JSON_UNESCAPED_UNICODE) . ' — неизвестно');
+    }
+    file_put_contents($ctx['deployHome'] . '/state.json', json_encode(['current' => [
+        'catalogVersion' => 'v1', 'catalogChangedAt' => '2026-10-05T14:05:00+05:00',
+    ]]));
+    t_equal(admin_deployed_catalog($ctx['deployHome'])['changedAt'], '2026-10-05T14:05:00+05:00', 'нормальная дата — как есть');
+});
