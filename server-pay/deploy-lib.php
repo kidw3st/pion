@@ -776,8 +776,12 @@ const DEPLOY_ALERT_MAX_TRIES = 4;
  * 15 минут, пока длится сбой. После последней неудачной попытки сообщение
  * считается отправленным и ждёт обычного перерыва: каталог — 3 часа, копия —
  * сутки, обслуживание — до следующего неудавшегося запуска. Цена — не больше
- * четырёх одинаковых сообщений, если ответы так и теряются. Счёт живёт, пока
- * сообщение пора отправлять: сбой кончился — счёт снят, новый начнёт заново.
+ * четырёх одинаковых сообщений, если ответы так и теряются. Счёт хранится между
+ * запусками, пока сообщение не отправлено или не закрыто после последней попытки;
+ * рода, о котором в этом запуске писать не нужно, он не касается (lag и catalog
+ * выпадают из списка на запуск при любом сбое выкладки, и сброс счёта давал бы
+ * сообщения без предела). Остаток счёта от закончившегося сбоя может только
+ * укоротить следующий: попыток будет меньше, но не больше.
  *
  * @param Closure(string): string $send текст → ответ deploy_telegram
  * @param Closure(string): void   $log  строка в deploy.log
@@ -785,25 +789,30 @@ const DEPLOY_ALERT_MAX_TRIES = 4;
 function deploy_send_alerts(array $state, int $now, ?array $watch, Closure $send, Closure $log): array
 {
     $pending = deploy_pending_alerts($state, $now, $watch);
-    // state.json могли испортить вручную: счёт не массив — пуст, значение не целое — 0.
+    // state.json могли испортить вручную: счёт не массив — пуст; в счёте оставляем только род (строку)
+    // с целым положительным числом, и не больше, чем DEPLOY_ALERT_MAX_TRIES - 1: так счёт не вырастет
+    // до «100 попыток» или дробного числа в журнале, а следующая неудача всё равно закроет сообщение.
+    // Счёт рода, о котором сейчас писать не нужно, не трогаем: lag и catalog выпадают из списка на
+    // один запуск при любом сбое выкладки, и без счёта предел обнулялся бы.
     $tries = [];
-    if (is_array($state['alertTries'] ?? null)) {
-        foreach ($pending as $kind) {
-            $value = $state['alertTries'][$kind] ?? 0;
-            $tries[$kind] = is_int($value) && $value > 0 ? $value : 0;
+    foreach ((is_array($state['alertTries'] ?? null) ? $state['alertTries'] : []) as $k => $v) {
+        if (is_string($k) && is_int($v) && $v > 0) {
+            $tries[$k] = min($v, DEPLOY_ALERT_MAX_TRIES - 1);
         }
     }
-    $state['alertTries'] = [];
+    $state['alertTries'] = $tries;
     foreach ($pending as $kind) {
         $result = $send(deploy_alert_text($kind, $state, $watch));
         $log("сообщение о сбое ($kind): $result");
         if ($result === DEPLOY_TELEGRAM_SENT || $result === DEPLOY_TELEGRAM_OFF) {
             $state = deploy_mark_alerted($state, $kind, $now);
+            unset($state['alertTries'][$kind]);
             continue;
         }
         $count = ($tries[$kind] ?? 0) + 1;
         if ($count >= DEPLOY_ALERT_MAX_TRIES) {
             $state = deploy_mark_alerted($state, $kind, $now);
+            unset($state['alertTries'][$kind]);
             $log("сообщение о сбое ($kind): не ушло с $count попыток — следующая попытка после обычного перерыва");
         } else {
             $state['alertTries'][$kind] = $count;

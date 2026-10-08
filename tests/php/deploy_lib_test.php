@@ -612,14 +612,91 @@ t_equal([$code, implode("\n", $out)], [0, 'нет'], 'deploy-lib.php сама к
     t_equal($state['alerts']['maintenance'] ?? null, $now + 1800, 'отметка обслуживания не сдвинулась');
     t_equal($state['alertTries'], [], 'счётов нет');
 
-    // Счёт роду, о котором писать больше не нужно (сбой кончился), не переносится на следующий сбой.
+    // Счёт рода, о котором в этом запуске писать не нужно, остаётся: lag и catalog выпадают из списка на
+    // запуск при любом сбое выкладки, и сброс счёта снимал бы предел (см. следующий блок).
     $stale = ['alertTries' => ['lag' => 3, 'backup' => 2]] + deploy_empty_state();
     $state = deploy_send_alerts($stale, $now, $watch, $fail, $log);
-    t_equal($state['alertTries'], ['backup' => 3], 'счёт роду, которого нет среди тех, о ком пора писать, снят');
+    t_equal($state['alertTries'], ['lag' => 3, 'backup' => 3], 'счёт рода, о котором сейчас писать не нужно, остаётся');
     $quiet = ['version' => '', 'changedAt' => 0, 'backupAt' => $now - 60, 'maintenance' => null];
     $state = deploy_send_alerts(['alertTries' => ['backup' => 3]] + deploy_empty_state(), $now, $quiet, $fail, $log);
-    t_equal($state['alertTries'], [], 'писать не о чем — счёта нет');
+    t_equal($state['alertTries'], ['backup' => 3], 'писать не о чем — счёт не трогаем');
     t_equal($state['alerts'], [], 'и отметок нет');
+})();
+
+// --- Сбой выкладки между попытками не обнуляет счёт: lag и catalog выпадают из списка на запуск ------
+(static function (): void {
+    $lines = [];
+    $log = static function (string $line) use (&$lines): void {
+        $lines[] = $line;
+    };
+    $sends = 0;
+    $fail = static function (string $text) use (&$sends): string {
+        $sends++;
+        return 'Telegram ответил 502';
+    };
+    $release = ['sha' => str_repeat('a', 40), 'commit' => str_repeat('a', 40), 'paySha256' => str_repeat('0', 64)];
+    // Отставание: master ушёл вперёд, сборки по нему нет 90 минут. lag пора слать, только если выкладка не сбоит.
+    $lagging = deploy_note_master(deploy_note_head(deploy_state_after_success(deploy_empty_state(), $release, 0), $release['sha'], 0), 'commit-new', 1000);
+    $t0 = 1000 + DEPLOY_LAG_ALERT_AFTER;
+    $blip = static fn(array $state, int $at): array => deploy_state_after_failure($state, 'transient', 'таймаут', null, $at);
+
+    t_equal(deploy_pending_alerts($lagging, $t0, null), ['lag'], 'исходно: об отставании пора писать');
+    $state = deploy_send_alerts($lagging, $t0, null, $fail, $log);
+    t_equal($state['alertTries'], ['lag' => 1], 'первая неудача: счёт 1');
+    // Сеть мигнула: сбой моложе часа, пишем не о чем — lag выпал из списка.
+    $state = $blip($state, $t0 + 900);
+    t_equal(deploy_pending_alerts($state, $t0 + 900, null), [], 'пока выкладка сбоит, об отставании не пишут');
+    $state = deploy_send_alerts($state, $t0 + 900, null, $fail, $log);
+    t_equal($state['alertTries'], ['lag' => 1], 'запуск, где lag не пора слать, счёт не сбросил');
+    // Следующий удачный запуск снимает сбой, lag снова пора слать — вторая неудача, счёт 2.
+    $state = deploy_state_idle($state);
+    t_equal(deploy_pending_alerts($state, $t0 + 1800, null), ['lag'], 'сбой снят: о lag снова пора писать');
+    $state = deploy_send_alerts($state, $t0 + 1800, null, $fail, $log);
+    t_equal($state['alertTries'], ['lag' => 2], 'вторая неудача: счёт 2, а не 1');
+    // Ещё две неудачи через такие же промежутки — четвёртая закрывает сообщение.
+    foreach ([2700, 4500] as $blipAt) {
+        $state = $blip($state, $t0 + $blipAt);
+        $state = deploy_send_alerts($state, $t0 + $blipAt, null, $fail, $log);
+        $state = deploy_state_idle($state);
+        $state = deploy_send_alerts($state, $t0 + $blipAt + 900, null, $fail, $log);
+    }
+    t_equal($sends, 4, 'всего четыре отправки lag, как бы ни мигала сеть между ними');
+    t_equal($state['alerts']['lag'] ?? null, $t0 + 5400, 'четвёртая неудача: lag отмечен');
+    t_true(!isset($state['alertTries']['lag']), 'и счёт снят');
+    t_equal(end($lines), 'сообщение о сбое (lag): не ушло с 4 попыток — следующая попытка после обычного перерыва', 'в журнале — строка «не ушло с 4 попыток»');
+
+    // Сутки запусков через 15 минут, сеть мигает через раз, Telegram ответы теряет: предел держится.
+    $sends = 0;
+    $state = $lagging;
+    for ($i = 0; $i < 96; $i++) {
+        $at = $t0 + 900 * $i;
+        if ($i % 2 === 1) {
+            $state = $blip($state, $at);
+        } else {
+            $state = deploy_state_idle($state);
+        }
+        $state = deploy_send_alerts($state, $at, null, $fail, $log);
+    }
+    // Если счёт между запусками сбрасывать, lag уходит каждые 30 минут: 48 раз за сутки. Со счётом — 23
+    // (не больше четырёх на каждые 3 часа).
+    t_true($sends <= 4 * 9, "за сутки с мигающей сетью lag ушёл $sends раз — не больше четырёх на каждые 3 часа");
+    t_true($sends >= 4, 'и всё же ушёл');
+
+    // То же с catalog: сбой выкладки выбрасывает и его, а ещё его нет в списке, пока база не прочиталась.
+    $sends = 0;
+    $watch = ['version' => 'v2', 'changedAt' => 0, 'backupAt' => 5000, 'maintenance' => null];
+    $base = deploy_state_after_success(deploy_empty_state(), ['catalogVersion' => 'v1'] + $release, 0);
+    $now = 20000;
+    $state = deploy_send_alerts($base, $now, $watch, $fail, $log);
+    t_equal($state['alertTries'], ['catalog' => 1], 'catalog: первая неудача — счёт 1');
+    $state = $blip($state, $now + 900);
+    $state = deploy_send_alerts($state, $now + 900, $watch, $fail, $log);
+    t_equal($state['alertTries'], ['catalog' => 1], 'catalog: сбой выкладки счёт не сбросил');
+    $unreadable = ['version' => ''] + $watch;
+    $state = deploy_send_alerts(deploy_state_idle($state), $now + 1800, $unreadable, $fail, $log);
+    t_equal($state['alertTries'], ['catalog' => 1], 'catalog: база не прочиталась — счёт не сбросил');
+    $state = deploy_send_alerts($state, $now + 2700, $watch, $fail, $log);
+    t_equal($state['alertTries'], ['catalog' => 2], 'catalog: вторая неудача — счёт 2');
 })();
 
 // --- Испорченный alertTries в state.json не роняет отправку; старый state.json без него грузится -
@@ -653,9 +730,24 @@ t_equal([$code, implode("\n", $out)], [0, 'нет'], 'deploy-lib.php сама к
             t_true(false, "alertTries — $what: бросило " . $e::class . ': ' . $e->getMessage());
         }
     }
-    // Большое целое — попытки уже исчерпаны: одна неудача, и сообщение отмечено.
-    $after = deploy_send_alerts(['alertTries' => ['backup' => 99]] + deploy_empty_state(), $now, $watch, $fail, $log);
-    t_equal($after['alerts']['backup'] ?? null, $now, 'счёт больше предела: первая же неудача отмечает сообщение');
+    // Большое целое — попытки исчерпаны: одна неудача, и сообщение отмечено; в журнале «с 4 попыток», а не
+    // «со 100» (и не дробное число при PHP_INT_MAX + 1).
+    foreach ([99, PHP_INT_MAX] as $big) {
+        $lines = [];
+        $after = deploy_send_alerts(['alertTries' => ['backup' => $big]] + deploy_empty_state(), $now, $watch, $fail,
+            static function (string $line) use (&$lines): void {
+                $lines[] = $line;
+            });
+        t_equal($after['alerts']['backup'] ?? null, $now, "счёт $big больше предела: первая же неудача отмечает сообщение");
+        t_equal($after['alertTries'], [], "счёт $big: и счёт снят");
+        t_equal($lines, [
+            'сообщение о сбое (backup): Telegram ответил 502',
+            'сообщение о сбое (backup): не ушло с 4 попыток — следующая попытка после обычного перерыва',
+        ], "счёт $big: в журнале «с 4 попыток»");
+    }
+    // Ключ не строкой (список) в счёт не попадает.
+    $after = deploy_send_alerts(['alertTries' => [0 => 3, 'backup' => 2]] + deploy_empty_state(), $now, $watch, $fail, $log);
+    t_equal($after['alertTries'], ['backup' => 3], 'числовой ключ в счёте отброшен, счёт копии сохранён');
 
     // Старый state.json (без alertTries) и испорченный — через deploy_state_load.
     $home = t_tmpdir();
