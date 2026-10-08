@@ -5,8 +5,11 @@
  * Фото, на которые больше не ссылается ни один букет (кроме удалённых) и ни
  * один раздел, — заменили, убрали из карточки, букет удалён, — переезжают в
  * корзину images/catalog/_deleted/. Но не сразу: сначала фото становится
- * кандидатом, и только если через сутки ссылок на него так и нет, уходит —
- * до выкладки старая страница на сайте ещё показывает его. Корзина стирает
+ * кандидатом, и уходит оно, только когда ссылок на него нет уже сутки и сайт,
+ * выложенный на сервере, собран после того, как ссылки пропали: пока
+ * выкладка не дошла, старая страница на сайте ещё показывает фото, и
+ * задержка сборки не должна оставить на ней пустую картинку. Дошла ли
+ * выкладка, решает вызывающий (см. catalog_deploy_covers). Корзина стирает
  * фото через 90 дней. Файлы, хозяина которых база не знает (uid букета ни в
  * базе, ни в журнале, раздела из имени нет), не трогаются никогда.
  *
@@ -98,10 +101,45 @@ function catalog_photo_owner_known(PDO $db, string $dir, string $name): bool
 }
 
 /**
+ * Выложено ли на сайте всё, что было в базе к моменту $since. state.json пишет
+ * deploy.php: версия выложенного каталога и время его последней правки. Пока
+ * состояния нет (выкладка ещё не знает каталог) — считаем, что не выложено:
+ * лучше подержать фото лишний день, чем показать на сайте пустую картинку.
+ *
+ * Выложено, если версия выложенного каталога та же, что в базе (на сайте всё),
+ * или выложенная сборка учла правки не раньше $since: ссылки на фото пропали
+ * не позже $since, значит, и в ней их уже нет.
+ *
+ * @param array|null $current state.json → current: catalogVersion, catalogChangedAt
+ *                            ('' или нет — каталог не менялся); null — состояния нет
+ * @param string     $dbVersion версия каталога в базе (catalog_meta, ключ version)
+ * @return Closure(int): bool принимает время, с которого у фото нет ссылок
+ */
+function catalog_deploy_covers(?array $current, string $dbVersion): Closure
+{
+    $version = is_array($current) ? ($current['catalogVersion'] ?? null) : null;
+    $changed = is_array($current) && is_string($current['catalogChangedAt'] ?? null) ? strtotime($current['catalogChangedAt']) : false;
+    return static function (int $since) use ($version, $dbVersion, $changed): bool {
+        if (!is_string($version) || $version === '') {
+            return false;
+        }
+        return $version === $dbVersion || ($changed !== false && $changed >= $since);
+    };
+}
+
+/**
  * Одна уборка. Порядок такой: сначала вернуть из корзины то, на что снова
  * ссылаются; потом найти фото без ссылок и, если их к переносу не слишком
- * много, унести те, что пробыли без ссылок сутки; потом стереть из корзины
- * старое — кроме того, на что ссылаются.
+ * много, унести те, что пробыли без ссылок сутки и ссылок на которые нет уже
+ * и на выложенном сайте; потом стереть из корзины старое — кроме того, на что
+ * ссылаются.
+ *
+ * $published($since) отвечает, выложена ли уже правка, сделанная не позже
+ * $since (время, с которого у фото нет ссылок): без «да» фото не уходит, как бы
+ * давно оно ни лежало. Оно остаётся кандидатом со своим прежним $since и
+ * уйдёт в одну из следующих уборок, когда выкладка дойдёт. null — выкладку не
+ * учитывать, ждать только сутки. Предохранитель считает только то, что
+ * действительно уходит, — выложенное.
  *
  * Предохранитель сработал — RuntimeException: в корзину не уходит ничего и
  * из корзины ничего не стирается (при сбившихся ссылках защите «на это
@@ -110,9 +148,10 @@ function catalog_photo_owner_known(PDO $db, string $dir, string $name): bool
  * исправления все фото снова ждали бы сутки, а выбывшие из списка вернулись
  * бы в него со старым временем.
  *
+ * @param (Closure(int): bool)|null $published
  * @return array{candidates: int, moved: int, purged: int, returned: int}
  */
-function catalog_photos_sweep(PDO $db, string $webroot, string $candidatesFile, DateTimeImmutable $now): array
+function catalog_photos_sweep(PDO $db, string $webroot, string $candidatesFile, DateTimeImmutable $now, ?Closure $published = null): array
 {
     $time = $now->getTimestamp();
     $referenced = catalog_photos_referenced($db);
@@ -149,7 +188,8 @@ function catalog_photos_sweep(PDO $db, string $webroot, string $candidatesFile, 
             $known++;
             $since = is_int($previous[$rel] ?? null) ? $previous[$rel] : $time;
             $candidates[$rel] = $since;
-            if ($time - $since >= CATALOG_PHOTO_GRACE) {
+            // Кандидат, которому не хватает только выкладки, остаётся в списке со своим $since.
+            if ($time - $since >= CATALOG_PHOTO_GRACE && ($published === null || $published($since))) {
                 $due[] = $rel;
             }
         }
