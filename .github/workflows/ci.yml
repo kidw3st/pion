@@ -64,4 +64,17 @@ jobs:
       - name: SQLite — та же, что на хостинге
         run: |
           php -r 'echo SQLite3::version()["versionString"], PHP_EOL;' | tee /dev/stderr | grep -q '^3\.26\.'
-      - run: php tests/php/run.php
+      # Версии и итог — аннотациями: их видно на странице запуска и через API
+      # без входа, а журнал шагов без входа не открыть.
+      - name: Версии в контейнере
+        run: |
+          echo "::notice title=Версии в контейнере::SQLite $(php -r 'echo SQLite3::version()["versionString"];'), PHP $(php -r 'echo PHP_VERSION;'), WebP в GD: $(php -r 'echo gd_info()["WebP Support"] ? "да" : "нет";')"
+      - name: PHP-проверки
+        run: |
+          status=0
+          php tests/php/run.php > run.log 2>&1 || status=$?
+          cat run.log
+          level=notice
+          [ "$status" -eq 0 ] || level=error
+          echo "::$level title=Итог PHP-проверок на SQLite 3.26::$(tail -n 1 run.log)"
+          exit "$status"
