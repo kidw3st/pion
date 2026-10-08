@@ -1,0 +1,150 @@
+{
+  "version": "4e8ad6165702c28cc49e0e9e14eb37f7de4771608bd1e349162eba59946dfafc",
+  "changedAt": "2026-10-05T14:32:10+05:00",
+  "sections": [
+    {
+      "slug": "bukety",
+      "label": "Букеты",
+      "tileImage": "/images/site/catalog-tiles/tile-1.webp",
+      "visible": true,
+      "coverTitle": "Букеты",
+      "coverSub": "Стильные и уникальные букеты",
+      "covers": [
+        "/images/site/category-covers/bukety-0.webp"
+      ],
+      "heading": "БУКЕТЫ",
+      "headingSub": "",
+      "hasNotFound": true,
+      "seoTitle": null,
+      "seoDescription": null,
+      "products": [
+        "100000000003",
+        "100000000001",
+        "100000000002"
+      ]
+    },
+    {
+      "slug": "novinki",
+      "label": "Новинки",
+      "tileImage": "",
+      "visible": false,
+      "coverTitle": "",
+      "coverSub": "",
+      "covers": [],
+      "heading": "",
+      "headingSub": "",
+      "hasNotFound": false,
+      "seoTitle": "Новинки салона «Пион»",
+      "seoDescription": "Свежие букеты — «в\nдве строки» & слэш / и \"кавычки\"",
+      "products": [
+        "100000000003",
+        "100000000002",
+        "100000000004"
+      ]
+    },
+    {
+      "slug": "roses",
+      "label": "Розы",
+      "tileImage": "",
+      "visible": false,
+      "coverTitle": "Лучшее для дома\nи офиса",
+      "coverSub": "",
+      "covers": [],
+      "heading": "",
+      "headingSub": "",
+      "hasNotFound": false,
+      "seoTitle": null,
+      "seoDescription": null,
+      "products": [
+        "100000000005"
+      ]
+    }
+  ],
+  "tiles": [
+    {
+      "type": "link",
+      "label": "Цветы",
+      "href": "/flowers",
+      "image": "/images/site/catalog-tiles/tile-0.webp"
+    },
+    {
+      "type": "section",
+      "slug": "bukety"
+    },
+    {
+      "type": "popup",
+      "label": "Создать уникальный букет",
+      "href": "#popup:individual",
+      "image": "/images/site/catalog-tiles/tile-6.webp"
+    }
+  ],
+  "products": [
+    {
+      "uid": "100000000001",
+      "slug": "buket-a",
+      "title": "Букет «А»",
+      "description": "Состав букета: роза, эвкалипт",
+      "price": 4400,
+      "images": [
+        "/images/catalog/bukety/buket-a-100000000001.webp"
+      ],
+      "mainSection": "bukety",
+      "status": "active"
+    },
+    {
+      "uid": "100000000002",
+      "slug": "buket-b",
+      "title": "Букет «Б»",
+      "description": "",
+      "price": 6380,
+      "images": [
+        "/images/catalog/bukety/buket-b-100000000002.webp",
+        "/images/catalog/bukety/buket-b-100000000002-2.webp"
+      ],
+      "mainSection": "bukety",
+      "status": "active"
+    },
+    {
+      "uid": "100000000003",
+      "slug": "buket-v",
+      "title": "Букет «В»",
+      "description": "Снят с продажи",
+      "price": 5100,
+      "images": [
+        "/images/catalog/bukety/buket-v-100000000003.webp"
+      ],
+      "mainSection": "bukety",
+      "status": "hidden"
+    },
+    {
+      "uid": "100000000004",
+      "slug": "pion",
+      "title": "Пион",
+      "description": "Привозим пионы даже в октябре!",
+      "price": 1600,
+      "images": [
+        "/images/catalog/novinki/pion-100000000004-abcdef12.webp"
+      ],
+      "mainSection": "novinki",
+      "status": "active"
+    },
+    {
+      "uid": "100000000005",
+      "slug": "pion",
+      "title": "Пион",
+      "description": "Пион сорта Сара Бернар",
+      "price": 540,
+      "images": [
+        "/images/catalog/roses/pion-100000000005.webp"
+      ],
+      "mainSection": "roses",
+      "status": "active"
+    }
+  ],
+  "redirects": [
+    {
+      "from": "/korobki/buket-a/",
+      "to": "/bukety/buket-a/"
+    }
+  ]
+}
