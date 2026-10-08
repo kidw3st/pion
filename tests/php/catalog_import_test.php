@@ -106,9 +106,80 @@ t_case('import-cli.php', function (): void {
     $file = t_tmpdir() . '/export.json';
     $source = catalog_export(t_rich_catalog());
     file_put_contents($file, json_encode($source, CATALOG_JSON));
-    [$code, $out] = t_catalog_cli("$scripts/catalog/import-cli.php", $home, [$file]);
-    t_equal($code, 0, 'загрузка прошла');
-    t_true(str_contains($out, 'букетов 2') && str_contains($out, $source['version']), 'печатает, сколько загружено, и версию');
-    [$code] = t_catalog_cli("$scripts/catalog/import-cli.php", $home, [$file]);
-    t_equal($code, 1, 'второй раз в ту же базу — отказ');
+    // Корень сайта скрипту задают переменной PION_WEBROOT; в нём должны лежать все фото выгрузки.
+    $webroot = t_tmpdir();
+    putenv('PION_WEBROOT=' . $webroot);
+    try {
+        [$code, $out] = t_catalog_cli("$scripts/catalog/import-cli.php", $home, [$file]);
+        t_equal($code, 1, 'фото на месте нет — отказ');
+        t_true(str_contains($out, 'не найдены'), 'причина названа: фото не найдены');
+        foreach ($source['products'] as $p) {
+            foreach ($p['images'] as $path) {
+                t_put_files($webroot, [ltrim($path, '/') => 'webp']);
+            }
+        }
+        foreach ($source['sections'] as $s) {
+            foreach (array_merge($s['tileImage'] !== '' ? [$s['tileImage']] : [], $s['covers']) as $path) {
+                t_put_files($webroot, [ltrim($path, '/') => 'webp']);
+            }
+        }
+        foreach ($source['tiles'] as $t) {
+            if (isset($t['image'])) {
+                t_put_files($webroot, [ltrim($t['image'], '/') => 'webp']);
+            }
+        }
+        [$code, $out] = t_catalog_cli("$scripts/catalog/import-cli.php", $home, [$file]);
+        t_equal($code, 0, 'загрузка прошла');
+        t_true(str_contains($out, 'букетов 2') && str_contains($out, $source['version']), 'печатает, сколько загружено, и версию');
+        [$code] = t_catalog_cli("$scripts/catalog/import-cli.php", $home, [$file]);
+        t_equal($code, 1, 'второй раз в ту же базу — отказ');
+    } finally {
+        putenv('PION_WEBROOT');
+    }
+});
+
+function t_import_sample(): array
+{
+    return json_decode((string)file_get_contents(__DIR__ . '/fixtures/catalog-export-small.json'), true, 64, JSON_THROW_ON_ERROR);
+}
+
+t_case('загрузка: пути фото проверяются', function (): void {
+    $e = t_import_sample();
+    unset($e['version']);
+    $e['products'][0]['images'] = ['/images/site/new-pion.webp'];
+    $err = t_throws(fn () => catalog_import(t_catalog_db(), $e, t_now()), CatalogError::class, 'фото букета не из images/catalog — отказ');
+    t_true($err !== null && str_contains($err->getMessage(), '100000000001'), 'в сообщении — какой букет');
+
+    $e = t_import_sample();
+    unset($e['version']);
+    $e['products'][0]['images'] = [['/images/catalog/bukety/a.webp']];
+    t_throws(fn () => catalog_import(t_catalog_db(), $e, t_now()), CatalogError::class, 'запись не строкой — отказ');
+
+    $e = t_import_sample();
+    unset($e['version']);
+    $e['sections'][0]['covers'] = ['/images/catalog/_deleted/x.webp'];
+    t_throws(fn () => catalog_import(t_catalog_db(), $e, t_now()), CatalogError::class, 'обложка из корзины — отказ');
+});
+
+t_case('загрузка: с корнем сайта — каждое фото должно лежать на месте', function (): void {
+    $webroot = t_tmpdir();
+    $err = t_throws(fn () => catalog_import(t_catalog_db(), t_import_sample(), t_now(), $webroot), CatalogError::class, 'фото нет — отказ');
+    t_true($err !== null && str_contains($err->getMessage(), 'не найдены'), 'объяснение: фото не найдены');
+    $sample = t_import_sample();
+    foreach ($sample['products'] as $p) {
+        foreach ($p['images'] as $path) {
+            t_put_files($webroot, [ltrim($path, '/') => 'webp']);
+        }
+    }
+    foreach ($sample['sections'] as $s) {
+        foreach (array_merge($s['tileImage'] !== '' ? [$s['tileImage']] : [], $s['covers']) as $path) {
+            t_put_files($webroot, [ltrim($path, '/') => 'webp']);
+        }
+    }
+    foreach ($sample['tiles'] as $t) {
+        if (isset($t['image'])) {
+            t_put_files($webroot, [ltrim($t['image'], '/') => 'webp']);
+        }
+    }
+    t_equal(catalog_import(t_catalog_db(), $sample, t_now(), $webroot)['products'], 5, 'все на месте — загружено');
 });

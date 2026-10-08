@@ -8,15 +8,62 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/export.php';
+require_once __DIR__ . '/products.php';
+require_once __DIR__ . '/sections.php';
 
-/** @return array{sections: int, products: int, redirects: int} */
-function catalog_import(PDO $db, array $export, DateTimeImmutable $now): array
+/**
+ * $webroot — корень сайта: если задан, каждое фото из выгрузки должно лежать на месте
+ * (загрузка на сервере). Без него проверяются только пути.
+ *
+ * @return array{sections: int, products: int, redirects: int}
+ */
+function catalog_import(PDO $db, array $export, DateTimeImmutable $now, ?string $webroot = null): array
 {
-    return catalog_tx($db, function () use ($db, $export, $now): array {
+    return catalog_tx($db, function () use ($db, $export, $now, $webroot): array {
         foreach (['sections', 'tiles', 'products', 'redirects'] as $part) {
             if (!is_array($export[$part] ?? null)) {
                 throw new CatalogError("В выгрузке нет части $part.");
             }
+        }
+        // Фото: только пути, которые принимает и сама админка, и только строки. Иначе
+        // уехавший путь не заметили бы, а ночная уборка отправила бы живые фото в корзину.
+        $missing = [];
+        $need = static function (string $path) use ($webroot, &$missing): void {
+            if ($webroot !== null && !is_file($webroot . $path)) {
+                $missing[] = $path;
+            }
+        };
+        foreach ($export['products'] as $p) {
+            $images = $p['images'] ?? null;
+            if (!is_array($images)) {
+                throw new CatalogError("Букет {$p['uid']}: фото — не список.");
+            }
+            foreach ($images as $path) {
+                if (!is_string($path) || !preg_match(CATALOG_IMAGE_PATH, $path)) {
+                    throw new CatalogError("Букет {$p['uid']}: неправильный путь к фото " . json_encode($path, CATALOG_JSON) . '.');
+                }
+                $need($path);
+            }
+        }
+        foreach ($export['sections'] as $s) {
+            $paths = array_merge(($s['tileImage'] ?? '') !== '' ? [$s['tileImage']] : [], is_array($s['covers'] ?? null) ? $s['covers'] : [null]);
+            foreach ($paths as $path) {
+                if (!is_string($path) || !preg_match(CATALOG_SITE_IMAGE, $path)) {
+                    throw new CatalogError("Раздел {$s['slug']}: неправильный путь к фото " . json_encode($path, CATALOG_JSON) . '.');
+                }
+                $need($path);
+            }
+        }
+        foreach ($export['tiles'] as $t) {
+            if (($t['type'] ?? '') !== 'section') {
+                if (!is_string($t['image'] ?? null) || !preg_match(CATALOG_SITE_IMAGE, $t['image'])) {
+                    throw new CatalogError('Плитка ' . json_encode($t['label'] ?? '', CATALOG_JSON) . ': неправильный путь к фото.');
+                }
+                $need($t['image']);
+            }
+        }
+        if ($missing !== []) {
+            throw new CatalogError('Фото не найдены на сервере: ' . count($missing) . ', например ' . implode(', ', array_slice($missing, 0, 3)) . '.');
         }
         if (isset($export['version']) && $export['version'] !== catalog_export_version($export)) {
             throw new CatalogError('Выгрузка повреждена: версия не сходится с содержимым.');
