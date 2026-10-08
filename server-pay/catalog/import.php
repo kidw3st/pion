@@ -29,8 +29,8 @@ function catalog_import(PDO $db, array $export, DateTimeImmutable $now, ?string 
         // уехавший путь не заметили бы, а ночная уборка отправила бы живые фото в корзину.
         $missing = [];
         $need = static function (string $path) use ($webroot, &$missing): void {
-            if ($webroot !== null && !is_file($webroot . $path)) {
-                $missing[] = $path;
+            if ($webroot !== null && !isset($missing[$path]) && !is_file($webroot . $path)) {
+                $missing[$path] = true;
             }
         };
         foreach ($export['products'] as $p) {
@@ -63,7 +63,8 @@ function catalog_import(PDO $db, array $export, DateTimeImmutable $now, ?string 
             }
         }
         if ($missing !== []) {
-            throw new CatalogError('Фото не найдены на сервере: ' . count($missing) . ', например ' . implode(', ', array_slice($missing, 0, 3)) . '.');
+            throw new CatalogError('Фото не найдены на сервере: ' . count($missing) . ' (искали в ' . $webroot . '), например '
+                . implode(', ', array_slice(array_keys($missing), 0, 3)) . '.');
         }
         if (isset($export['version']) && $export['version'] !== catalog_export_version($export)) {
             throw new CatalogError('Выгрузка повреждена: версия не сходится с содержимым.');

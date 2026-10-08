@@ -113,6 +113,23 @@ t_case('import-cli.php', function (): void {
         [$code, $out] = t_catalog_cli("$scripts/catalog/import-cli.php", $home, [$file]);
         t_equal($code, 1, 'фото на месте нет — отказ');
         t_true(str_contains($out, 'не найдены'), 'причина названа: фото не найдены');
+        $paths = [];
+        foreach ($source['products'] as $p) {
+            $paths = array_merge($paths, $p['images']);
+        }
+        foreach ($source['sections'] as $s) {
+            $paths = array_merge($paths, $s['tileImage'] !== '' ? [$s['tileImage']] : [], $s['covers']);
+        }
+        foreach ($source['tiles'] as $t) {
+            if (isset($t['image'])) {
+                $paths[] = $t['image'];
+            }
+        }
+        $unique = count(array_unique($paths));
+        t_true(str_contains($out, "Фото не найдены на сервере: $unique (искали в $webroot)"),
+            'каждое фото считается один раз, и названа папка, где искали');
+        t_true(!is_file("$home/catalog.sqlite"), 'неудачная загрузка базу не оставляет — админка по-прежнему отвечает 503');
+        t_true(!is_file("$home/catalog.sqlite" . '.import'), 'и временный файл убран');
         foreach ($source['products'] as $p) {
             foreach ($p['images'] as $path) {
                 t_put_files($webroot, [ltrim($path, '/') => 'webp']);
@@ -130,6 +147,8 @@ t_case('import-cli.php', function (): void {
         }
         [$code, $out] = t_catalog_cli("$scripts/catalog/import-cli.php", $home, [$file]);
         t_equal($code, 0, 'загрузка прошла');
+        t_true(is_file("$home/catalog.sqlite"), 'после удачной загрузки база на месте');
+        t_true(!is_file("$home/catalog.sqlite" . '.import'), 'временного файла нет');
         t_true(str_contains($out, 'букетов 2') && str_contains($out, $source['version']), 'печатает, сколько загружено, и версию');
         [$code] = t_catalog_cli("$scripts/catalog/import-cli.php", $home, [$file]);
         t_equal($code, 1, 'второй раз в ту же базу — отказ');
@@ -182,4 +201,30 @@ t_case('загрузка: с корнем сайта — каждое фото �
         }
     }
     t_equal(catalog_import(t_catalog_db(), $sample, t_now(), $webroot)['products'], 5, 'все на месте — загружено');
+});
+
+t_case('загрузка: одно фото у двух букетов считается один раз', function (): void {
+    $export = t_import_sample();
+    $shared = $export['products'][0]['images'][0];
+    $export['products'][1]['images'] = [$shared];
+    $webroot = t_tmpdir();
+    $all = [];
+    foreach ($export['products'] as $p) {
+        $all = array_merge($all, $p['images']);
+    }
+    foreach ($export['sections'] as $s) {
+        $all = array_merge($all, $s['tileImage'] !== '' ? [$s['tileImage']] : [], $s['covers']);
+    }
+    foreach ($export['tiles'] as $t) {
+        if (isset($t['image'])) {
+            $all[] = $t['image'];
+        }
+    }
+    $expected = count(array_unique($all));
+    try {
+        catalog_import(t_catalog_db(), $export, t_now(), $webroot);
+        t_true(false, 'без фото загрузка должна отказать');
+    } catch (CatalogError $e) {
+        t_true(str_contains($e->getMessage(), "Фото не найдены на сервере: $expected (искали в $webroot)"), 'общее фото — один раз: ' . $e->getMessage());
+    }
 });
