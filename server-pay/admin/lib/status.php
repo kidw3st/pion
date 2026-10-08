@@ -91,7 +91,7 @@ function admin_catalog_now(PDO $db): array
  * расхождение версий бывает и без правки, когда выложили новый код выгрузки, а
  * сборку по нему привезёт следующий запуск (подробно — в
  * deploy_pending_catalog_alerts, server-pay/deploy-lib.php; сторож считает так же).
- * Времени выкладки нет — только от правки.
+ * Времени выкладки нет или оно из будущего (не берётся) — только от правки.
  *
  * @param array{version: ?string, changed_at: ?string} $catalog admin_catalog_now()
  * @param array{version: string, changedAt: string, deployedAt?: ?int}|null $deployed admin_deployed_catalog()
@@ -108,8 +108,9 @@ function admin_deploy_status(array $catalog, ?array $deployed, DateTimeImmutable
     }
     $since = admin_perm($catalog['changed_at']);
     $deployedAt = $deployed['deployedAt'] ?? null;
-    // Время из будущего (не бывает: его пишет deploy.php через time()) отодвинуло бы «задерживается» до него —
-    // такое время считаем неизвестным, и ожидание идёт от правки. (Подмена его на «сейчас» обнулила бы ожидание.)
+    // Время из будущего бывает, если на сервере перевели часы назад (deploy.php пишет его через time()). Оно
+    // отодвинуло бы «задерживается» до него — такое время не берём, и ожидание идёт от правки. (Подмена его на
+    // «сейчас» обнулила бы ожидание.)
     if (is_int($deployedAt) && $deployedAt > $since->getTimestamp() && $deployedAt <= $now->getTimestamp()) {
         $since = admin_perm('@' . $deployedAt);
     }

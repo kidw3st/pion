@@ -58,8 +58,11 @@ try {
             $keep = true;
             throw new RuntimeException("пока шла загрузка, появилась база $target — загруженное оставлено в $dbFile, разберитесь вручную");
         }
+        error_clear_last();
         if (!@rename($dbFile, $target)) {
-            throw new RuntimeException("не переименовать $dbFile в $target");
+            // Причину отдаёт система (права, занятый файл); текст зависит от платформы.
+            $os = (string)(error_get_last()['message'] ?? '');
+            throw new RuntimeException("не переименовать $dbFile в $target" . ($os !== '' ? ': ' . $os : ''));
         }
     }
     printf(

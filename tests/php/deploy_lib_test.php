@@ -485,6 +485,49 @@ t_equal([$code, implode("\n", $out)], [0, 'нет'], 'deploy-lib.php сама к
     t_true(in_array(deploy_alert_text('backup', deploy_empty_state(), $watch), $texts, true), 'отправляется текст deploy_alert_text');
 })();
 
+// --- Отметка о сообщении: граница, смешанный исход и повтор обслуживания -----
+(static function (): void {
+    $now = 1_800_000_000;
+    $log = static function (string $line): void {
+    };
+
+    // Граница: выкладка в эту самую секунду (так её пишет deploy.php) отсчёт 90 минут сдвигает.
+    // Если бы «сейчас» считалось будущим (< вместо <=), отсчёт пошёл бы от правки суточной давности.
+    $state = ['current' => ['catalogVersion' => 'v1', 'deployedAt' => $now]] + deploy_empty_state();
+    $fresh = ['version' => 'v2', 'changedAt' => $now - 86400, 'backupAt' => $now - 60, 'maintenance' => null];
+    t_true(!in_array('catalog', deploy_pending_alerts($state, $now, $fresh), true),
+        'deployedAt равно «сейчас»: берётся, отсчёт от выкладки — о каталоге не пишем');
+    t_true(in_array('catalog', deploy_pending_alerts($state, $now + 5400, $fresh), true),
+        'а через 90 минут после выкладки — пишем');
+
+    // Два рода сразу: копии нет и обслуживание не удалось. Первое сообщение не ушло, второе ушло.
+    $watch = ['version' => '', 'changedAt' => 0, 'backupAt' => null,
+        'maintenance' => ['ok' => false, 'at' => $now - 60, 'message' => 'x']];
+    $empty = deploy_empty_state();
+    t_equal(deploy_pending_alerts($empty, $now, $watch), ['backup', 'maintenance'], 'исходно пора писать о двух родах');
+    $backupText = deploy_alert_text('backup', $empty, $watch);
+    $lines = [];
+    $mixed = deploy_send_alerts($empty, $now, $watch, static fn(string $text): string => $text === $backupText ? 'Telegram ответил 502' : DEPLOY_TELEGRAM_SENT,
+        static function (string $line) use (&$lines): void {
+            $lines[] = $line;
+        });
+    t_equal($mixed['alerts']['backup'] ?? null, null, 'смешанный исход: не принятое Telegram не отмечено');
+    t_equal($mixed['alerts']['maintenance'] ?? null, $now, 'смешанный исход: принятое отмечено');
+    t_equal($lines, ['сообщение о сбое (backup): Telegram ответил 502', 'сообщение о сбое (maintenance): ' . DEPLOY_TELEGRAM_SENT],
+        'в журнале обе строки');
+    t_equal(deploy_pending_alerts($mixed, $now + 900, $watch), ['backup'], 'через 15 минут пора повторить только не ушедшее');
+
+    // Повтор обслуживания: сообщение не ушло — следующий запуск пробует снова, ушло — больше не пишет.
+    $maint = ['version' => '', 'changedAt' => 0, 'backupAt' => $now - 60,
+        'maintenance' => ['ok' => false, 'at' => $now - 60, 'message' => 'x']];
+    $failed = deploy_send_alerts($empty, $now, $maint, static fn(string $text): string => 'Telegram ответил 502', $log);
+    t_equal($failed['alerts']['maintenance'] ?? null, null, 'обслуживание: Telegram не принял — не отмечено');
+    t_equal(deploy_pending_alerts($failed, $now + 900, $maint), ['maintenance'], 'обслуживание: через 15 минут всё ещё пора писать');
+    $sent = deploy_send_alerts($failed, $now + 900, $maint, static fn(string $text): string => DEPLOY_TELEGRAM_SENT, $log);
+    t_equal($sent['alerts']['maintenance'] ?? null, $now + 900, 'обслуживание: повтор принят — отмечено');
+    t_equal(deploy_pending_alerts($sent, $now + 1800, $maint), [], 'обслуживание: после отправки не пора');
+})();
+
 // --- Время выкладки из будущего не откладывает сообщение о каталоге ----------
 (static function (): void {
     $now = 1_800_000_000;

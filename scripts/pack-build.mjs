@@ -61,6 +61,19 @@ function createArchive(file, dir, exclude) {
   execFileSync(TAR, [...create, file, '-C', dir, '--exclude', exclude, '.']);
 }
 
+/** catalog_iso и настоящая дата: месяц 13 или 31 февраля регулярное выражение пропустило бы. */
+function isCatalogIso(value) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})[+-](\d{2}):(\d{2})$/.exec(value);
+  if (!m) return false;
+  const [y, mo, d, h, mi, s, oh, om] = m.slice(1).map(Number);
+  const t = new Date(Date.UTC(y, mo - 1, d, h, mi, s));
+  return (
+    t.getUTCFullYear() === y && t.getUTCMonth() === mo - 1 && t.getUTCDate() === d &&
+    t.getUTCHours() === h && t.getUTCMinutes() === mi && t.getUTCSeconds() === s &&
+    oh <= 14 && om < 60
+  );
+}
+
 /**
  * Что build-info.json говорит о каталоге, из которого собран сайт: версия (по ней
  * админка показывает «на сайте» / «ждёт выкладки»), время последнего изменения и число товаров.
@@ -74,10 +87,7 @@ function catalogInfo(catalogFile) {
   if (typeof exp.version !== 'string' || !/^[0-9a-f]{64}$/.test(exp.version)) {
     throw new Error(`версия выгрузки каталога — не sha256: ${JSON.stringify(exp.version)}`);
   }
-  if (
-    exp.changedAt !== null &&
-    (typeof exp.changedAt !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/.test(exp.changedAt))
-  ) {
+  if (exp.changedAt !== null && (typeof exp.changedAt !== 'string' || !isCatalogIso(exp.changedAt))) {
     throw new Error(`changedAt выгрузки не в виде catalog_iso: ${JSON.stringify(exp.changedAt)}`);
   }
   if (!Array.isArray(exp.products)) throw new Error('в выгрузке каталога нет списка товаров');

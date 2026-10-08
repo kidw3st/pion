@@ -161,5 +161,9 @@ t_case('статус: время выкладки из будущего не о�
     $deployed = ['version' => 'v1', 'changedAt' => '', 'deployedAt' => t_now('+1 day')->getTimestamp()];
     $catalog = ['version' => 'v2', 'changed_at' => catalog_iso(t_now('-91 minutes'))];
     t_equal(admin_deploy_status($catalog, $deployed, t_now())['kind'], 'late',
-        'deployedAt позже «сейчас» считается «сейчас»: правка 91 минуту назад — задерживается');
+        'deployedAt позже «сейчас» не берётся: ожидание идёт от правки — правка 91 минуту назад, задерживается');
+    // Свежая правка: ожидание тоже считается от правки (13:50), а не от времени выкладки из будущего.
+    $fresh = admin_deploy_status(['version' => 'v2', 'changed_at' => catalog_iso(t_now('-10 minutes'))], $deployed, t_now());
+    t_equal($fresh['kind'], 'pending', 'правка 10 минут назад, deployedAt из будущего — ждёт, а не «задерживается»');
+    t_true(str_contains($fresh['text'], 'Ждёт выкладки с 13:50'), 'ожидание считается от правки: ' . $fresh['text']);
 });

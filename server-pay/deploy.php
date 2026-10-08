@@ -122,8 +122,15 @@ function deploy_telegram(string $text): string
     ]);
     $raw = curl_exec($ch);
     $code = (int)curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    $err = curl_error($ch);
     curl_close($ch);
-    return $code === 200 && is_string($raw) && str_contains($raw, '"ok":true') ? DEPLOY_TELEGRAM_SENT : "Telegram ответил $code";
+    // Принято — только если Telegram ответил 200 и в разобранном JSON ok === true: подстрока
+    // «"ok":true» нашлась бы и в чужом тексте (например, в описании ошибки).
+    $reply = json_decode((string)$raw, true);
+    if ($code === 200 && is_array($reply) && ($reply['ok'] ?? false) === true) {
+        return DEPLOY_TELEGRAM_SENT;
+    }
+    return "Telegram ответил $code" . ($err !== '' ? " ($err)" : '');
 }
 
 /**

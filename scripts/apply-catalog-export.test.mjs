@@ -152,7 +152,7 @@ describe('applyCatalogExport по сети', () => {
 });
 
 describe('запуск из командной строки', () => {
-  const run =(...args) => spawnSync(process.execPath, [SCRIPT, ...args], { encoding: 'utf8' });
+  const run = (...args) => spawnSync(process.execPath, [SCRIPT, ...args], { encoding: 'utf8' });
 
   it('--check на хорошем файле — код 0', () => {
     const r = run('--check', FIXTURE);

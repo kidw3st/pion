@@ -166,7 +166,8 @@ t_case('import-cli.php', function (): void {
         mkdir("$blocked/catalog.sqlite");
         [$code, $out] = t_catalog_cli("$scripts/catalog/import-cli.php", $blocked, [$file]);
         t_equal($code, 1, 'имя базы занято — отказ');
-        t_true(str_contains($out, 'Не загружено: не переименовать'), 'причина названа по-русски: ' . $out);
+        // Дальше идёт причина от системы (текст зависит от платформы), её не сверяем.
+        t_true(str_starts_with($out, 'Не загружено: не переименовать'), 'причина названа по-русски: ' . $out);
         t_true(!str_contains($out, 'Warning'), 'без предупреждения PHP: ' . $out);
         clearstatcache();
         t_true(!is_file("$blocked/catalog.sqlite" . '.import'), 'временный файл убран');
