@@ -1,0 +1,19 @@
+{
+  "commit": "5c48d011fed51df31f328d6fe30403524a9c1227",
+  "builtAt": "2026-10-09T08:20:12.266Z",
+  "site": {
+    "file": "pion-site.tar.gz",
+    "bytes": 16001221,
+    "sha256": "08cb595ae8f13f87c317def974cc7863dbca8b2cf919bf46d278949a19e847ef"
+  },
+  "pay": {
+    "file": "pion-pay.tar.gz",
+    "bytes": 112507,
+    "sha256": "b96a8dafd587c124392ef710fdf1c1ceed807fe4aae23b22b56757ca70a3de4b"
+  },
+  "catalog": {
+    "version": "5a11ba5effcc351348e09fbfcd9626018eceb8f475bc1e7debc104de58d40d92",
+    "changedAt": null,
+    "products": 487
+  }
+}
